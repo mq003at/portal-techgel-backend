@@ -1,0 +1,45 @@
+## Build artifacts
+bin/
+obj/
+*.user
+*.rsuser
+*.suo
+*.cache
+*.csproj.user
+
+## Rider + VS Code + VS settings
+.vscode/
+.idea/
+*.sln.docstates
+*.DotSettings.user
+
+## Logs
+*.log
+
+## Secrets
+appsettings.Development.json
+secrets.json
+
+## EF Core migrations snapshots
+Migrations/*Snapshot.cs
+
+## Publish output (EXCEPT the one we use for Docker)
+!bin/Release/net9.0/publish/**
+
+## Docker
+.dockerignore
+
+## Test results
+TestResults/
+
+## NPM / frontend stuff (if present)
+node_modules/
+dist/
+.env
+.env.*
+*.db
+*.sqlite
+
+## macOS & Linux metadata
+.DS_Store
+Thumbs.db
