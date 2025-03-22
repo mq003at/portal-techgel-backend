@@ -29,6 +29,7 @@ public class EmployeeDTO : BaseDTO<Employee>
     public string? Address { get; set; }
 
     public decimal? Salary { get; set; } = 0.00m;
+    public string? Password { get; set; }
 
     public List<int> DivisionIds { get; set; } = new();
     public List<int> DepartmentIds { get; set; } = new();
@@ -68,6 +69,7 @@ public class CreateEmployeeDTO : BaseDTO<Employee>
     public List<int> SectionIds { get; set; } = new();
     public List<int> UnitIds { get; set; } = new();
     public List<int> TeamIds { get; set; } = new();
+    public string? Password { get; set; }
 
     public override void UpdateModel(Employee model) { }
 }
@@ -102,6 +104,7 @@ public class UpdateEmployeeDTO : BaseDTO<Employee>
     public List<int> SectionIds { get; set; } = new();
     public List<int> UnitIds { get; set; } = new();
     public List<int> TeamIds { get; set; } = new();
+    public string? Password { get; set; }
 
     public override void UpdateModel(Employee model)
     {
@@ -126,6 +129,9 @@ public class UpdateEmployeeDTO : BaseDTO<Employee>
             model.PhoneNumber = PhoneNumber;
         if (CompanyNumber != null)
             model.CompanyNumber = CompanyNumber;
+
+        if (Password != null)
+            model.Password = Password;
 
         if (Address != null)
             model.Address = Address;

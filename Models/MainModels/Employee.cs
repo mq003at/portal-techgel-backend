@@ -68,6 +68,7 @@ public class Employee : BaseModel
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal Salary { get; set; } = 0.00m;
+    public string Password = null!;
 
     public ICollection<EmployeeDivision> EmployeeDivisions { get; set; } =
         new List<EmployeeDivision>();
