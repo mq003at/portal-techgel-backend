@@ -25,10 +25,16 @@ builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true;
 });
 
-builder.Services.Configure<KestrelServerOptions>(options =>
+// builder.Services.Configure<KestrelServerOptions>(options =>
+// {
+//     options.ListenAnyIP(5188); // HTTP
+//     options.ListenAnyIP(7188, listenOptions => listenOptions.UseHttps()); // HTTPS
+// });
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    options.ListenAnyIP(5188); // HTTP
-    options.ListenAnyIP(7188, listenOptions => listenOptions.UseHttps()); // HTTPS
+    // Only listen to HTTP, let Railway handle HTTPS
+    serverOptions.ListenAnyIP(8080); // Use port 8080 for Railway
 });
 
 // Register PostgreSQL Database
