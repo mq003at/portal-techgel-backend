@@ -22,4 +22,4 @@ EXPOSE 8080
 RUN echo "Contents of /app:" && ls -R /app
 
 # Run the app
-ENTRYPOINT ["dotnet", "out/portal-techgel-backend.dll"]
+ENTRYPOINT ["dotnet", "out/portal-techgel-api.dll"]
