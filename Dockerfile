@@ -21,5 +21,5 @@
     EXPOSE 8080
     
     # Run the app
-    ENTRYPOINT ["dotnet", "portal-techgel-backend.dll"]
+    ENTRYPOINT ["dotnet", "out/portal-techgel-backend.dll"]
     
