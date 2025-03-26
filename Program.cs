@@ -107,17 +107,16 @@ builder.Services.AddScoped<IUnitService, UnitService>();
 var app = builder.Build();
 
 // Enable Swagger
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+// }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+app.MapOpenApi();
+
 app.UseCors("AllowFrontend");
 app.UseRouting();
 app.UseAuthentication();
