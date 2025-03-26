@@ -1,5 +1,5 @@
 # 👷 Build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0.201 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 
 WORKDIR /src
@@ -19,7 +19,7 @@ FROM build AS publish
 RUN dotnet publish "portal-techgel-api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # 🏃 Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0.201 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
 # Copy published app from previous stage
