@@ -3,11 +3,11 @@ using portal.Models;
 
 namespace portal.Services;
 
-public interface IBaseService<TModel, TDTO, TUpdateDTO>
+public interface IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
 {
-    Task<IEnumerable<TDTO>> GetAllAsync();
-    Task<TDTO?> GetByIdAsync(int id);
-    Task<TDTO> CreateAsync(TDTO dto);
-    Task<TDTO?> UpdateAsync(int id, TUpdateDTO dto);
+    Task<IEnumerable<TReadDTO>> GetAllAsync();
+    Task<TReadDTO?> GetByIdAsync(int id);
+    Task<TReadDTO> CreateAsync(TCreateDTO dto);
+    Task<TReadDTO?> UpdateAsync(int id, TUpdateDTO dto);
     Task<bool> DeleteAsync(int id);
 }

@@ -1,6 +1,7 @@
-namespace portal.Services;
-
+// portal/Services/BaseService.cs
+using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -8,86 +9,79 @@ using portal.Db;
 using portal.DTOs;
 using portal.Models;
 
-public class BaseService<TModel, TDTO, TUpdateDTO> : IBaseService<TModel, TDTO, TUpdateDTO>
-    where TModel : BaseModel, new()
-    where TDTO : BaseDTO<TModel>, new()
-    where TUpdateDTO : BaseDTO<TModel>
+namespace portal.Services
 {
-    protected readonly ApplicationDbContext _context;
-    protected readonly DbSet<TModel> _dbSet;
-    protected readonly IMapper _mapper;
-    protected readonly ILogger<BaseService<TModel, TDTO, TUpdateDTO>> _logger;
-
-    public BaseService(
-        ApplicationDbContext context,
-        IMapper mapper,
-        ILogger<BaseService<TModel, TDTO, TUpdateDTO>> logger
-    )
+    public class BaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
+        : IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
+        where TModel : BaseModel, new()
+        where TReadDTO : BaseDTO<TModel>, new()
+        where TCreateDTO : BaseDTO<TModel>
+        where TUpdateDTO : BaseDTO<TModel>
     {
-        _context = context;
-        _dbSet = _context.Set<TModel>();
-        _mapper = mapper;
-        _logger = logger;
-    }
+        protected readonly ApplicationDbContext _context;
+        protected readonly DbSet<TModel> _dbSet;
+        protected readonly IMapper _mapper;
+        protected readonly ILogger _logger;
 
-    public virtual async Task<IEnumerable<TDTO>> GetAllAsync()
-    {
-        var entities = await _dbSet.ToListAsync();
-        return _mapper.Map<IEnumerable<TDTO>>(entities);
-    }
-
-    public virtual async Task<TDTO?> GetByIdAsync(int id)
-    {
-        var entity = await _dbSet.FindAsync(id);
-        return entity == null ? null : _mapper.Map<TDTO>(entity);
-    }
-
-    public virtual async Task<TDTO> CreateAsync(TDTO dto)
-    {
-        _logger.LogInformation($"Before Create: {JsonSerializer.Serialize(dto)}");
-
-        var entity = _mapper.Map<TModel>(dto);
-
-        dto.UpdateModel(entity);
-        _logger.LogInformation($"Entity: {JsonSerializer.Serialize(entity)}");
-
-        _dbSet.Add(entity);
-        await _context.SaveChangesAsync();
-
-        return _mapper.Map<TDTO>(entity);
-    }
-
-    public virtual async Task<TDTO?> UpdateAsync(int id, TUpdateDTO dto)
-    {
-        var entity = await _dbSet.FindAsync(id);
-        if (entity == null)
-            return null;
-
-        _logger.LogInformation($"Before Update: {JsonSerializer.Serialize(entity)}");
-
-        // Preserve MainID
-        if (!string.IsNullOrEmpty(entity.MainID) && string.IsNullOrEmpty(dto.MainID))
+        public BaseService(
+            ApplicationDbContext context,
+            IMapper mapper,
+            ILogger<BaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>> logger
+        )
         {
-            dto.MainID = entity.MainID;
+            _context = context;
+            _dbSet = _context.Set<TModel>();
+            _mapper = mapper;
+            _logger = logger;
         }
 
-        // Use manual model update logic
-        dto.UpdateModel(entity);
+        public virtual async Task<IEnumerable<TReadDTO>> GetAllAsync()
+        {
+            var entities = await _dbSet.ToListAsync();
+            return _mapper.Map<IEnumerable<TReadDTO>>(entities);
+        }
 
-        _logger.LogInformation($"After Update: {JsonSerializer.Serialize(entity)}");
+        public virtual async Task<TReadDTO?> GetByIdAsync(int id)
+        {
+            var entity = await _dbSet.FindAsync(id);
+            return entity == null ? null : _mapper.Map<TReadDTO>(entity);
+        }
 
-        await _context.SaveChangesAsync();
-        return _mapper.Map<TDTO>(entity);
-    }
+        public virtual async Task<TReadDTO> CreateAsync(TCreateDTO dto)
+        {
+            _logger.LogInformation($"Creating: {JsonSerializer.Serialize(dto)}");
+            var entity = _mapper.Map<TModel>(dto); // Map hết DTO → Entity
+            _dbSet.Add(entity);
+            await _context.SaveChangesAsync();
+            return _mapper.Map<TReadDTO>(entity);
+        }
 
-    public virtual async Task<bool> DeleteAsync(int id)
-    {
-        var entity = await _dbSet.FindAsync(id);
-        if (entity == null)
-            return false;
+        public virtual async Task<TReadDTO?> UpdateAsync(int id, TUpdateDTO dto)
+        {
+            var entity = await _dbSet.FindAsync(id);
+            if (entity == null)
+                return null;
 
-        _dbSet.Remove(entity);
-        await _context.SaveChangesAsync();
-        return true;
+            _logger.LogInformation($"Updating before: {JsonSerializer.Serialize(entity)}");
+
+            if (!string.IsNullOrEmpty(entity.MainID) && string.IsNullOrEmpty(dto.MainID))
+                dto.MainID = entity.MainID;
+
+            // Áp DTO lên entity
+            _mapper.Map(dto, entity);
+
+            await _context.SaveChangesAsync();
+            return _mapper.Map<TReadDTO>(entity);
+        }
+
+        public virtual async Task<bool> DeleteAsync(int id)
+        {
+            var entity = await _dbSet.FindAsync(id);
+            if (entity == null)
+                return false;
+            _dbSet.Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

@@ -25,16 +25,17 @@ builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true;
 });
 
-// builder.Services.Configure<KestrelServerOptions>(options =>
-// {
-//     options.ListenAnyIP(5188); // HTTP
-//     options.ListenAnyIP(7188, listenOptions => listenOptions.UseHttps()); // HTTPS
-// });
-
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     // Only listen to HTTP, let Railway handle HTTPS
-    serverOptions.ListenAnyIP(8080); // Use port 8080 for Railway
+    serverOptions.ListenAnyIP(5000); // http://localhost:5000
+    serverOptions.ListenAnyIP(
+        5001,
+        listenOpts =>
+        {
+            listenOpts.UseHttps(); // https://localhost:5001
+        }
+    );
 });
 
 // Register PostgreSQL Database
@@ -71,8 +72,10 @@ builder
 // Add controllers and Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new() { Title = "Techgel ERP API", Version = "v1" });
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
@@ -98,11 +101,7 @@ builder
     });
 
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
-builder.Services.AddScoped<IDepartmentService, DepartmentService>();
-builder.Services.AddScoped<IDivisionService, DivisionService>();
-builder.Services.AddScoped<ITeamService, TeamService>();
-builder.Services.AddScoped<ISectionService, SectionService>();
-builder.Services.AddScoped<IUnitService, UnitService>();
+builder.Services.AddScoped<IOrganizationEntityService, OrganizationEntityService>();
 
 var app = builder.Build();
 
@@ -114,7 +113,11 @@ var app = builder.Build();
 // }
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Techgel ERP API v1");
+    c.RoutePrefix = string.Empty; // hiển thị UI tại https://localhost:5001/
+});
 app.MapOpenApi();
 
 app.UseCors("AllowFrontend");

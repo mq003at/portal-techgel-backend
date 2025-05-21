@@ -3,4 +3,5 @@ namespace portal.Services;
 using portal.DTOs;
 using portal.Models;
 
-public interface IEmployeeService : IBaseService<Employee, EmployeeDTO, UpdateEmployeeDTO> { }
+public interface IEmployeeService
+    : IBaseService<Employee, EmployeeDTO, CreateEmployeeDTO, UpdateEmployeeDTO> { }

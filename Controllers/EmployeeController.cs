@@ -4,8 +4,10 @@ using portal.DTOs;
 using portal.Models;
 using portal.Services;
 
-public class EmployeeController : BaseController<Employee, EmployeeDTO, UpdateEmployeeDTO>
+public class EmployeesController
+    : BaseController<Employee, EmployeeDTO, CreateEmployeeDTO, UpdateEmployeeDTO>
 {
-    public EmployeeController(IEmployeeService service)
-        : base(service) { }
+    public EmployeesController(IEmployeeService service)
+        : base(service) // service ở đây là IEmployeeService nhưng cũng hiện thực IBaseService<...>
+    { }
 }

@@ -3,7 +3,6 @@ namespace portal.Db;
 using System.Reflection;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using portal.Config.Models;
 using portal.Models;
 
 public class ApplicationDbContext : IdentityDbContext
@@ -38,17 +37,10 @@ public class ApplicationDbContext : IdentityDbContext
         return base.SaveChanges();
     }
 
+    public DbSet<OrganizationEntity> OrganizationEntities { get; set; }
     public DbSet<Employee> Employees { get; set; }
-    public DbSet<Division> Divisions { get; set; }
-
-    public DbSet<Department> Departments { get; set; }
-
-    public DbSet<Section> Sections { get; set; }
-    public DbSet<Team> Teams { get; set; }
-    public DbSet<Unit> Units { get; set; }
-    public DbSet<EmployeeDivision> EmployeeDivisions { get; set; }
-    public DbSet<EmployeeDepartment> EmployeeDepartment { get; set; }
-    public DbSet<EmployeeTeam> EmployeeTeam { get; set; }
-    public DbSet<EmployeeUnit> EmployeeUnit { get; set; }
-    public DbSet<EmployeeSection> EmployeeSection { get; set; }
+    public DbSet<EmployeeRoleDetail> EmployeeRoleDetails { get; set; }
+    public DbSet<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; }
+    // public DbSet<Signature> Signatures { get; set; }
+    // public DbSet<Workflow> Workflows { get; set; }
 }
