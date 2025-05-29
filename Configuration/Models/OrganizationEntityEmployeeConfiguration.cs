@@ -8,16 +8,21 @@ public class OrganizationEntityEmployeeConfiguration
 {
     public void Configure(EntityTypeBuilder<OrganizationEntityEmployee> builder)
     {
-        builder.HasKey(oe => new { oe.OrganizationEntityId, oe.EmployeeId });
+        // Composite PK on OrganizationEntityId + EmployeeId
+        builder.HasKey(oee => new { oee.OrganizationEntityId, oee.EmployeeId });
 
+        // FK → OrganizationEntity
         builder
-            .HasOne(oe => oe.OrganizationEntity)
-            .WithMany(o => o.OrganizationEntityEmployees)
-            .HasForeignKey(oe => oe.OrganizationEntityId);
+            .HasOne(oee => oee.OrganizationEntity)
+            .WithMany(oe => oe.OrganizationEntityEmployees)
+            .HasForeignKey(oee => oee.OrganizationEntityId)
+            .OnDelete(DeleteBehavior.Cascade);
 
+        // FK → Employee
         builder
-            .HasOne(oe => oe.Employee)
-            .WithMany(e => e.OrganizationEntityEmployees)
-            .HasForeignKey(oe => oe.EmployeeId);
+            .HasOne(oee => oee.Employee)
+            .WithMany()
+            .HasForeignKey(oee => oee.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

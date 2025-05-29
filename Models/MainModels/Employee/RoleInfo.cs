@@ -2,27 +2,20 @@ using portal.Models;
 
 public class RoleInfo
 {
+    // Supervisor relationship (one-to-many)
     public int? SupervisorId { get; set; }
     public Employee? Supervisor { get; set; }
-    public ICollection<EmployeeRoleDetail> RoleDetailsInfo { get; set; } =
-        new List<EmployeeRoleDetail>();
-}
 
-public class EmployeeRoleDetail
-{
-    public int OrganizationEntityId { get; set; }
-    public OrganizationEntity OrganizationEntity { get; set; } = null!;
+    // All direct reports
+    public ICollection<Employee> Subordinates { get; set; } = new HashSet<Employee>();
 
-    public int? ManagesOrganizationEntityId { get; set; }
-    public OrganizationEntity? ManagesOrganizationEntity { get; set; }
+    // Entities this role manages (many-to-many)
+    public ICollection<OrganizationEntity> ManagedOrganizationEntities { get; set; } =
+        new HashSet<OrganizationEntity>();
 
-    public int? SubordinateId { get; set; }
-    public Employee? Subordinate { get; set; }
+    public ICollection<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } =
+        new HashSet<OrganizationEntityEmployee>();
 
+    // Optional grouping of roles into a higher-level Group
     public int? GroupId { get; set; }
-
-    // public Group? Group { get; set; }
-
-    public int EmployeeId { get; set; }
-    public Employee Employee { get; set; } = null!;
 }

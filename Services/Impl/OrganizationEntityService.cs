@@ -78,6 +78,64 @@ public class OrganizationEntityService
         return _mapper.Map<OrganizationEntitySummaryDTO>(entity);
     }
 
+    public override async Task<OrganizationEntitySummaryDTO?> GetByIdAsync(int id)
+    {
+        // 1) Lấy entity gốc (không include navigation)
+        var entity = await _context
+            .OrganizationEntities.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (entity == null)
+            throw new KeyNotFoundException($"OrganizationEntity with Id={id} not found.");
+
+        // 2) Map các property cơ bản
+        var dto = _mapper.Map<OrganizationEntitySummaryDTO>(entity);
+
+        // 3) Lấy parentId & parentName nếu có
+        if (entity.ParentId.HasValue)
+        {
+            var parent = await _context
+                .OrganizationEntities.AsNoTracking()
+                .Where(x => x.Id == entity.ParentId.Value)
+                .Select(x => new { x.Id, x.Name })
+                .FirstOrDefaultAsync();
+
+            dto.ParentId = parent?.Id.ToString();
+            dto.ParentName = parent?.Name;
+        }
+
+        // 4) Lấy danh sách immediate children (chỉ Id & Name)
+        var children = await _context
+            .OrganizationEntities.AsNoTracking()
+            .Where(x => x.ParentId == id)
+            .Select(x => new { x.Id, x.Name })
+            .ToListAsync();
+
+        dto.ChildrenIds = children.Select(c => c.Id.ToString()).ToList();
+        dto.ChildrenNames = children.Select(c => c.Name).ToList();
+
+        // 5) Lấy danh sách employees gắn với entity này
+        //    Giả sử bạn có table liên kết OrganizationEntityEmployees
+        var employees = await _context
+            .OrganizationEntityEmployees.AsNoTracking()
+            .Where(oe => oe.OrganizationEntityId == id)
+            .Select(oe => new
+            {
+                oe.Employee.Id,
+                oe.Employee.FirstName,
+                oe.Employee.MiddleName,
+                oe.Employee.LastName
+            })
+            .ToListAsync();
+
+        dto.EmployeeIds = employees.Select(e => e.Id.ToString()).ToList();
+        dto.EmployeeNames = employees
+            .Select(e => $"{e.FirstName} {e.MiddleName} {e.LastName}")
+            .ToList();
+
+        return dto;
+    }
+
     public override async Task<OrganizationEntitySummaryDTO?> UpdateAsync(
         int id,
         UpdateOrganizationEntityDTO dto

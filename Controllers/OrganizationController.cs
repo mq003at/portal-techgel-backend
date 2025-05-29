@@ -13,8 +13,13 @@ public class OrganizationEntitiesController
         UpdateOrganizationEntityDTO
     >
 {
+    private readonly IOrganizationEntityService _entityService;
+
     public OrganizationEntitiesController(IOrganizationEntityService service)
-        : base(service) { }
+        : base(service)
+    {
+        _entityService = service;
+    }
 
     [HttpPost]
     public override async Task<ActionResult<OrganizationEntitySummaryDTO>> Create(
@@ -23,12 +28,23 @@ public class OrganizationEntitiesController
     {
         try
         {
-            var created = await _service.CreateAsync(dto);
+            var created = await _entityService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
-        catch (InvalidOperationException ex)
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
         {
             return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                500,
+                new { error = "An unexpected error occurred", details = ex.Message }
+            );
         }
     }
 
@@ -40,14 +56,25 @@ public class OrganizationEntitiesController
     {
         try
         {
-            var updated = await _service.UpdateAsync(id, dto);
+            var updated = await _entityService.UpdateAsync(id, dto);
             if (updated == null)
-                return NotFound();
+                return NotFound(new { error = $"OrganizationEntity with ID {id} not found" });
             return Ok(updated);
         }
-        catch (InvalidOperationException ex)
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
         {
             return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(
+                500,
+                new { error = "An unexpected error occurred", details = ex.Message }
+            );
         }
     }
 }

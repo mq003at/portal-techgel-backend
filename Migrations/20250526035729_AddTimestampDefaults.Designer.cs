@@ -13,8 +13,8 @@ using portal.Db;
 namespace portal_techgel_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250521044848_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250526035729_AddTimestampDefaults")]
+    partial class AddTimestampDefaults
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -246,59 +246,42 @@ namespace portal_techgel_api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Avatar")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
-                    b.Property<string>("MainID")
+                    b.Property<string>("MainId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("MiddleName")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Employees");
-                });
-
-            modelBuilder.Entity("portal.Models.EmployeeRoleDetail", b =>
-                {
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("OrganizationEntityId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("GroupId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ManagesOrganizationEntityId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SubordinateId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("EmployeeId", "OrganizationEntityId");
-
-                    b.HasIndex("ManagesOrganizationEntityId");
-
-                    b.HasIndex("OrganizationEntityId");
-
-                    b.HasIndex("SubordinateId");
-
-                    b.ToTable("EmployeeRoleDetails");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("portal.Models.OrganizationEntity", b =>
@@ -313,6 +296,7 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("integer[]");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -322,7 +306,8 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
-                    b.Property<string>("MainID")
+                    b.Property<string>("MainId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int?>("ManagerId")
@@ -342,6 +327,7 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -351,6 +337,42 @@ namespace portal_techgel_api.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("OrganizationEntities");
+                });
+
+            modelBuilder.Entity("portal.Models.Signature", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("MainId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("Signatures");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -407,7 +429,7 @@ namespace portal_techgel_api.Migrations
             modelBuilder.Entity("OrganizationEntityEmployee", b =>
                 {
                     b.HasOne("portal.Models.Employee", "Employee")
-                        .WithMany("OrganizationEntityEmployees")
+                        .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -629,6 +651,36 @@ namespace portal_techgel_api.Migrations
                                 .HasForeignKey("EmployeeId");
                         });
 
+                    b.OwnsOne("RoleInfo", "RoleInfo", b1 =>
+                        {
+                            b1.Property<int>("EmployeeId1")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("GroupId")
+                                .HasColumnType("integer")
+                                .HasColumnName("GroupId");
+
+                            b1.Property<int?>("SupervisorId")
+                                .HasColumnType("integer")
+                                .HasColumnName("SupervisorId");
+
+                            b1.HasKey("EmployeeId1");
+
+                            b1.HasIndex("SupervisorId");
+
+                            b1.ToTable("Employees");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmployeeId1");
+
+                            b1.HasOne("portal.Models.Employee", "Supervisor")
+                                .WithMany()
+                                .HasForeignKey("SupervisorId")
+                                .OnDelete(DeleteBehavior.Restrict);
+
+                            b1.Navigation("Supervisor");
+                        });
+
                     b.Navigation("CareerPathInfo")
                         .IsRequired();
 
@@ -644,42 +696,14 @@ namespace portal_techgel_api.Migrations
                     b.Navigation("PersonalInfo")
                         .IsRequired();
 
+                    b.Navigation("RoleInfo")
+                        .IsRequired();
+
                     b.Navigation("ScheduleInfo")
                         .IsRequired();
 
                     b.Navigation("TaxInfo")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("portal.Models.EmployeeRoleDetail", b =>
-                {
-                    b.HasOne("portal.Models.Employee", "Employee")
-                        .WithMany("RoleDetails")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("portal.Models.OrganizationEntity", "ManagesOrganizationEntity")
-                        .WithMany()
-                        .HasForeignKey("ManagesOrganizationEntityId");
-
-                    b.HasOne("portal.Models.OrganizationEntity", "OrganizationEntity")
-                        .WithMany()
-                        .HasForeignKey("OrganizationEntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("portal.Models.Employee", "Subordinate")
-                        .WithMany()
-                        .HasForeignKey("SubordinateId");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("ManagesOrganizationEntity");
-
-                    b.Navigation("OrganizationEntity");
-
-                    b.Navigation("Subordinate");
                 });
 
             modelBuilder.Entity("portal.Models.OrganizationEntity", b =>
@@ -697,11 +721,20 @@ namespace portal_techgel_api.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("portal.Models.Signature", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithOne("Signature")
+                        .HasForeignKey("portal.Models.Signature", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("portal.Models.Employee", b =>
                 {
-                    b.Navigation("OrganizationEntityEmployees");
-
-                    b.Navigation("RoleDetails");
+                    b.Navigation("Signature");
                 });
 
             modelBuilder.Entity("portal.Models.OrganizationEntity", b =>

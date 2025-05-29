@@ -16,6 +16,8 @@ public class EmployeeDTO : BaseDTO<Employee>
     public string LastName { get; set; } = null!;
     public string? Avatar { get; set; }
 
+    public string? Password { get; set; }
+
     // Các sub-DTO
     public PersonalInfoDTO PersonalInfo { get; set; } = null!;
     public CompanyInfoDTO CompanyInfo { get; set; } = null!;
@@ -24,6 +26,7 @@ public class EmployeeDTO : BaseDTO<Employee>
     public InsuranceInfoDTO InsuranceInfo { get; set; } = null!;
     public EmergencyContactInfoDTO EmergencyContactInfo { get; set; } = null!;
     public ScheduleInfoDTO ScheduleInfo { get; set; } = null!;
+    public Signature? Signature { get; set; }
 
     // Role Info
     public RoleInfoDTO RoleInfo { get; set; } = null!;
@@ -34,6 +37,7 @@ public class CreateEmployeeDTO : BaseDTO<Employee>
     [Required]
     public string FirstName { get; set; } = null!;
     public string? MiddleName { get; set; }
+    public string? Password { get; set; }
 
     [Required]
     public string LastName { get; set; } = null!;
@@ -57,6 +61,7 @@ public class CreateEmployeeDTO : BaseDTO<Employee>
     [Required]
     public EmergencyContactInfoDTO EmergencyContactInfo { get; set; } = null!;
     public ScheduleInfoDTO ScheduleInfo { get; set; } = null!;
+    public Signature? Signature { get; set; }
 
     [Required]
     public RoleInfoDTO RoleInfo { get; set; } = null!;
@@ -68,7 +73,7 @@ public class UpdateEmployeeDTO : BaseDTO<Employee>
     public string? MiddleName { get; set; }
     public string? LastName { get; set; }
     public string? Avatar { get; set; }
-
+    public string? Password { get; set; }
     public PersonalInfoDTO? PersonalInfo { get; set; }
     public CompanyInfoDTO? CompanyInfo { get; set; }
     public CareerPathInfoDTO? CareerPathInfo { get; set; }
@@ -78,4 +83,11 @@ public class UpdateEmployeeDTO : BaseDTO<Employee>
     public ScheduleInfoDTO? ScheduleInfo { get; set; }
 
     public RoleInfoDTO? RoleInfo { get; set; }
+    public Signature? Signature { get; set; }
+}
+
+public class LoginRequestDTO
+{
+    public string MainId { get; set; } = null!;
+    public string Password { get; set; } = null!;
 }

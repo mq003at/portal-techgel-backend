@@ -10,7 +10,7 @@ public class OrganizationEntityProfile : Profile
     {
         CreateMap<CreateOrganizationEntityDTO, OrganizationEntity>();
         CreateMap<UpdateOrganizationEntityDTO, OrganizationEntity>()
-            // Bỏ qua Id và MainID nếu không muốn cập nhật
+            // Bỏ qua Id và MainId nếu không muốn cập nhật
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForAllMembers(opt =>
             {

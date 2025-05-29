@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace portal_techgel_api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -58,10 +58,11 @@ namespace portal_techgel_api.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    MiddleName = table.Column<string>(type: "text", nullable: true),
-                    LastName = table.Column<string>(type: "text", nullable: false),
-                    Avatar = table.Column<string>(type: "text", nullable: true),
+                    FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    MiddleName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Avatar = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    Password = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     PersonalInfo_Gender = table.Column<int>(type: "integer", nullable: false),
                     PersonalInfo_Address = table.Column<string>(type: "text", nullable: false),
                     PersonalInfo_DateOfBirth = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -99,13 +100,21 @@ namespace portal_techgel_api.Migrations
                     ScheduleInfo_WorkSchedule = table.Column<string>(type: "text", nullable: true),
                     ScheduleInfo_IsRemoteStatus = table.Column<bool>(type: "boolean", nullable: true),
                     ScheduleInfo_ShiftType = table.Column<string>(type: "text", nullable: true),
-                    MainID = table.Column<string>(type: "text", nullable: true),
+                    SupervisorId = table.Column<int>(type: "integer", nullable: true),
+                    GroupId = table.Column<int>(type: "integer", nullable: true),
+                    MainId = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Employees", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Employees_Employees_SupervisorId",
+                        column: x => x.SupervisorId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -228,7 +237,7 @@ namespace portal_techgel_api.Migrations
                     ParentId = table.Column<int>(type: "integer", nullable: true),
                     ChildrenIds = table.Column<int[]>(type: "integer[]", nullable: true),
                     ManagerId = table.Column<int>(type: "integer", nullable: true),
-                    MainID = table.Column<string>(type: "text", nullable: true),
+                    MainId = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -248,38 +257,24 @@ namespace portal_techgel_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EmployeeRoleDetails",
+                name: "Signatures",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     EmployeeId = table.Column<int>(type: "integer", nullable: false),
-                    OrganizationEntityId = table.Column<int>(type: "integer", nullable: false),
-                    ManagesOrganizationEntityId = table.Column<int>(type: "integer", nullable: true),
-                    SubordinateId = table.Column<int>(type: "integer", nullable: true),
-                    GroupId = table.Column<int>(type: "integer", nullable: true)
+                    FileName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    MainId = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EmployeeRoleDetails", x => new { x.EmployeeId, x.OrganizationEntityId });
+                    table.PrimaryKey("PK_Signatures", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EmployeeRoleDetails_Employees_EmployeeId",
+                        name: "FK_Signatures_Employees_EmployeeId",
                         column: x => x.EmployeeId,
                         principalTable: "Employees",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_EmployeeRoleDetails_Employees_SubordinateId",
-                        column: x => x.SubordinateId,
-                        principalTable: "Employees",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_EmployeeRoleDetails_OrganizationEntities_ManagesOrganizatio~",
-                        column: x => x.ManagesOrganizationEntityId,
-                        principalTable: "OrganizationEntities",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_EmployeeRoleDetails_OrganizationEntities_OrganizationEntity~",
-                        column: x => x.OrganizationEntityId,
-                        principalTable: "OrganizationEntities",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -346,19 +341,9 @@ namespace portal_techgel_api.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_EmployeeRoleDetails_ManagesOrganizationEntityId",
-                table: "EmployeeRoleDetails",
-                column: "ManagesOrganizationEntityId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeRoleDetails_OrganizationEntityId",
-                table: "EmployeeRoleDetails",
-                column: "OrganizationEntityId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeRoleDetails_SubordinateId",
-                table: "EmployeeRoleDetails",
-                column: "SubordinateId");
+                name: "IX_Employees_SupervisorId",
+                table: "Employees",
+                column: "SupervisorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrganizationEntities_ManagerId",
@@ -374,6 +359,12 @@ namespace portal_techgel_api.Migrations
                 name: "IX_OrganizationEntityEmployees_EmployeeId",
                 table: "OrganizationEntityEmployees",
                 column: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Signatures_EmployeeId",
+                table: "Signatures",
+                column: "EmployeeId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -395,10 +386,10 @@ namespace portal_techgel_api.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "EmployeeRoleDetails");
+                name: "OrganizationEntityEmployees");
 
             migrationBuilder.DropTable(
-                name: "OrganizationEntityEmployees");
+                name: "Signatures");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

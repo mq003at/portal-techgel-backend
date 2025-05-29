@@ -27,7 +27,7 @@ public class OrganizationEntitySummaryDTO : BaseDTO<OrganizationEntity>
     // Quan hệ cây
     public string? ParentId { get; set; }
     public string? ParentName { get; set; }
-    public OrganizationEntitySummaryDTO? parent { get; set; }
+    public OrganizationEntitySummaryDTO? Parent { get; set; }
 
     // Con cháu
     public List<string>? ChildrenIds { get; set; }

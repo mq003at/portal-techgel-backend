@@ -23,11 +23,12 @@ public class ApplicationDbContext : IdentityDbContext
         base.OnModelCreating(modelBuilder);
 
         // Apply all configurations dynamically
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(BaseModelConfiguration<>).Assembly);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+        base.OnConfiguring(optionsBuilder);
         optionsBuilder.AddInterceptors(_saveChangesInterceptor); // Register SaveChangesInterceptor
     }
 
@@ -39,8 +40,10 @@ public class ApplicationDbContext : IdentityDbContext
 
     public DbSet<OrganizationEntity> OrganizationEntities { get; set; }
     public DbSet<Employee> Employees { get; set; }
-    public DbSet<EmployeeRoleDetail> EmployeeRoleDetails { get; set; }
     public DbSet<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; }
-    // public DbSet<Signature> Signatures { get; set; }
-    // public DbSet<Workflow> Workflows { get; set; }
+    public DbSet<Signature> Signatures { get; set; }
+    public DbSet<Document> Documents { get; set; }
+
+    public DbSet<GeneralWorkflow> GeneralWorkflows { get; set; }
+    public DbSet<ApprovalWorkflowNode> ApprovalWorkflowNodes { get; set; }
 }

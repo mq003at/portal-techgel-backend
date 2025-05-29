@@ -2,16 +2,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using portal.Models;
 
-public class BaseModelConfiguration<T> : IEntityTypeConfiguration<T>
+public abstract class BaseModelConfiguration<T> : IEntityTypeConfiguration<T>
     where T : BaseModel
 {
-    public void Configure(EntityTypeBuilder<T> builder)
+    public virtual void Configure(EntityTypeBuilder<T> builder)
     {
         builder.HasKey(e => e.Id);
 
-        // Default values for timestamps
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        builder.Property(e => e.MainId).HasDefaultValue("").IsRequired();
 
-        builder.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        builder
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAdd();
+
+        builder
+            .Property(e => e.UpdatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAddOrUpdate();
     }
 }

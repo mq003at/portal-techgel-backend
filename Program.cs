@@ -6,10 +6,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using portal.Db;
 using portal.Mappings;
+using portal.Options;
 using portal.Services;
+using Renci.SshNet;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,8 +103,30 @@ builder
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+// Other Services
+// SFTP and Local File Storage
+// Bind all three option sets
+builder
+    .Services.Configure<SftpOptions>(builder.Configuration.GetSection("Sftp"))
+    .Configure<SignatureOptions>(builder.Configuration.GetSection("Signature"))
+    .Configure<DocumentOptions>(builder.Configuration.GetSection("Document"));
+
+// Register a single SftpClient factory
+builder.Services.AddSingleton(sp =>
+{
+    var s = sp.GetRequiredService<IOptions<SftpOptions>>().Value;
+    return new SftpClient(s.Host, s.Port, s.Username, s.Password);
+});
+
+// Always use SFTP as your IFileStorageService
+builder.Services.AddScoped<IFileStorageService, SftpFileStorageService>();
+builder.Services.AddScoped<IFileNameValidationService, FileNameValidationService>();
+
+builder.Services.AddScoped<ISignatureService, SignatureService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IOrganizationEntityService, OrganizationEntityService>();
+builder.Services.AddScoped<ISignatureService, SignatureService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 var app = builder.Build();
 

@@ -7,7 +7,11 @@ public abstract class BaseModel
 {
     [Key]
     public int Id { get; set; } // Primary Key, auto-generated
-    public string? MainID { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public string MainId { get; set; } = "";
+
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public DateTime CreatedAt { get; set; }
+
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public DateTime UpdatedAt { get; set; }
 }

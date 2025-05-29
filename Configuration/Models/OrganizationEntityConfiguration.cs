@@ -4,9 +4,11 @@ using portal.Models;
 
 namespace portal.Configuration.Models;
 
-public class OrganizationEntityConfiguration : IEntityTypeConfiguration<OrganizationEntity>
+public class OrganizationEntityConfiguration
+    : BaseModelConfiguration<OrganizationEntity>,
+        IEntityTypeConfiguration<OrganizationEntity>
 {
-    public void Configure(EntityTypeBuilder<OrganizationEntity> builder)
+    public override void Configure(EntityTypeBuilder<OrganizationEntity> builder)
     {
         builder.HasKey(o => o.Id);
 

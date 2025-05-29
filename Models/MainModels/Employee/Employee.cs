@@ -7,6 +7,7 @@ public class Employee : BaseModel
     public string? MiddleName { get; set; }
     public string LastName { get; set; } = null!;
     public string? Avatar { get; set; }
+    public string? Password { get; set; }
 
     // Owned types (sẽ map vào cùng bảng Employees)
     public PersonalInfo PersonalInfo { get; set; } = new();
@@ -16,12 +17,7 @@ public class Employee : BaseModel
     public InsuranceInfo InsuranceInfo { get; set; } = new();
     public EmergencyContactInfo EmergencyContactInfo { get; set; } = new();
     public ScheduleInfo ScheduleInfo { get; set; } = new();
+    public Signature? Signature { get; set; }
 
-    // Quan hệ many-to-many với OrganizationEntity
-    public ICollection<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } =
-        new List<OrganizationEntityEmployee>();
-
-    // Quan hệ 1-n với RoleDetail
-    public ICollection<EmployeeRoleDetail> RoleDetails { get; set; } =
-        new List<EmployeeRoleDetail>();
+    public RoleInfo RoleInfo { get; set; } = new();
 }
