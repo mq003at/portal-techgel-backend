@@ -3,6 +3,12 @@ using portal.Models;
 
 namespace portal.DTOs;
 
+public class SignDocumentUploadDTO
+{
+    [Required]
+    public IFormFile File { get; set; } = default!;
+}
+
 public class DocumentDTO : BaseDTO<Document>
 {
     public IFormFile? File { get; set; } // For file upload scenarios

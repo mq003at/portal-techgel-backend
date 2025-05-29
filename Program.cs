@@ -28,18 +28,21 @@ builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true;
 });
 
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    // Only listen to HTTP, let Railway handle HTTPS
-    serverOptions.ListenAnyIP(5000); // http://localhost:5000
-    serverOptions.ListenAnyIP(
-        5001,
-        listenOpts =>
-        {
-            listenOpts.UseHttps(); // https://localhost:5001
-        }
-    );
-});
+builder
+    .WebHost.ConfigureKestrel(serverOptions =>
+    {
+        // Only listen to HTTP, let Railway handle HTTPS
+        serverOptions.ListenAnyIP(5000); // http://localhost:5000
+        serverOptions.ListenAnyIP(
+            5001,
+            listenOpts =>
+            {
+                listenOpts.UseHttps(); // https://localhost:5001
+            }
+        );
+    })
+    .UseUrls("http://0.0.0.0:5000");
+;
 
 // Register PostgreSQL Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -81,6 +84,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddCors(options =>
 {
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
     options.AddPolicy(
         "AllowFrontend",
         policy => policy.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader()
@@ -145,6 +152,7 @@ app.UseSwaggerUI(c =>
 });
 app.MapOpenApi();
 
+app.UseCors();
 app.UseCors("AllowFrontend");
 app.UseRouting();
 app.UseAuthentication();

@@ -43,14 +43,14 @@ public class ApprovalWorkflowNodeController
     public async Task<IActionResult> SignDocument(
         int nodeId,
         int documentId,
-        [FromForm] IFormFile file
+        [FromForm] SignDocumentUploadDTO dto
     )
     {
-        if (file == null)
+        if (dto.File == null)
             return BadRequest("File is required.");
 
-        await using var stream = file.OpenReadStream();
-        var fileName = file.FileName;
+        await using var stream = dto.File.OpenReadStream();
+        var fileName = dto.File.FileName;
 
         var result = await _service.SignDocumentByUpdatingTheDocumentAsync(
             nodeId,
