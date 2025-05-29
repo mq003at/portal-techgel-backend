@@ -25,7 +25,7 @@ public class FileNameValidationService : IFileNameValidationService
     public async Task EnsureUniqueAsync(string fileName)
     {
         var inDb = await _ctx.Signatures.AnyAsync(s => s.FileName == fileName);
-        var onDisk = await _storage.ExistsAsync(fileName);
+        var onDisk = await _storage.Exists(fileName);
         if (inDb || onDisk)
             throw new InvalidOperationException($"Filename '{fileName}' is already taken.");
     }

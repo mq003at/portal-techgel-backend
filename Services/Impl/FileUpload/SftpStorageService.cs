@@ -152,7 +152,7 @@ public class SftpFileStorageService : IFileStorageService
     }
 
     // Download a file from remote path
-    public async Task<bool> ExistsAsync(string remotePath)
+    public async Task<bool> Exists(string remotePath)
     {
         await _sync.WaitAsync();
         try

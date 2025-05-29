@@ -42,4 +42,21 @@ public class LocalFileStorageService : IFileStorageService
         var full = Path.Combine(_basePath, safe);
         return File.Exists(full);
     }
+
+    public Task<List<string>> ListFilesAsync(string prefix = "")
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> Exists(string fileName)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<string>> UploadMultipleAsync(
+        List<(Stream fileStream, string remotePath)> files
+    )
+    {
+        throw new NotImplementedException();
+    }
 }

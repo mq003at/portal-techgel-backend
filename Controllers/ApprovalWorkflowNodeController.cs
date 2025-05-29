@@ -1,62 +1,87 @@
 using Microsoft.AspNetCore.Mvc;
 using portal.DTOs;
+using portal.Models;
+using portal.Services;
 
 namespace portal.Controllers;
 
-[ApiController]
-[Route("api/workflows/{workflowId}/nodes/{nodeId}/files")]
-public class ApprovalWorkflowNodesFilesController : ControllerBase
+public class ApprovalWorkflowNodeController
+    : BaseController<
+        ApprovalWorkflowNode,
+        ApprovalWorkflowNodeDTO,
+        CreateApprovalWorkflowNodeDTO,
+        UpdateApprovalWorkflowNodeDTO
+    >
 {
-    private readonly IApprovalWorkflowNodesFileService _fileService;
-    private readonly ILogger<ApprovalWorkflowNodesFilesController> _logger;
+    private new readonly IApprovalWorkflowNodeService _service;
+    private readonly ILogger<ApprovalWorkflowNodeController> _logger;
 
-    public ApprovalWorkflowNodesFilesController(
-        IApprovalWorkflowNodesFileService fileService,
-        ILogger<ApprovalWorkflowNodesFilesController> logger
+    public ApprovalWorkflowNodeController(
+        IApprovalWorkflowNodeService service,
+        ILogger<ApprovalWorkflowNodeController> logger
     )
+        : base(service)
     {
-        _fileService = fileService;
+        _service = service;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Remove one or more files from an approval node.
-    /// </summary>
-    [HttpDelete]
-    public async Task<IActionResult> DeleteFiles(
-        [FromRoute] int workflowId,
-        [FromRoute] int nodeId,
-        [FromBody] DeleteFilesFromApprovalWorkflowNodesDTO dto
+    // PUT: api/approvalworkflownodes/{id}/documents
+    [HttpPut("{id}/documents")]
+    public async Task<IActionResult> UpdateRelatedDocuments(
+        int id,
+        [FromBody] List<int> documentIds
     )
     {
-        _logger.LogInformation(
-            "Deleting files {FileIds} from ApprovalWorkflowNodes {NodeId}",
-            dto.FileIds,
-            nodeId
-        );
-        await _fileService.DeleteFilesAsync(nodeId, dto.FileIds);
-        return NoContent();
+        var result = await _service.UpdateRelatedDocument(documentIds, id);
+        return Ok(result);
     }
 
-    /// <summary>
-    /// Upload new files and/or link existing documents to an approval node.
-    /// </summary>
-    [HttpPut]
+    // POST: api/approvalworkflownodes/{nodeId}/sign/{documentId}
+    [HttpPost("{nodeId}/sign/{documentId}")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UpdateFiles(
-        [FromRoute] int workflowId,
-        [FromRoute] int nodeId,
-        [FromForm] UpdateFilesInApprovalWorkflowNodesDTO dto
+    public async Task<IActionResult> SignDocument(
+        int nodeId,
+        int documentId,
+        [FromForm] IFormFile file
     )
     {
-        _logger.LogInformation("Updating files for ApprovalWorkflowNodes {NodeId}", nodeId);
+        if (file == null)
+            return BadRequest("File is required.");
 
-        var result = await _fileService.UpdateFilesAsync(
+        await using var stream = file.OpenReadStream();
+        var fileName = file.FileName;
+
+        var result = await _service.SignDocumentByUpdatingTheDocumentAsync(
             nodeId,
-            dto.NewFiles,
-            dto.ExistingDocumentIds
+            documentId,
+            stream,
+            fileName
         );
 
         return Ok(result);
+    }
+
+    // GET: api/approvalworkflownodes/{id}/status
+    [HttpGet("{id}/status")]
+    public async Task<IActionResult> GetApprovalStatus(int id)
+    {
+        var status = await _service.CheckApprovalStatusAsync(id);
+        return Ok(status);
+    }
+
+    // POST: api/approvalworkflownodes/{id}/supporting-documents
+    [HttpPost("{id}/supporting-documents")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadSupportingDocuments(
+        int id,
+        [FromForm] List<IFormFile> files
+    )
+    {
+        if (files == null || !files.Any())
+            return BadRequest("No files uploaded.");
+
+        await _service.UploadSupportingDocumentsAsync(id, files);
+        return NoContent();
     }
 }

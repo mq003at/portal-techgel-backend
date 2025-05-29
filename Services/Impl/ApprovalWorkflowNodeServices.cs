@@ -8,11 +8,17 @@ using portal.Models;
 
 namespace portal.Services;
 
-public class ApprovalWorkflowNodeService : IApprovalWorkflowNodeService
+public class ApprovalWorkflowNodeService
+    : BaseService<
+        ApprovalWorkflowNode,
+        ApprovalWorkflowNodeDTO,
+        CreateApprovalWorkflowNodeDTO,
+        UpdateApprovalWorkflowNodeDTO
+    >,
+        IApprovalWorkflowNodeService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IMapper _mapper;
-    private readonly ILogger<ApprovalWorkflowNodeService> _logger;
+    private readonly DbSet<ApprovalWorkflowNode> _approvalWorkflowNodes;
+    private readonly DbSet<Document> _documents;
     private readonly IDocumentService _documentService;
     private readonly DocumentOptions _docOpts;
     private readonly IFileStorageService _storage;
@@ -20,63 +26,115 @@ public class ApprovalWorkflowNodeService : IApprovalWorkflowNodeService
     public ApprovalWorkflowNodeService(
         ApplicationDbContext context,
         IMapper mapper,
-        IDocumentService documentService,
         ILogger<ApprovalWorkflowNodeService> logger,
-        IOptions<DocumentOptions> docOpts,
-        IFileStorageService _storage
+        IDocumentService documentService,
+        IFileStorageService storage,
+        IOptions<DocumentOptions> docOpts
     )
+        : base(context, mapper, logger)
     {
-        _context = context;
-        _mapper = mapper;
+        _approvalWorkflowNodes = context.Set<ApprovalWorkflowNode>();
+        _documents = context.Set<Document>();
         _documentService = documentService;
-        _logger = logger;
         _docOpts = docOpts.Value;
-        _storage = _storage;
+        _storage = storage;
     }
 
-    public async Task<ApprovalWorkflowNodeFileResultDTO> AttachDocumentsToNodeAsync(
-        UpdateFilesInApprovalWorkflowNodesDTO dto
+    public async Task<ApprovalWorkflowNodeDTO> UpdateRelatedDocument(
+        List<int> documentIds,
+        int nodeId
     )
-    
+    {
+        var node =
+            await _context.ApprovalWorkflowNodes.FindAsync(nodeId)
+            ?? throw new KeyNotFoundException($"Node {nodeId} not found.");
 
+        node.DocumentIds = documentIds;
+        _context.ApprovalWorkflowNodes.Update(node);
+        await _context.SaveChangesAsync();
+
+        return _mapper.Map<ApprovalWorkflowNodeDTO>(node);
     }
 
-    public async Task DeleteFilesFromNodeAsync(DeleteFilesFromApprovalWorkflowNodesDTO dto, int id)
+    public async Task<string> SignDocumentByUpdatingTheDocumentAsync(
+        int nodeId,
+        int documentId,
+        Stream file,
+        string fileName
+    )
     {
-        if (dto.DocumentIds == null || !dto.DocumentIds.Any())
-            throw new ArgumentException("No document IDs provided.");
+        var node =
+            await _context.ApprovalWorkflowNodes.FindAsync(nodeId)
+            ?? throw new KeyNotFoundException($"Node {nodeId} not found.");
 
-        var node = await _context
-            .ApprovalWorkflowNodes.Include(n => n.WorkflowNodeDocuments)
-            .FirstOrDefaultAsync(n => n.Id == id);
+        var document =
+            await _context.Documents.FindAsync(documentId)
+            ?? throw new KeyNotFoundException($"Document {documentId} not found.");
 
-        if (node is null)
-            throw new KeyNotFoundException($"ApprovalWorkflowNode with ID {id} not found.");
+        var category = document.GeneralDocumentInfo.Category.ToString();
+        var path = $"{_docOpts.StorageDir.TrimEnd('/')}/{category}/{fileName}";
 
-        foreach (var docId in dto.DocumentIds)
+        if (await _storage.Exists(path))
         {
-            var document = await _context.Documents.FindAsync(docId);
-            if (document is null)
-                continue;
-
-            var category = document.GeneralDocumentInfo.Category.ToString();
-            var name = document.GeneralDocumentInfo.Name;
-            var relPath = $"{category}/{name}";
-            var fullPath = $"{_docOpts.StorageDir.TrimEnd('/')}/{relPath}";
-
-            if (await _storage.ExistsAsync(fullPath))
-            {
-                await _storage.DeleteAsync(fullPath);
-            }
-
-            // Remove link from join table
-            var link = node.WorkflowNodeDocuments.FirstOrDefault(w => w.DocumentId == docId);
-            if (link is not null)
-                _context.Remove(link);
-
-            _context.Documents.Remove(document);
+            await _storage.DeleteAsync(path);
         }
 
+        await _storage.UploadAsync(file, path);
+
+        document.GeneralDocumentInfo.Url =
+            $"{_docOpts.PublicBaseUrl.TrimEnd('/')}/{category}/{fileName}";
+        _context.Documents.Update(document);
+        await _context.SaveChangesAsync();
+
+        return document.GeneralDocumentInfo.Url;
+    }
+
+    public async Task<GeneralWorkflowStatusType> CheckApprovalStatusAsync(int nodeId)
+    {
+        var node =
+            await _context.ApprovalWorkflowNodes.FindAsync(nodeId)
+            ?? throw new KeyNotFoundException($"Node {nodeId} not found.");
+        return node.Status;
+    }
+
+    public async Task UploadSupportingDocumentsAsync(int nodeId, List<IFormFile> files)
+    {
+        var node =
+            await _context.ApprovalWorkflowNodes.FindAsync(nodeId)
+            ?? throw new KeyNotFoundException($"Node {nodeId} not found.");
+
+        foreach (var file in files)
+        {
+            var fileName = file.FileName;
+            var category = "ARCHIVE";
+            var relPath = $"{category}/{fileName}";
+            var fullPath = $"{_docOpts.StorageDir.TrimEnd('/')}/{relPath}";
+
+            if (await _storage.Exists(fullPath))
+                throw new InvalidOperationException($"File {fileName} already exists on server.");
+
+            await using var stream = file.OpenReadStream();
+            await _storage.UploadAsync(stream, fullPath);
+
+            var doc = new CreateDocumentDTO
+            {
+                GeneralDocumentInfo = new GeneralDocumentInfoDTO
+                {
+                    Name = fileName,
+                    Category = DocumentCategoryEnum.ARCHIVE,
+                    Url = $"{_docOpts.PublicBaseUrl.TrimEnd('/')}/{relPath}"
+                }
+            };
+
+            var created = await _documentService.CreateMetaDataAsync(doc);
+            var createdId = created?.Id;
+            if (!createdId.HasValue)
+                throw new InvalidOperationException("Failed to create document metadata.");
+            else
+                node.DocumentIds.Add(createdId.Value);
+        }
+
+        _context.ApprovalWorkflowNodes.Update(node);
         await _context.SaveChangesAsync();
     }
 }

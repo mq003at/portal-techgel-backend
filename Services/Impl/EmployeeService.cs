@@ -65,11 +65,14 @@ public class EmployeeService
         return dtos;
     }
 
-    public override async Task<EmployeeDTO> GetByIdAsync(int id)
+    public override async Task<EmployeeDTO?> GetByIdAsync(int id)
     {
-        var dto =
-            await base.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException($"Employee {id} not found");
+        var dto = await base.GetByIdAsync(id);
+
+        if (dto == null)
+        {
+            throw new KeyNotFoundException($"Employee {id} not found");
+        }
 
         await PopulateRoleInfoAsync(dto);
         return dto;
@@ -146,7 +149,7 @@ public class EmployeeService
         return result;
     }
 
-    public override async Task<EmployeeDTO> UpdateAsync(int id, UpdateEmployeeDTO dto)
+    public override async Task<EmployeeDTO?> UpdateAsync(int id, UpdateEmployeeDTO dto)
     {
         // 1) load the employee (owned RoleInfo will come down automatically)
         var entity =
@@ -181,8 +184,7 @@ public class EmployeeService
         _employees.Update(entity);
         await _context.SaveChangesAsync();
 
-        return await GetByIdAsync(entity.Id)
-            ?? throw new InvalidOperationException("Failed to retrieve the updated Employee.");
+        return await GetByIdAsync(entity.Id);
     }
 
     public async Task<EmployeeDTO> LoginAsync(string MainId, string password)

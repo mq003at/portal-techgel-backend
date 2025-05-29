@@ -1,4 +1,5 @@
 using portal.DTOs;
+using portal.Enums;
 
 namespace portal.Services;
 
@@ -15,4 +16,5 @@ public interface IDocumentService
     Task<DocumentDTO> UploadDocumentAsync(CreateDocumentDTO dto);
     Task<DocumentDTO> UploadAndReplaceDocumentAsync(UpdateDocumentDTO dto, int id);
     Task<bool> IsFileExistAsync(string category, string fileName);
+    Task<DocumentStatusEnum> CheckDocumentStatusAsync(int id);
 }

@@ -43,12 +43,14 @@ public class DocumentConfiguration
             d => d.LegalDocumentInfo,
             l =>
             {
-                l.Property(x => x.DraftDate).HasColumnType("date");
-                l.Property(x => x.PublishDate).HasColumnType("date");
-                l.Property(x => x.EffectiveDate).HasColumnType("date");
-                l.Property(x => x.ExpiredDate).HasColumnType("date");
-                l.Property(x => x.FinalApprovalDate).HasColumnType("date");
-                l.Property(x => x.InspectionDate).HasColumnType("date");
+                l.Property(x => x.DraftDate).HasMaxLength(500).HasDefaultValue(string.Empty);
+                l.Property(x => x.PublishDate).HasMaxLength(500).HasDefaultValue(string.Empty);
+                l.Property(x => x.EffectiveDate).HasMaxLength(500).HasDefaultValue(string.Empty);
+                l.Property(x => x.ExpiredDate).HasMaxLength(500).HasDefaultValue(string.Empty);
+                l.Property(x => x.FinalApprovalDate)
+                    .HasMaxLength(500)
+                    .HasDefaultValue(string.Empty);
+                l.Property(x => x.InspectionDate).HasMaxLength(500).HasDefaultValue(string.Empty);
 
                 l.Ignore(x => x.DraftByIds);
                 l.Ignore(x => x.PublishByIds);

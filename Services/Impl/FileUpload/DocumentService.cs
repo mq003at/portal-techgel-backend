@@ -155,7 +155,7 @@ public class DocumentService : IDocumentService
             .Replace("\\", "/");
 
         // Check if file exists on SFTP
-        var fileExists = await _storage.ExistsAsync(remotePath);
+        var fileExists = await _storage.Exists(remotePath);
         if (fileExists)
             throw new InvalidOperationException(
                 $"A file named '{fileName}' already exists on SFTP."
@@ -195,7 +195,7 @@ public class DocumentService : IDocumentService
         var relativePath = $"{category}/{fileName}";
         var fullPath = $"{_docOpts.StorageDir.TrimEnd('/')}/{relativePath}";
 
-        if (await _storage.ExistsAsync(fullPath))
+        if (await _storage.Exists(fullPath))
         {
             await _storage.DeleteAsync(fullPath);
         }
@@ -209,10 +209,21 @@ public class DocumentService : IDocumentService
         return await UpdateAsync(id, dto);
     }
 
+    // Check the document status based on its metadata
+    public async Task<DocumentStatusEnum> CheckDocumentStatusAsync(int id)
+    {
+        var entity = await _ctx.Documents.FindAsync(id);
+        if (entity == null)
+            throw new KeyNotFoundException($"Document {id} not found.");
+
+        // Assuming status is determined by some logic in the GeneralDocumentInfo
+        return entity.GeneralDocumentInfo?.Status ?? DocumentStatusEnum.UNKNOWN;
+    }
+
     // Check if a file exists in the storage. Helper funcs
     public async Task<bool> IsFileExistAsync(string category, string fileName)
     {
         var remotePath = Path.Combine(_docOpts.StorageDir, category, fileName).Replace("\\", "/");
-        return await _storage.ExistsAsync(remotePath);
+        return await _storage.Exists(remotePath);
     }
 }

@@ -25,7 +25,7 @@ public class ApprovalWorkflowNodeConfiguration
         builder.Property(n => n.ReceiverName).HasMaxLength(255);
         builder.Property(n => n.ReceiverMessage).HasMaxLength(1000).HasDefaultValue(string.Empty);
 
-        builder.Property(n => n.ApprovalStatus).IsRequired();
+        builder.Property(n => n.Status).IsRequired();
 
         builder.Property(n => n.ApprovalDate).HasColumnType("timestamp without time zone");
 

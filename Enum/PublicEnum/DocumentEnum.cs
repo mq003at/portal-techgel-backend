@@ -18,7 +18,8 @@ public enum DocumentStatusEnum
     REJECTED,
     CANCELLED,
     EXPIRED,
-    APPROVED
+    APPROVED,
+    UNKNOWN
 }
 
 public enum DocumentSubTypeEnum

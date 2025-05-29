@@ -14,7 +14,7 @@ public class ApprovalWorkflowNode : BaseModel
     public string? ReceiverName { get; set; }
     public string? ReceiverMessage { get; set; }
 
-    public GeneralWorkflowStatusType ApprovalStatus { get; set; }
+    public GeneralWorkflowStatusType Status { get; set; }
     public DateTime? ApprovalDate { get; set; }
     public string? ApprovalComment { get; set; }
 
@@ -23,6 +23,6 @@ public class ApprovalWorkflowNode : BaseModel
     // Many-to-one back to the parent workflow
     public int GeneralWorkflowId { get; set; }
     public GeneralWorkflow GeneralWorkflow { get; set; } = null!;
-    public ICollection<WorkflowNodeDocument> WorkflowNodeDocuments { get; set; } =
-        new List<WorkflowNodeDocument>();
+    public List<Document> Documents { get; set; } = new();
+    public List<int> DocumentIds { get; set; } = new();
 }
