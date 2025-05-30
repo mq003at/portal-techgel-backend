@@ -82,12 +82,14 @@ public class EmployeeProfile : Profile
 
         // CreateEmployeeDTO → Employee
         CreateMap<CreateEmployeeDTO, Employee>()
+            .ForMember(dest => dest.MainId, o => o.MapFrom(src => src.MainId))
             .ForMember(dest => dest.Id, o => o.Ignore())
             .ForMember(d => d.RoleInfo, o => o.Ignore())
             .ForMember(d => d.Signature, o => o.Ignore());
 
         // UpdateEmployeeDTO → Employee (only non-null src members)
         CreateMap<UpdateEmployeeDTO, Employee>()
+            .ForMember(dest => dest.MainId, o => o.MapFrom(src => src.MainId))
             .ForMember(dest => dest.Id, o => o.Ignore())
             .ForMember(d => d.RoleInfo, o => o.Ignore())
             .ForMember(d => d.Signature, o => o.Ignore())
