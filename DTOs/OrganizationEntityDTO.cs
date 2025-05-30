@@ -66,14 +66,8 @@ public class CreateOrganizationEntityDTO : BaseDTO<OrganizationEntity>
     public OrganizationStatus Status { get; set; }
 
     public int? ParentId { get; set; }
-    public OrganizationEntitySummaryDTO? parent { get; set; }
-
     public List<int>? ChildrenIds { get; set; }
-    public List<OrganizationEntity>? Children { get; set; } = new List<OrganizationEntity>();
-
     public List<int>? EmployeeIds { get; set; }
-    public List<OrganizationEntity>? Employees { get; set; } = new List<OrganizationEntity>();
-
     public int? SortOrder { get; set; }
 }
 
@@ -93,10 +87,8 @@ public class UpdateOrganizationEntityDTO : BaseDTO<OrganizationEntity>
     public OrganizationEntitySummaryDTO? Parent { get; set; }
 
     public List<int>? ChildrenIds { get; set; }
-    public List<OrganizationEntity>? Children { get; set; } = new List<OrganizationEntity>();
 
     public int? SortOrder { get; set; }
 
     public List<int>? EmployeeIds { get; set; }
-    public List<OrganizationEntity>? Employees { get; set; } = new List<OrganizationEntity>();
 }

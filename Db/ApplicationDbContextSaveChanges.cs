@@ -10,53 +10,35 @@ using portal.Models;
 
 public class AppDbContextSaveChangesInterceptor : SaveChangesInterceptor
 {
-    public override InterceptionResult<int> SavingChanges(
-        DbContextEventData eventData,
-        InterceptionResult<int> result
-    )
-    {
-        ConvertDateTimeFieldsToUtc(eventData);
-        return base.SavingChanges(eventData, result);
-    }
-
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default
     )
     {
-        ConvertDateTimeFieldsToUtc(eventData);
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
-    }
+        var context = eventData.Context;
+        if (context == null)
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
 
-    private void ConvertDateTimeFieldsToUtc(DbContextEventData eventData)
-    {
-        if (eventData.Context == null)
-            return;
+        var utcNow = DateTime.UtcNow;
 
-        var entries = eventData
-            .Context.ChangeTracker.Entries()
-            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
-
-        foreach (var entry in entries)
+        foreach (var entry in context.ChangeTracker.Entries())
         {
-            foreach (var property in entry.Entity.GetType().GetProperties())
+            if (entry.Entity is BaseModel baseModel)
             {
-                if (
-                    property.PropertyType == typeof(DateTime)
-                    || property.PropertyType == typeof(DateTime?)
-                )
+                if (entry.State == EntityState.Added)
                 {
-                    var value = property.GetValue(entry.Entity);
-                    if (value is DateTime dateTimeValue && dateTimeValue.Kind != DateTimeKind.Utc)
-                    {
-                        property.SetValue(
-                            entry.Entity,
-                            DateTime.SpecifyKind(dateTimeValue, DateTimeKind.Utc)
-                        );
-                    }
+                    baseModel.CreatedAt = utcNow;
+                    baseModel.UpdatedAt = utcNow;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    baseModel.UpdatedAt = utcNow;
+                    entry.Property(nameof(baseModel.CreatedAt)).IsModified = false; // Don't overwrite CreatedAt
                 }
             }
         }
+
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 }

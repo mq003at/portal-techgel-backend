@@ -45,8 +45,14 @@ builder
 ;
 
 // Register PostgreSQL Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+builder.Services.AddDbContext<ApplicationDbContext>(
+    (sp, options) =>
+    {
+        var interceptor = sp.GetRequiredService<AppDbContextSaveChangesInterceptor>();
+        options
+            .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+            .AddInterceptors(interceptor);
+    }
 );
 
 // Register SaveChangesInterceptor

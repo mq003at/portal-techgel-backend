@@ -12,7 +12,7 @@ public class DocumentProfile : Profile
     {
         // Entity -> DTO
         CreateMap<Document, DocumentDTO>()
-            .IncludeBase<BaseModel, BaseDTO<Document>>()
+            .IncludeAllDerived()
             .ForMember(dest => dest.File, opt => opt.Ignore())
             .ForMember(
                 dest => dest.GeneralDocumentInfo,
