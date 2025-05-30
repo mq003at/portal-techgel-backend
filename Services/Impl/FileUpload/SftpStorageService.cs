@@ -8,10 +8,17 @@ public class SftpFileStorageService : IFileStorageService
 {
     private readonly SftpOptions _opts;
     private readonly SemaphoreSlim _sync = new(1, 1);
+    private readonly ILogger<SftpFileStorageService> _logger;
 
     public SftpFileStorageService(IOptions<SftpOptions> opts)
     {
         _opts = opts.Value;
+        _logger = LoggerFactory
+            .Create(builder =>
+            {
+                builder.AddConsole();
+            })
+            .CreateLogger<SftpFileStorageService>();
     }
 
     // List file trong remote directory
@@ -51,6 +58,7 @@ public class SftpFileStorageService : IFileStorageService
     // Upload a single file to remote path
     public async Task<string> UploadAsync(Stream fileStream, string remotePath)
     {
+        _logger.LogInformation("Uploading file to SFTP: {RemotePath}", remotePath);
         await _sync.WaitAsync();
         try
         {
@@ -69,6 +77,9 @@ public class SftpFileStorageService : IFileStorageService
             }
 
             fileStream.Position = 0;
+            _logger.LogInformation("Uploading file to SFTP: {RemotePath}", remotePath);
+            _logger.LogInformation("Uploading file to Diretory: {Directory}", directory);
+            _logger.LogInformation("File size: {Size} bytes", fileStream.Length);
             client.UploadFile(fileStream, remotePath, true);
             client.Disconnect();
 

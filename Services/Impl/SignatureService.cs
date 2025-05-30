@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using portal.Db;
@@ -14,13 +15,15 @@ public class SignatureService : ISignatureService
     private readonly ILogger<SignatureService> _logger;
     private readonly SignatureOptions _sigOpts;
     private readonly string _publicBase;
+    private readonly IMapper _mapper;
 
     public SignatureService(
         ApplicationDbContext ctx,
         IFileStorageService storage,
         IFileNameValidationService validator,
         ILogger<SignatureService> logger,
-        IOptions<SignatureOptions> sigOpts
+        IOptions<SignatureOptions> sigOpts,
+        IMapper mapper
     )
     {
         _ctx = ctx;
@@ -28,37 +31,39 @@ public class SignatureService : ISignatureService
         _validator = validator;
         _logger = logger;
         _sigOpts = sigOpts.Value;
+        _mapper = mapper;
         _publicBase = _sigOpts.PublicBaseUrl.TrimEnd('/');
     }
 
     public async Task<SignatureDTO> UploadAsync(UploadSignatureDTO dto)
     {
-        // Ensure unique name
-        var remotePath = $"{_sigOpts.StorageDir.TrimEnd('/')}/{dto.FileName}";
         await _validator.EnsureUniqueAsync(dto.FileName);
+        var remotePath = $"{_sigOpts.StorageDir.TrimEnd('/')}/{dto.FileName}";
+
         _logger.LogInformation(
             "Uploading signature for Employee {Id} to {Path}",
             dto.EmployeeId,
             remotePath
         );
-
         await using var stream = dto.File.OpenReadStream();
         await _storage.UploadAsync(stream, remotePath);
 
-        // Upsert DB
-        var sig = new Signature { EmployeeId = dto.EmployeeId };
-        _ctx.Signatures.Add(sig);
-        await _ctx.SaveChangesAsync(); // to get Id
+        var sig = new Signature
+        {
+            EmployeeId = dto.EmployeeId,
+            FileName = dto.FileName,
+            StoragePath = remotePath,
+            ContentType = dto.File.ContentType!,
+            FileSize = dto.File.Length,
+            UploadedAt = DateTime.UtcNow
+        };
 
-        sig.FileName = dto.FileName;
-        sig.StoragePath = remotePath;
-        sig.ContentType = dto.File.ContentType!;
-        sig.FileSize = dto.File.Length;
-        sig.UploadedAt = DateTime.UtcNow;
-        _ctx.Signatures.Update(sig);
+        _ctx.Signatures.Add(sig);
         await _ctx.SaveChangesAsync();
 
-        return ToDto(sig);
+        var dtoResult = _mapper.Map<SignatureDTO>(sig);
+        dtoResult.FileUrl = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
+        return dtoResult;
     }
 
     public async Task<SignatureDTO> UploadAndReplaceAsync(UploadSignatureDTO dto)
@@ -80,10 +85,13 @@ public class SignatureService : ISignatureService
         sig.ContentType = dto.File.ContentType!;
         sig.FileSize = dto.File.Length;
         sig.UploadedAt = DateTime.UtcNow;
+
         _ctx.Signatures.Update(sig);
         await _ctx.SaveChangesAsync();
 
-        return ToDto(sig);
+        var dtoResult = _mapper.Map<SignatureDTO>(sig);
+        dtoResult.FileUrl = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
+        return dtoResult;
     }
 
     public async Task<SignatureDTO?> GetByEmployeeAsync(int employeeId)
@@ -91,7 +99,12 @@ public class SignatureService : ISignatureService
         var sig = await _ctx
             .Signatures.AsNoTracking()
             .FirstOrDefaultAsync(s => s.EmployeeId == employeeId);
-        return sig == null ? null : ToDto(sig);
+        if (sig == null)
+            return null;
+
+        var dtoResult = _mapper.Map<SignatureDTO>(sig);
+        dtoResult.FileUrl = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
+        return dtoResult;
     }
 
     public async Task DeleteSignatureAsync(int employeeId)
@@ -99,13 +112,14 @@ public class SignatureService : ISignatureService
         var sig = await _ctx.Signatures.FirstOrDefaultAsync(s => s.EmployeeId == employeeId);
         if (sig == null)
             return;
-        var remotePath = sig.StoragePath;
+
         _logger.LogInformation(
             "Deleting signature for Employee {Id} at {Path}",
             employeeId,
-            remotePath
+            sig.StoragePath
         );
-        await _storage.DeleteAsync(remotePath);
+        await _storage.DeleteAsync(sig.StoragePath);
+
         _ctx.Signatures.Remove(sig);
         await _ctx.SaveChangesAsync();
     }
@@ -117,15 +131,7 @@ public class SignatureService : ISignatureService
                 .Signatures.AsNoTracking()
                 .FirstOrDefaultAsync(s => s.EmployeeId == employeeId)
             ?? throw new FileNotFoundException($"Signature for employee {employeeId} not found");
+
         return await _storage.DownloadAsync(sig.StoragePath);
     }
-
-    private SignatureDTO ToDto(Signature sig) =>
-        new()
-        {
-            Id = sig.Id,
-            EmployeeId = sig.EmployeeId,
-            FileName = sig.FileName,
-            FileUrl = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}"
-        };
 }
