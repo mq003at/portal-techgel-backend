@@ -19,6 +19,7 @@ public class DocumentController : ControllerBase
     }
 
     // GET: api/document
+    // Retrieves all document metadata
     [HttpGet]
     public async Task<IActionResult> GetAllMetaData()
     {
@@ -27,6 +28,7 @@ public class DocumentController : ControllerBase
     }
 
     // GET: api/document/{id}
+    // Retrieves document metadata by ID
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
@@ -37,6 +39,7 @@ public class DocumentController : ControllerBase
     }
 
     // POST: api/document/metadata
+    // Creates metadata for a document without uploading the file
     [HttpPost("metadata")]
     public async Task<IActionResult> CreateMetaData([FromBody] CreateDocumentDTO dto)
     {
@@ -45,6 +48,7 @@ public class DocumentController : ControllerBase
     }
 
     // POST: api/document/upload
+    // Uploads the document file and creates metadata
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadDocument([FromForm] CreateDocumentDTO dto)
@@ -57,8 +61,9 @@ public class DocumentController : ControllerBase
     }
 
     // PUT: api/document/{id}
+    // Updates the document metadata - Use when only want to change filename or something else
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateMetaData(
+    public async Task<IActionResult> UpdateMetadata(
         [FromRoute] int id,
         [FromBody] UpdateDocumentDTO dto
     )
@@ -67,7 +72,9 @@ public class DocumentController : ControllerBase
         return Ok(updated);
     }
 
+    // Updates the document metadata and replaces the file
     // PUT: api/document/{id}/upload
+
     [HttpPut("{id}/upload")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> ReplaceFile(
@@ -83,6 +90,7 @@ public class DocumentController : ControllerBase
     }
 
     // DELETE: api/document/{id}
+    // Deletes the document metadata and file
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
@@ -91,6 +99,7 @@ public class DocumentController : ControllerBase
     }
 
     // HEAD: api/document/exist?category=LEGAL&fileName=abc.svg
+    // Check if file exist in the specified category
     [HttpHead("exist")]
     public async Task<IActionResult> CheckFileExist(
         [FromQuery] string category,

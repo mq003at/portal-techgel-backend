@@ -109,15 +109,11 @@ public class EmployeeService
         // 3) Add & Save
         _employees.Add(entity);
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error saving new Employee. Entity state: {@entity}", entity);
-            throw;
-        }
+        await _context.SaveChangesAsync();
+
+        entity.MainId = "TG" + entity.Id;
+        _context.Employees.Update(entity);
+        await _context.SaveChangesAsync();
 
         _logger.LogInformation("Employee inserted with Id={Id}", entity.Id);
 
