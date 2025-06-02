@@ -8,15 +8,28 @@ public class ApprovalWorkflowNodeProfile : Profile
 {
     public ApprovalWorkflowNodeProfile()
     {
-        CreateMap<ApprovalWorkflowNode, ApprovalWorkflowNodeDTO>();
-        CreateMap<ApprovalWorkflowNodeDTO, ApprovalWorkflowNode>();
+        // Main entity <-> DTO
+        CreateMap<ApprovalWorkflowNode, ApprovalWorkflowNodeDTO>()
+            .ReverseMap()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
+        // Entity <-> Create DTO (ignore Id, timestamps on reverse)
         CreateMap<ApprovalWorkflowNode, CreateApprovalWorkflowNodeDTO>()
             .ReverseMap()
-            .ForMember(dest => dest.Id, opt => opt.Ignore()); // ignore Id during creation
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-        CreateMap<ApprovalWorkflowNode, UpdateApprovalWorkflowNodeDTO>().ReverseMap();
+        // Entity <-> Update DTO (ignore Id, timestamps on reverse)
+        CreateMap<ApprovalWorkflowNode, UpdateApprovalWorkflowNodeDTO>()
+            .ReverseMap()
+            .ForMember(dest => dest.Id, opt => opt.Ignore()) // Up to you; can allow if needed for patching
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
+        // Entity -> FileResult DTO
         CreateMap<ApprovalWorkflowNode, ApprovalWorkflowNodeFileResultDTO>()
             .ForMember(dest => dest.NodeId, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.DocumentIds, opt => opt.Ignore())

@@ -6,6 +6,7 @@ public class GeneralWorkflow : BaseModel
 {
     public GeneralWorkflowInfo GeneralWorkflowInfo { get; set; } = new();
 
+    public ICollection<int> ApprovalWorkflowNodesIds { get; set; } = new List<int>();
     public ICollection<ApprovalWorkflowNode> ApprovalWorkflowNodes { get; set; } =
         new List<ApprovalWorkflowNode>();
 }

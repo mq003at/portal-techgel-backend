@@ -15,15 +15,18 @@ public class ApprovalWorkflowNodeDTO : BaseDTO<ApprovalWorkflowNode>
     public string? SenderMessage { get; set; }
 
     [Required]
-    public int ReceiverId { get; set; }
-    public string? ReceiverName { get; set; }
-    public string? ReceiverMessage { get; set; }
+    public List<int> ReceiverIds { get; set; } = new List<int>();
+    public List<string>? ReceiverNames { get; set; } = new List<string>();
+    public List<string> ReceiverMessages { get; set; } = new List<string>();
 
     [Required]
     public GeneralWorkflowStatusType ApprovalStatus { get; set; }
     public DateTime? ApprovalDate { get; set; }
     public string? ApprovalComment { get; set; }
+    public List<int> DocumentIds { get; set; } = new();
+    public List<string> DocumentNames { get; set; } = new();
     public int? Order { get; set; }
+    public int GeneralWorkflowId { get; set; }
 }
 
 /// <summary>
@@ -40,9 +43,7 @@ public class CreateApprovalWorkflowNodeDTO : BaseDTO<ApprovalWorkflowNode>
     public string? SenderMessage { get; set; }
 
     [Required]
-    public int ReceiverId { get; set; }
-    public string? ReceiverName { get; set; }
-    public string? ReceiverMessage { get; set; }
+    public List<int> ReceiverIds { get; set; } = new List<int>();
 
     [Required]
     public GeneralWorkflowStatusType ApprovalStatus { get; set; }
@@ -56,7 +57,7 @@ public class CreateApprovalWorkflowNodeDTO : BaseDTO<ApprovalWorkflowNode>
 
     // Optional file attachments
     public List<IFormFile>? Files { get; set; }
-    public List<int>? ExistingDocumentIds { get; set; }
+    public List<int>? DocumentIds { get; set; }
 
     [Required]
     public int GeneralWorkflowId { get; set; }
@@ -64,26 +65,16 @@ public class CreateApprovalWorkflowNodeDTO : BaseDTO<ApprovalWorkflowNode>
 
 public class UpdateApprovalWorkflowNodeDTO : BaseDTO<ApprovalWorkflowNode>
 {
-    [Required]
-    public int Id { get; set; }
-
-    [Required, StringLength(255)]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; } = string.Empty;
 
     [Required]
-    public int SenderId { get; set; }
-    public string? SenderName { get; set; }
-    public string? SenderMessage { get; set; }
-
-    [Required]
-    public int ReceiverId { get; set; }
-    public string? ReceiverName { get; set; }
-    public string? ReceiverMessage { get; set; }
-
+    public List<int> ReceiverIds { get; set; } = new List<int>();
     [Required]
     public GeneralWorkflowStatusType ApprovalStatus { get; set; }
     public DateTime? ApprovalDate { get; set; }
     public string? ApprovalComment { get; set; }
+    public List<int> DocumentIds { get; set; }
+        = new List<int>();
 
     public int? Order { get; set; }
 }

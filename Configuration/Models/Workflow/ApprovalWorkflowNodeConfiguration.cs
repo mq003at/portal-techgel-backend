@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using portal.Models;
@@ -15,24 +16,61 @@ public class ApprovalWorkflowNodeConfiguration
 
         builder.ToTable("ApprovalWorkflowNodes");
 
-        builder.Property(n => n.Name).IsRequired().HasMaxLength(255);
+        builder.Property(n => n.Name)
+            .IsRequired()
+            .HasMaxLength(255);
 
         builder.Property(n => n.SenderId).IsRequired();
-        builder.Property(n => n.SenderName).HasMaxLength(255);
-        builder.Property(n => n.SenderMessage).HasMaxLength(1000).HasDefaultValue(string.Empty);
 
-        builder.Property(n => n.ReceiverId).IsRequired();
-        builder.Property(n => n.ReceiverName).HasMaxLength(255);
-        builder.Property(n => n.ReceiverMessage).HasMaxLength(1000).HasDefaultValue(string.Empty);
+        builder.Property(n => n.Status)
+            .HasConversion<int>() // Store enums as int
+            .IsRequired();
 
-        builder.Property(n => n.Status).IsRequired();
+        builder.Property(n => n.ApprovalDate);
 
-        builder.Property(n => n.ApprovalDate).HasColumnType("timestamp without time zone");
+        builder.Property(n => n.Order);
 
-        builder.Property(n => n.ApprovalComment).HasMaxLength(1000).HasDefaultValue(string.Empty);
+        // List<int> and List<string> as JSON columns
+        builder.Property(n => n.ReceiverIds)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<List<int>>(v, (JsonSerializerOptions)null) ?? new List<int>()
+            );
+        builder.Property(n => n.ReceiverNames)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null) ?? new List<string>()
+            );
+        builder.Property(n => n.ReceiverMessages)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null) ?? new List<string>()
+            );
+        builder.Property(n => n.ApprovalCommentIds)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<List<int>>(v, (JsonSerializerOptions)null) ?? new List<int>()
+            );
+        builder.Property(n => n.ApprovalComments)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null) ?? new List<string>()
+            );
+        builder.Property(n => n.DocumentIds)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<List<int>>(v, (JsonSerializerOptions)null) ?? new List<int>()
+            );
 
-        builder.Property(n => n.Order).HasColumnName("SortOrder");
+        // Many-to-one with GeneralWorkflow
+        builder.HasOne(n => n.GeneralWorkflow)
+            .WithMany(w => w.ApprovalWorkflowNodes)
+            .HasForeignKey(n => n.GeneralWorkflowId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Foreign key mapping handled in GeneralWorkflowConfiguration via HasMany/WithOne
+        // Many-to-many (or one-to-many) with Documents
+        builder.HasMany(n => n.Documents)
+            .WithMany() // If you have navigation in Document, set here
+            .UsingEntity(j => j.ToTable("ApprovalWorkflowNodeDocuments"));
     }
 }

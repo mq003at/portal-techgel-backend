@@ -40,6 +40,43 @@ public class ApprovalWorkflowNodeService
         _storage = storage;
     }
 
+    public override async Task<ApprovalWorkflowNodeDTO> CreateAsync(
+        CreateApprovalWorkflowNodeDTO dto
+    )
+    {
+        var nodeDto = await base.CreateAsync(dto);
+        await PopulateNamesAndDocsAsync(nodeDto);
+
+        return nodeDto;
+    }
+
+    public override async Task<ApprovalWorkflowNodeDTO?> GetByIdAsync(int id)
+    {
+        var dto = await base.GetByIdAsync(id);
+        if (dto != null)
+            await PopulateNamesAndDocsAsync(dto);
+        return dto;
+    }
+
+    public override async Task<IEnumerable<ApprovalWorkflowNodeDTO>> GetAllAsync()
+    {
+        var list = (await base.GetAllAsync()).ToList();
+        foreach (var dto in list)
+            await PopulateNamesAndDocsAsync(dto);
+        return list;
+    }
+
+    public override async Task<ApprovalWorkflowNodeDTO> UpdateAsync(
+        int id,
+        UpdateApprovalWorkflowNodeDTO dto
+    )
+    {
+        var nodeDto = await base.UpdateAsync(id, dto);
+        if (nodeDto != null)
+            await PopulateNamesAndDocsAsync(nodeDto);
+        return nodeDto;
+    }
+
     public async Task<ApprovalWorkflowNodeDTO> UpdateRelatedDocument(
         List<int> documentIds,
         int nodeId
@@ -136,5 +173,48 @@ public class ApprovalWorkflowNodeService
 
         _context.ApprovalWorkflowNodes.Update(node);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task PopulateNamesAndDocsAsync(ApprovalWorkflowNodeDTO nodeDto)
+    {
+        // Populate SenderName
+        var sender = await _context.Set<Employee>().FindAsync(nodeDto.SenderId);
+        nodeDto.SenderName = sender != null
+            ? $"{sender.FirstName} {sender.LastName}".Trim()
+            : null;
+
+        // Populate ReceiverNames
+        if (nodeDto.ReceiverIds != null && nodeDto.ReceiverIds.Count > 0)
+        {
+            var receivers = await _context.Set<Employee>()
+                .Where(e => nodeDto.ReceiverIds.Contains(e.Id))
+                .ToListAsync();
+
+            nodeDto.ReceiverNames = receivers
+                .OrderBy(e => nodeDto.ReceiverIds.IndexOf(e.Id))
+                .Select(e => $"{e.FirstName} {e.LastName}".Trim())
+                .ToList();
+        }
+
+        // Populate DocumentNames and (optionally) URLs
+        if (nodeDto.DocumentIds != null && nodeDto.DocumentIds.Count > 0)
+        {
+            var docIdList = nodeDto.DocumentIds.ToList();
+
+            var documents = await _context.Set<Document>()
+                .Where(d => docIdList.Contains(d.Id))
+                .ToListAsync();
+
+            nodeDto.DocumentNames = documents
+                .OrderBy(d => docIdList.IndexOf(d.Id))
+                .Select(d => d.GeneralDocumentInfo.Name)
+                .ToList();
+
+            _logger.LogInformation(
+                "docId: {id}, docNames: {names}",
+                nodeDto.DocumentIds.Count,
+                nodeDto.DocumentNames.Count
+            );
+        }
     }
 }
