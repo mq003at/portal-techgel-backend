@@ -52,7 +52,8 @@ public class ApprovalWorkflowNodeService
 
         if (general != null)
         {
-
+            if (!general.ApprovalWorkflowNodesIds.Contains((int)nodeDto.Id))
+                general.ApprovalWorkflowNodesIds.Add((int)nodeDto.Id);
             _context.Update(general);
             await _context.SaveChangesAsync();
         }
@@ -84,6 +85,22 @@ public class ApprovalWorkflowNodeService
         var nodeDto = await base.UpdateAsync(id, dto);
         if (nodeDto != null)
             await PopulateNamesAndDocsAsync(nodeDto);
+
+        var general = await _context.Set<GeneralWorkflow>()
+    .FirstOrDefaultAsync(g => g.Id == nodeDto.GeneralWorkflowId);
+        if (general != null)
+        {
+            general.UpdatedAt = DateTime.UtcNow;
+            _logger.LogInformation(
+                "Updating GeneralWorkflow {Id} with new node {NodeId}",
+                general.Id,
+                nodeDto.Id
+            );
+            if (!general.ApprovalWorkflowNodesIds.Contains((int)nodeDto.Id))
+                general.ApprovalWorkflowNodesIds.Add((int)nodeDto.Id);
+            _context.Update(general);
+            await _context.SaveChangesAsync();
+        }
         return nodeDto;
     }
 

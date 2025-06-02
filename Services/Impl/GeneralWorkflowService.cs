@@ -34,4 +34,30 @@ public class GeneralWorkflowService
         _nodeService = nodeService;
         _context = context;
     }
+
+    public override async Task<IEnumerable<GeneralWorkflowDTO>> GetAllAsync()
+    {
+        // Load all workflows with nodes in one query
+        var workflows = await _generalWorkflows
+            .Include(g => g.ApprovalWorkflowNodes)
+            .ToListAsync();
+
+        // Use the base.MapEntitiesToDTOs (if base expects entities) or base.Map (if available)
+        // (Assume base.GetAllAsync fetches from context.Set<T> - which would not include nodes by default)
+        // So: re-map here for performance
+        return _mapper.Map<IEnumerable<GeneralWorkflowDTO>>(workflows);
+    }
+
+    public override async Task<GeneralWorkflowDTO?> GetByIdAsync(int id)
+    {
+        var workflow = await _generalWorkflows
+            .Include(g => g.ApprovalWorkflowNodes)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
+        if (workflow == null)
+            return null;
+
+        return _mapper.Map<GeneralWorkflowDTO>(workflow);
+    }
+
 }

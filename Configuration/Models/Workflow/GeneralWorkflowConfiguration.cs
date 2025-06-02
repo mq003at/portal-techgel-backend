@@ -43,5 +43,7 @@ public class GeneralWorkflowConfiguration
             .WithOne(n => n.GeneralWorkflow)
             .HasForeignKey(n => n.GeneralWorkflowId)
             .OnDelete(DeleteBehavior.Cascade);
+
+
     }
 }
