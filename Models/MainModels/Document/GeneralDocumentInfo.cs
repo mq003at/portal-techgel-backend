@@ -3,7 +3,6 @@ using portal.Enums;
 
 namespace portal.Models;
 
-[Owned]
 public class GeneralDocumentInfo
 {
     public string Name { get; set; } = null!;
@@ -19,7 +18,7 @@ public class GeneralDocumentInfo
     public string OrganizationEntityResponsibleName { get; set; } = string.Empty;
 
     public ICollection<string> Tag { get; set; } = new List<string>();
-    public string Description { get; set; } = string.Empty;
+    public string Description { get; set; } = null!;
     public string Url { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
 

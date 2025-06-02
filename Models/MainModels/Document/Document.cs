@@ -2,6 +2,7 @@ namespace portal.Models;
 
 public class Document : BaseModel
 {
+    // public string RemoteFileName { get; set; } = string.Empty;
     public GeneralDocumentInfo GeneralDocumentInfo { get; set; } = new();
     public LegalDocumentInfo LegalDocumentInfo { get; set; } = new();
     public SecurityDocumentInfo SecurityDocumentInfo { get; set; } = new();

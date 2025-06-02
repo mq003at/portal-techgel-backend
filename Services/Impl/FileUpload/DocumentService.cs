@@ -7,6 +7,7 @@ using portal.Enums;
 using portal.Models;
 using portal.Options;
 using Renci.SshNet;
+using portal.Helpers;
 
 namespace portal.Services;
 
@@ -48,10 +49,34 @@ public class DocumentService : IDocumentService
     // Update the document metadata, but not the file itself
     public async Task<DocumentDTO> UpdateAsync(int id, UpdateDocumentDTO dto)
     {
+        _logger.LogInformation(
+            "Updating document {Id} with new metadata: {@Dto}",
+            id,
+            dto.GeneralDocumentInfo.SubType
+        );
         var entity =
             await _ctx.Documents.FindAsync(id)
             ?? throw new KeyNotFoundException($"Document {id} not found.");
+        _logger.LogInformation(
+            "Before mapping, Updating document {Id}, name {name} with new metadata: {@Dto}, {entity}, {description}",
+            id,
+            entity.GeneralDocumentInfo.Name,
+            dto.GeneralDocumentInfo.SubType,
+            entity.GeneralDocumentInfo.SubType,
+            entity.GeneralDocumentInfo.Description
+        );
+
         _mapper.Map(dto, entity);
+
+
+        _logger.LogInformation(
+            "After mapping, Updating document {Id}, name {name} with new metadata: {@Dto}, {entity}, {description}",
+            id,
+            entity.GeneralDocumentInfo.Name,
+            dto.GeneralDocumentInfo.SubType,
+            entity.GeneralDocumentInfo.SubType,
+            entity.GeneralDocumentInfo.Description
+        );
         _ctx.Documents.Update(entity);
         await _ctx.SaveChangesAsync();
         return await GetByIdAsync(id)
@@ -100,7 +125,7 @@ public class DocumentService : IDocumentService
         var dto = _mapper.Map<DocumentDTO>(entity);
 
         var fileUrl = entity.GeneralDocumentInfo?.Url;
-        if (!string.IsNullOrWhiteSpace(fileUrl))
+        // if (!string.IsNullOrWhiteSpace(fileUrl))
         {
             try
             {
@@ -136,7 +161,7 @@ public class DocumentService : IDocumentService
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is required.");
 
-        var fileName = dto.GeneralDocumentInfo?.Name;
+        var fileName = dto.GeneralDocumentInfo.Name;
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("Document name is required in GeneralDocumentInfo.Name");
 

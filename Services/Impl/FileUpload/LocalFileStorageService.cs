@@ -59,4 +59,37 @@ public class LocalFileStorageService : IFileStorageService
     {
         throw new NotImplementedException();
     }
+
+    public Task<string> ChangeFileNameAsync(string oldFileName, string newFileName)
+    {
+        var oldSafe = Path.GetFileName(oldFileName);
+        var newSafe = Path.GetFileName(newFileName);
+
+        var oldFullPath = Path.Combine(_basePath, oldSafe);
+        var newFullPath = Path.Combine(_basePath, newSafe);
+
+        if (!File.Exists(oldFullPath))
+            throw new FileNotFoundException($"File not found: {oldSafe}");
+
+        File.Move(oldFullPath, newFullPath);
+        return Task.FromResult(newSafe);
+    }
+
+    public Task<string> MoveFileToAnotherLocationAsync(string oldLocation, string newLocation)
+    {
+        var oldFullPath = Path.Combine(_basePath, oldLocation);
+        var newFullPath = Path.Combine(_basePath, newLocation);
+
+        var newDir = Path.GetDirectoryName(newFullPath);
+        if (!Directory.Exists(newDir))
+        {
+            Directory.CreateDirectory(newDir);
+        }
+
+        if (!File.Exists(oldFullPath))
+            throw new FileNotFoundException($"File not found: {oldLocation}");
+
+        File.Move(oldFullPath, newFullPath);
+        return Task.FromResult(newLocation);
+    }
 }

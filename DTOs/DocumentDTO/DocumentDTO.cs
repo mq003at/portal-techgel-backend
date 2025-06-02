@@ -24,13 +24,13 @@ public class CreateDocumentDTO : BaseDTO<Document>
     public IFormFile? File { get; set; } // For file upload scenarios
 
     [Required]
-    public GeneralDocumentInfoDTO GeneralDocumentInfo { get; set; } = new();
+    public CreateGeneralDocumentInfoDTO GeneralDocumentInfo { get; set; } = new();
 
     [Required]
-    public LegalDocumentInfoDTO LegalDocumentInfo { get; set; } = new();
+    public CreateLegalDocumentInfoDTO LegalDocumentInfo { get; set; } = new();
     public SecurityDocumentInfo SecurityDocumentInfo { get; set; } = new();
     public AdditionalDocumentInfo AdditionalDocumentInfo { get; set; } = new();
-    public List<EditDocumentInfoDTO> EditDocumentInfoDTO { get; set; } = new();
+    public List<EditDocumentInfoDTO> EditDocumentInfo{ get; set; } = new();
 }
 
 public class UpdateDocumentDTO : BaseDTO<Document>
@@ -38,13 +38,13 @@ public class UpdateDocumentDTO : BaseDTO<Document>
     public IFormFile? File { get; set; } // For file upload scenarios
 
     [Required]
-    public GeneralDocumentInfoDTO GeneralDocumentInfo { get; set; } = new();
+    public UpdateGeneralDocumentInfoDTO GeneralDocumentInfo { get; set; } = new();
 
     [Required]
-    public LegalDocumentInfoDTO LegalDocumentInfo { get; set; } = new();
+    public UpdateLegalDocumentInfoDTO LegalDocumentInfo { get; set; } = new();
     public SecurityDocumentInfo SecurityDocumentInfo { get; set; } = new();
     public AdditionalDocumentInfo AdditionalDocumentInfo { get; set; } = new();
-    public List<EditDocumentInfoDTO> EditDocumentInfoDTO { get; set; } = new();
+    public List<EditDocumentInfoDTO> EditDocumentInfo { get; set; } = new();
 }
 
 // DTO specifically for multipart file upload

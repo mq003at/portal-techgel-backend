@@ -55,6 +55,38 @@ public class SftpFileStorageService : IFileStorageService
         }
     }
 
+    public async Task<string> ChangeFileNameAsync(string oldFileName, string newFileName)
+{
+    _logger.LogInformation("Renaming file from {OldFileName} to {NewFileName}", oldFileName, newFileName);
+
+    await _sync.WaitAsync();
+    try
+    {
+        using var client = new SftpClient(
+            _opts.Host,
+            _opts.Port,
+            _opts.Username,
+            _opts.Password
+        );
+
+        client.Connect();
+
+        if (!client.Exists(oldFileName))
+        {
+            throw new FileNotFoundException($"File not found: {oldFileName}");
+        }
+
+        client.RenameFile(oldFileName, newFileName);
+        client.Disconnect();
+
+        return newFileName;
+    }
+    finally
+    {
+        _sync.Release();
+    }
+}
+
     // Upload a single file to remote path
     public async Task<string> UploadAsync(Stream fileStream, string remotePath)
     {
@@ -185,4 +217,46 @@ public class SftpFileStorageService : IFileStorageService
             _sync.Release();
         }
     }
+
+    public async Task<string> MoveFileToAnotherLocationAsync(string oldLocation, string newLocation)
+{
+    _logger.LogInformation("Moving file from {OldLocation} to {NewLocation}", oldLocation, newLocation);
+
+    await _sync.WaitAsync();
+    try
+    {
+        using var client = new SftpClient(
+            _opts.Host,
+            _opts.Port,
+            _opts.Username,
+            _opts.Password
+        );
+
+        client.Connect();
+
+        // Ensure the source file exists
+        if (!client.Exists(oldLocation))
+        {
+            throw new FileNotFoundException($"Source file not found: {oldLocation}");
+        }
+
+        // Ensure the target directory exists, create it if not
+        var newDirectory = Path.GetDirectoryName(newLocation)?.Replace('\\', '/');
+        if (!string.IsNullOrEmpty(newDirectory) && !client.Exists(newDirectory))
+        {
+            client.CreateDirectory(newDirectory);
+        }
+
+        // Perform the move operation
+        client.RenameFile(oldLocation, newLocation);
+        client.Disconnect();
+
+        return newLocation;
+    }
+    finally
+    {
+        _sync.Release();
+    }
+}
+
 }

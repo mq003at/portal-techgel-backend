@@ -118,12 +118,12 @@ public class ApprovalWorkflowNodeService
 
             var doc = new CreateDocumentDTO
             {
-                GeneralDocumentInfo = new GeneralDocumentInfoDTO
-                {
-                    Name = fileName,
-                    Category = DocumentCategoryEnum.ARCHIVE,
-                    Url = $"{_docOpts.PublicBaseUrl.TrimEnd('/')}/{relPath}"
-                }
+                // GeneralDocumentInfo = new GeneralDocumentInfoDTO
+                // {
+                //     Name = fileName,
+                //     Category = DocumentCategoryEnum.ARCHIVE,
+                //     Url = $"{_docOpts.PublicBaseUrl.TrimEnd('/')}/{relPath}"
+                // }
             };
 
             var created = await _documentService.CreateMetaDataAsync(doc);

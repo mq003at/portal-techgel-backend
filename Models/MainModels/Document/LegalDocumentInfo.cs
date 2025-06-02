@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace portal.Models;
 
-[Owned]
 public class LegalDocumentInfo
 {
     public string DraftDate { get; set; } = string.Empty;
