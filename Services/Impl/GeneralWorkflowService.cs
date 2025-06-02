@@ -42,10 +42,18 @@ public class GeneralWorkflowService
             .Include(g => g.ApprovalWorkflowNodes)
             .ToListAsync();
 
-        // Use the base.MapEntitiesToDTOs (if base expects entities) or base.Map (if available)
-        // (Assume base.GetAllAsync fetches from context.Set<T> - which would not include nodes by default)
-        // So: re-map here for performance
-        return _mapper.Map<IEnumerable<GeneralWorkflowDTO>>(workflows);
+        var dtos = _mapper.Map<List<GeneralWorkflowDTO>>(workflows);
+
+        // For each workflow and each node, populate names
+        foreach (var workflowDto in dtos)
+        {
+            foreach (var nodeDto in workflowDto.ApprovalWorkflowNodes)
+            {
+                await _nodeService.PopulateNamesAndDocsAsync(nodeDto);
+            }
+        }
+
+        return dtos;
     }
 
     public override async Task<GeneralWorkflowDTO?> GetByIdAsync(int id)
@@ -57,7 +65,58 @@ public class GeneralWorkflowService
         if (workflow == null)
             return null;
 
-        return _mapper.Map<GeneralWorkflowDTO>(workflow);
+        var dto = _mapper.Map<GeneralWorkflowDTO>(workflow);
+
+        foreach (var nodeDto in dto.ApprovalWorkflowNodes)
+        {
+            await _nodeService.PopulateNamesAndDocsAsync(nodeDto);
+        }
+
+        return dto;
     }
+
+    public async Task PopulateNamesAndDocsAsync(ApprovalWorkflowNodeDTO nodeDto)
+    {
+        // Populate SenderName
+        var sender = await _context.Set<Employee>().FindAsync(nodeDto.SenderId);
+        nodeDto.SenderName = sender != null
+            ? $"{sender.FirstName} {sender.LastName}".Trim()
+            : null;
+
+        // Populate ReceiverNames
+        if (nodeDto.ReceiverIds != null && nodeDto.ReceiverIds.Count > 0)
+        {
+            var receivers = await _context.Set<Employee>()
+                .Where(e => nodeDto.ReceiverIds.Contains(e.Id))
+                .ToListAsync();
+
+            nodeDto.ReceiverNames = receivers
+                .OrderBy(e => nodeDto.ReceiverIds.IndexOf(e.Id))
+                .Select(e => $"{e.FirstName} {e.LastName}".Trim())
+                .ToList();
+        }
+
+        // Populate DocumentNames and (optionally) URLs
+        if (nodeDto.DocumentIds != null && nodeDto.DocumentIds.Count > 0)
+        {
+            var docIdList = nodeDto.DocumentIds.ToList();
+
+            var documents = await _context.Set<Document>()
+                .Where(d => docIdList.Contains(d.Id))
+                .ToListAsync();
+
+            nodeDto.DocumentNames = documents
+                .OrderBy(d => docIdList.IndexOf(d.Id))
+                .Select(d => d.GeneralDocumentInfo.Name)
+                .ToList();
+
+            _logger.LogInformation(
+                "docId: {id}, docNames: {names}",
+                nodeDto.DocumentIds.Count,
+                nodeDto.DocumentNames.Count
+            );
+        }
+    }
+
 
 }

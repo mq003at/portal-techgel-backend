@@ -21,4 +21,5 @@ public interface IApprovalWorkflowNodeService
     );
     Task<GeneralWorkflowStatusType> CheckApprovalStatusAsync(int nodeId);
     Task UploadSupportingDocumentsAsync(int nodeId, List<IFormFile> files);
+    Task PopulateNamesAndDocsAsync(ApprovalWorkflowNodeDTO nodeDto);
 }
