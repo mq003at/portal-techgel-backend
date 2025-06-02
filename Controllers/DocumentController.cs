@@ -72,6 +72,30 @@ public class DocumentController : ControllerBase
         return Ok(updated);
     }
 
+    [HttpPut("{id}/sign")]
+    public async Task<IActionResult> SignFileAsync(int id, IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("No signed file uploaded.");
+
+        await using var stream = file.OpenReadStream();
+
+        bool result;
+        try
+        {
+            result = await _documentService.SignFileAsync(id, stream);
+        }
+        catch (FileNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+
+        if (!result)
+            return StatusCode(500, "Failed to replace file.");
+
+        return Ok(new { success = true });
+    }
+
     // Updates the document metadata and replaces the file
     // PUT: api/document/{id}/upload
 

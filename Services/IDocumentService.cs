@@ -17,4 +17,5 @@ public interface IDocumentService
     Task<DocumentDTO> UploadAndReplaceDocumentAsync(UpdateDocumentDTO dto, int id);
     Task<bool> IsFileExistAsync(string category, string fileName);
     Task<DocumentStatusEnum> CheckDocumentStatusAsync(int id);
+    Task<bool> SignFileAsync(int documentId, Stream signedFileStream);
 }

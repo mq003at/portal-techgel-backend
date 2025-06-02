@@ -10,7 +10,7 @@ public interface IFileStorageService
     Task<List<string>> UploadMultipleAsync(List<(Stream fileStream, string remotePath)> files);
     Task<string> ChangeFileNameAsync(string oldFileName, string newFileName);
 
-
+    Task<bool> ReplaceFileAsync(string fileName, Stream newFileStream);
     Task<string> MoveFileToAnotherLocationAsync(
         string oldLocation,
         string newLocation

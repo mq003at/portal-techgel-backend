@@ -92,4 +92,24 @@ public class LocalFileStorageService : IFileStorageService
         File.Move(oldFullPath, newFullPath);
         return Task.FromResult(newLocation);
     }
+
+    public async Task<bool> ReplaceFileAsync(string fileName, Stream newFileStream)
+{
+    var safe = Path.GetFileName(fileName);
+    var full = Path.Combine(_basePath, safe);
+
+    // Check if the file exists before replacing
+    if (!File.Exists(full))
+        return false;
+
+    // Delete the old file
+    File.Delete(full);
+
+    // Upload the new file
+    Directory.CreateDirectory(_basePath); // Ensure directory still exists
+    await using var fs = File.Create(full);
+    await newFileStream.CopyToAsync(fs);
+
+    return true;
+}
 }

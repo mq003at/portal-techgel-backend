@@ -56,36 +56,36 @@ public class SftpFileStorageService : IFileStorageService
     }
 
     public async Task<string> ChangeFileNameAsync(string oldFileName, string newFileName)
-{
-    _logger.LogInformation("Renaming file from {OldFileName} to {NewFileName}", oldFileName, newFileName);
-
-    await _sync.WaitAsync();
-    try
     {
-        using var client = new SftpClient(
-            _opts.Host,
-            _opts.Port,
-            _opts.Username,
-            _opts.Password
-        );
+        _logger.LogInformation("Renaming file from {OldFileName} to {NewFileName}", oldFileName, newFileName);
 
-        client.Connect();
-
-        if (!client.Exists(oldFileName))
+        await _sync.WaitAsync();
+        try
         {
-            throw new FileNotFoundException($"File not found: {oldFileName}");
+            using var client = new SftpClient(
+                _opts.Host,
+                _opts.Port,
+                _opts.Username,
+                _opts.Password
+            );
+
+            client.Connect();
+
+            if (!client.Exists(oldFileName))
+            {
+                throw new FileNotFoundException($"File not found: {oldFileName}");
+            }
+
+            client.RenameFile(oldFileName, newFileName);
+            client.Disconnect();
+
+            return newFileName;
         }
-
-        client.RenameFile(oldFileName, newFileName);
-        client.Disconnect();
-
-        return newFileName;
+        finally
+        {
+            _sync.Release();
+        }
     }
-    finally
-    {
-        _sync.Release();
-    }
-}
 
     // Upload a single file to remote path
     public async Task<string> UploadAsync(Stream fileStream, string remotePath)
@@ -219,39 +219,77 @@ public class SftpFileStorageService : IFileStorageService
     }
 
     public async Task<string> MoveFileToAnotherLocationAsync(string oldLocation, string newLocation)
-{
-    _logger.LogInformation("Moving file from {OldLocation} to {NewLocation}", oldLocation, newLocation);
+    {
+        _logger.LogInformation("Moving file from {OldLocation} to {NewLocation}", oldLocation, newLocation);
 
+        await _sync.WaitAsync();
+        try
+        {
+            using var client = new SftpClient(
+                _opts.Host,
+                _opts.Port,
+                _opts.Username,
+                _opts.Password
+            );
+
+            client.Connect();
+
+            // Ensure the source file exists
+            if (!client.Exists(oldLocation))
+            {
+                throw new FileNotFoundException($"Source file not found: {oldLocation}");
+            }
+
+            // Ensure the target directory exists, create it if not
+            var newDirectory = Path.GetDirectoryName(newLocation)?.Replace('\\', '/');
+            if (!string.IsNullOrEmpty(newDirectory) && !client.Exists(newDirectory))
+            {
+                client.CreateDirectory(newDirectory);
+            }
+
+            // Perform the move operation
+            client.RenameFile(oldLocation, newLocation);
+            client.Disconnect();
+
+            return newLocation;
+        }
+        finally
+        {
+            _sync.Release();
+        }
+    }
+
+public async Task<bool> ReplaceFileAsync(string fileName, Stream newFileStream)
+{
     await _sync.WaitAsync();
     try
     {
-        using var client = new SftpClient(
-            _opts.Host,
-            _opts.Port,
-            _opts.Username,
-            _opts.Password
-        );
-
+        using var client = new SftpClient(_opts.Host, _opts.Port, _opts.Username, _opts.Password);
         client.Connect();
 
-        // Ensure the source file exists
-        if (!client.Exists(oldLocation))
+        // Check if file exists
+        if (!client.Exists(fileName))
         {
-            throw new FileNotFoundException($"Source file not found: {oldLocation}");
+            client.Disconnect();
+            return false;
         }
 
-        // Ensure the target directory exists, create it if not
-        var newDirectory = Path.GetDirectoryName(newLocation)?.Replace('\\', '/');
-        if (!string.IsNullOrEmpty(newDirectory) && !client.Exists(newDirectory))
+        // Delete the old file
+        client.DeleteFile(fileName);
+
+        // Ensure parent directory exists (in case file is in a subfolder)
+        var directory = Path.GetDirectoryName(fileName)?.Replace('\\', '/');
+        if (!string.IsNullOrEmpty(directory) && !client.Exists(directory))
         {
-            client.CreateDirectory(newDirectory);
+            client.CreateDirectory(directory);
         }
 
-        // Perform the move operation
-        client.RenameFile(oldLocation, newLocation);
+        // Upload new file
+        newFileStream.Position = 0;
+        client.UploadFile(newFileStream, fileName, true);
+
         client.Disconnect();
-
-        return newLocation;
+        return true;
     }
     finally
     {

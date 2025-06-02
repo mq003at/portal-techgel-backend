@@ -245,6 +245,21 @@ public class DocumentService : IDocumentService
         return entity.GeneralDocumentInfo?.Status ?? DocumentStatusEnum.UNKNOWN;
     }
 
+    public async Task<bool> SignFileAsync(int documentId, Stream signedFileStream)
+{
+    // Step 1: Check if document exists in DB
+    var doc = await _ctx.Documents.FindAsync(documentId);
+    if (doc == null)
+        throw new FileNotFoundException($"Document with ID {documentId} not found.");
+
+    // Step 2: Replace file in storage
+    bool replaced = await _storage.ReplaceFileAsync(doc.GeneralDocumentInfo.Url, signedFileStream);
+    if (!replaced)
+        throw new FileNotFoundException($"File '{doc.GeneralDocumentInfo.Url}' does not exist in storage.");
+    // Optionally: update metadata, e.g. mark as signed, update timestamp
+    return true;
+}
+
     // Check if a file exists in the storage. Helper funcs
     public async Task<bool> IsFileExistAsync(string category, string fileName)
     {
