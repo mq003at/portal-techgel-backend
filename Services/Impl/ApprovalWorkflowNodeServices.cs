@@ -47,6 +47,16 @@ public class ApprovalWorkflowNodeService
         var nodeDto = await base.CreateAsync(dto);
         await PopulateNamesAndDocsAsync(nodeDto);
 
+        var general = await _context.Set<GeneralWorkflow>()
+    .FirstOrDefaultAsync(g => g.Id == nodeDto.GeneralWorkflowId);
+
+        if (general != null)
+        {
+
+            _context.Update(general);
+            await _context.SaveChangesAsync();
+        }
+
         return nodeDto;
     }
 
