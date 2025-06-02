@@ -11,7 +11,4 @@ public interface IGeneralWorkflowService
         UpdateGeneralWorkflowDTO
     >
 {
-    Task<IEnumerable<ApprovalWorkflowNodeDTO>> GetNodesAsync(int workflowId);
-    Task<ApprovalWorkflowNodeDTO> AddNodeAsync(int workflowId, CreateApprovalWorkflowNodeDTO dto);
-    Task RemoveNodeAsync(int workflowId, int nodeId);
 }

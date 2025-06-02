@@ -191,4 +191,18 @@ public class EmployeeService
 
         return _mapper.Map<EmployeeDTO>(employee);
     }
+
+    public async Task<List<string>> GetUserNamesByIdsAsync(List<int> userIds)
+{
+    // Replace Employee with your actual user entity name if needed
+    var employees = await _context.Set<Employee>()
+        .Where(e => userIds.Contains(e.Id))
+        .ToListAsync();
+
+    // You can adjust formatting as needed
+    return employees
+        .OrderBy(e => userIds.IndexOf(e.Id)) // maintain original order
+        .Select(e => $"{e.FirstName} {e.LastName}".Trim())
+        .ToList();
+}
 }

@@ -5,6 +5,7 @@ using portal.Services;
 
 namespace portal.Controllers;
 
+[Route("api/[controller]s")]
 public class ApprovalWorkflowNodeController
     : BaseController<
         ApprovalWorkflowNode,

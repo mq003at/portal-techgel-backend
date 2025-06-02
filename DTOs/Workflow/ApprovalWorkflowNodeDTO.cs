@@ -57,6 +57,9 @@ public class CreateApprovalWorkflowNodeDTO : BaseDTO<ApprovalWorkflowNode>
     // Optional file attachments
     public List<IFormFile>? Files { get; set; }
     public List<int>? ExistingDocumentIds { get; set; }
+
+    [Required]
+    public int GeneralWorkflowId { get; set; }
 }
 
 public class UpdateApprovalWorkflowNodeDTO : BaseDTO<ApprovalWorkflowNode>

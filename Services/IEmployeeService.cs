@@ -7,4 +7,5 @@ public interface IEmployeeService
     : IBaseService<Employee, EmployeeDTO, CreateEmployeeDTO, UpdateEmployeeDTO>
 {
     Task<EmployeeDTO> LoginAsync(string MainId, string password);
+    Task<List<string>> GetUserNamesByIdsAsync(List<int> userIds);
 }
