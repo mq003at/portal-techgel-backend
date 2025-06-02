@@ -145,6 +145,9 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IOrganizationEntityService, OrganizationEntityService>();
 builder.Services.AddScoped<ISignatureService, SignatureService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IGeneralWorkflowService, GeneralWorkflowService>();
+builder.Services.AddScoped<IApprovalWorkflowNodeService, ApprovalWorkflowNodeService>();
+
 
 var app = builder.Build();
 

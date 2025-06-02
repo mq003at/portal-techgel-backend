@@ -4,7 +4,7 @@ using portal.Models;
 using portal.Services;
 
 namespace portal.Controllers;
-
+[Route("api/[controller]s")]
 public class GeneralWorkflowController
     : BaseController<
         GeneralWorkflow,
