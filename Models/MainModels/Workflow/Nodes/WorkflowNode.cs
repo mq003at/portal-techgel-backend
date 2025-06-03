@@ -16,4 +16,15 @@ abstract public class WorkflowNode : BaseModel
 
     [NotMapped]
     public ICollection<string> ApprovedByNames { get; set; } = new List<string>();
+
+    public ICollection<int> HasBeenApprovedByIds { get; set; } = new List<int>();
+    [NotMapped]
+    public ICollection<string> HasBeenApprovedByNames { get; set; } = new List<string>();
+    public ICollection<DateTime> ApprovedDates { get; set; } = new List<DateTime>();
+    public ICollection<int> DocumentIds { get; set; } = new List<int>();
+
+    [NotMapped]
+    public ICollection<string> DocumentNames { get; set; } = new List<string>();
+    [NotMapped]
+    public ICollection<string> DocumentUrls { get; set; } = new List<string>();
 }

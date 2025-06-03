@@ -1,14 +1,14 @@
-using portal.DTOs;
-using portal.Models;
+// using portal.DTOs;
+// using portal.Models;
 
-namespace portal.Services;
+// namespace portal.Services;
 
-public interface IGeneralWorkflowService
-    : IBaseService<
-        GeneralWorkflow,
-        GeneralWorkflowDTO,
-        CreateGeneralWorkflowDTO,
-        UpdateGeneralWorkflowDTO
-    >
-{
-}
+// public interface IGeneralWorkflowService
+//     : IBaseService<
+//         GeneralWorkflow,
+//         GeneralWorkflowDTO,
+//         CreateGeneralWorkflowDTO,
+//         UpdateGeneralWorkflowDTO
+//     >
+// {
+// }

@@ -83,6 +83,7 @@ public class OrganizationEntityService
         // 1) Lấy entity gốc (không include navigation)
         var entity = await _context
             .OrganizationEntities.AsNoTracking()
+            .OfType<OrganizationEntity>()
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (entity == null)

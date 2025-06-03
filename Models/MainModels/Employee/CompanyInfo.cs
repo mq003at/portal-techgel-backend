@@ -13,4 +13,5 @@ public class CompanyInfo
     public DateTime? EndDate { get; set; }
     public DateTime? ProbationStartDate { get; set; }
     public DateTime? ProbationEndDate { get; set; }
+    public float AnnualLeaveTotalDays { get; set; } = 0f;
 }
