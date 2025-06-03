@@ -1,3 +1,5 @@
+using portal.Enums;
+
 namespace portal.DTOs;
 
 public class LegalDocumentInfoDTO
@@ -11,14 +13,17 @@ public class LegalDocumentInfoDTO
 
     public List<int> DraftByIds { get; set; } = new();
     public List<int> PublishByIds { get; set; } = new();
-    public List<int> ApprovalByIds { get; set; } = new();
+    public List<int> RequestApprovalByIds { get; set; } = new();
+    public List<int> HaveApprovedByIds { get; set; } = new();
     public List<int> InspectionByIds { get; set; } = new();
+    public DocumentApprovalLogicEnum DocumentApprovalLogic { get; set; } = DocumentApprovalLogicEnum.PARALLEL;
 
     public List<string> DraftByNames { get; set; } = new();
     public List<string> PublishByNames { get; set; } = new();
     public List<string> ApprovalByNames { get; set; } = new();
     public List<string> InspectionByNames { get; set; } = new();
-
+    public List<string> HaveApprovedByNames { get; set; } = new();
+    public List<string> RequestApprovalByNames { get; set; } = new();
     public bool IsLegalDocument { get; set; }
 }
 
@@ -32,9 +37,12 @@ public class CreateLegalDocumentInfoDTO
     public string FinalApprovalDate { get; set; } = string.Empty;
     public string InspectionDate { get; set; } = string.Empty;
 
+    public DocumentApprovalLogicEnum DocumentApprovalLogic { get; set; } = DocumentApprovalLogicEnum.PARALLEL;
+
     public List<int> DraftByIds { get; set; } = new();
     public List<int> PublishByIds { get; set; } = new();
-    public List<int> ApprovalByIds { get; set; } = new();
+    public List<int> RequestApprovalByIds { get; set; } = new();
+    public List<int> HaveApprovedByIds { get; set; } = new();
     public List<int> InspectionByIds { get; set; } = new();
 
     public bool IsLegalDocument { get; set; }
@@ -51,8 +59,6 @@ public class UpdateLegalDocumentInfoDTO
 
     public List<int>? DraftByIds { get; set; }
     public List<int>? PublishByIds { get; set; }
-    public List<int>? ApprovalByIds { get; set; }
-    public List<int>? InspectionByIds { get; set; }
-
+    public List<int> HaveApprovedByIds { get; set; } = new(); public List<int>? InspectionByIds { get; set; }
     public bool? IsLegalDocument { get; set; }
 }

@@ -1,5 +1,14 @@
 namespace portal.Enums;
 
+
+public enum DocumentApprovalLogicEnum
+{
+    SEQUENTIAL, // Each node must be approved in order
+    PARALLEL,   // All nodes must approve simultaneously
+    MAJORITY,   // Majority of nodes must approve
+    QUORUM,     // A minimum number of nodes must approve
+    ABSOLUTE_MAJORITY // More than half of the total nodes must approve
+}
 public enum DocumentTypeEnum
 {
     DICISION,

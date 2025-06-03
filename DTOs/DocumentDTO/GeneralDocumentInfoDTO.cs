@@ -8,16 +8,16 @@ namespace portal.DTOs;
 public class GeneralDocumentInfoDTO
 {
     [Required, StringLength(255)]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [Required]
     public DocumentTypeEnum Type { get; set; }
 
     [Required]
-    public DocumentStatusEnum Status { get; set; } 
+    public DocumentStatusEnum Status { get; set; }
 
     [Required]
-    public DocumentSubTypeEnum SubType { get; set; } 
+    public DocumentSubTypeEnum SubType { get; set; }
 
     [Required]
     public DocumentCategoryEnum Category { get; set; }
@@ -75,9 +75,9 @@ public class UpdateGeneralDocumentInfoDTO
 
     public DocumentTypeEnum? Type { get; set; }
 
-    public DocumentStatusEnum? Status { get; set; } 
+    public DocumentStatusEnum? Status { get; set; }
 
-    public DocumentSubTypeEnum? SubType { get; set; } 
+    public DocumentSubTypeEnum? SubType { get; set; }
 
     public DocumentCategoryEnum? Category { get; set; }
 
