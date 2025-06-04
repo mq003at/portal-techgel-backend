@@ -16,6 +16,8 @@ public class LeaveRequestWorkflow : BaseWorkflow
     [Required]
     public LeaveAprrovalCategory LeaveAprrovalCategory { get; set; }
     public int WorkAssignedToId { get; set; }
+    [NotMapped]
+    public Employee? WorkAssignedTo { get; set; } = null;
     [Required]
     public DateTime StartDate { get; set; }
     [Required]

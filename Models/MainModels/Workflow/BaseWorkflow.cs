@@ -28,5 +28,10 @@ public abstract class BaseWorkflow : BaseModel
     [NotMapped]
     public List<string> HasBeenApprovedByNames { get; set; } = new List<string>();
 
+    public int SenderId { get; set; }
+    [NotMapped]
+    public string SenderName { get; set; } = string.Empty;
+    [NotMapped]
+    public Employee? Sender { get; set; } = null;
     public List<DateTime> ApprovedDates { get; set; } = new List<DateTime>();
 }

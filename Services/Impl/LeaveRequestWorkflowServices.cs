@@ -253,7 +253,7 @@ public class LeaveRequestWorkflowService : BaseService<
         await PopulateMetadataAsync(workflow);
         foreach (var node in workflow.LeaveRequestNodes)
         {
-            await PopulateMetadataAsync(node);
+            await PopulateMetadataAsync(node, workflow.SenderName);
         }
         return workflow;
     }
@@ -286,19 +286,13 @@ public class LeaveRequestWorkflowService : BaseService<
         );
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId);
         var assignee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.WorkAssignedToId);
-        _logger.LogInformation(
-            "Found Employee {EmployeeId} with Name {EmployeeName} with assignee {ass}",
-            employee?.Id,
-            employee?.FirstName + " " + employee?.LastName,
-            assignee?.FirstName + " " + assignee?.LastName
-        );
 
         if (employee != null && assignee != null)
         {
             workflow.SenderId = employee.Id;
-            workflow.SenderName = employee.FirstName + " " + employee.LastName;
-            workflow.EmployeeName = employee.FirstName + " " + employee.LastName;
-            workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.LastName;
+            workflow.SenderName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
+            workflow.EmployeeName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
+            workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName;
             workflow.WorkAssignedToPosition = assignee.CompanyInfo.Position ?? "";
             workflow.WorkAssignedToPhone = assignee.CompanyInfo.CompanyPhoneNumber ?? "";
             workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
@@ -310,25 +304,21 @@ public class LeaveRequestWorkflowService : BaseService<
             .Where(n => n.LeaveRequestWorkflowId == workflow.Id)
             .Select(n => _mapper.Map<LeaveRequestNodeDTO>(n))
             .ToList();
-    }
 
-    private async Task PopulateMetadataAsync(LeaveRequestNodeDTO node)
-    {
-        // Populate EmployeeName
-        _logger.LogInformation(
-            "Populating metadata for LeaveRequestNode with ID {Id} which has empid {empid}",
-            node.Id, node.SenderId
-        );
-        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == node.SenderId);
-        if (employee != null)
+        foreach (var node in workflow.LeaveRequestNodes)
         {
-            node.SenderName = employee.FirstName + " " + employee.LastName;
+            await PopulateMetadataAsync(node, workflow.SenderName);
         }
 
+    }
+
+    private async Task PopulateMetadataAsync(LeaveRequestNodeDTO node, string SenderName)
+    {
+        // Populate EmployeeName
         // Populate names from IDs
-
-
         node.HasBeenApprovedByNames = await GetNamesByIdsAsync(node.HasBeenApprovedByIds.ToList());
+        node.ApprovedByNames = await GetNamesByIdsAsync(node.ApprovedByIds.ToList());
+        node.SenderName = SenderName;
     }
 
     private async Task<List<string>> GetNamesByIdsAsync(List<int> ids)

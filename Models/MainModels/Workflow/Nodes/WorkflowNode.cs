@@ -12,6 +12,8 @@ abstract public class WorkflowNode : BaseModel
     public int SenderId { get; set; }
     [NotMapped]
     public string SenderName { get; set; } = string.Empty;
+    [NotMapped]
+    public Employee Sender { get; set; } = null!;
     public List<int>? ApprovedByIds { get; set; } = new List<int>();
 
     [NotMapped]
