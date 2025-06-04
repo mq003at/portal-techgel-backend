@@ -1,7 +1,7 @@
 public enum LeaveApprovalStepType
 {
-    ManagerApproval = 0,
-    SummaryTracking = 1,
+    CreateForm = 0,
+    ManagerApproval = 1,
     HRHeadApproval = 2,
     ExecutiveApproval = 3,
 }

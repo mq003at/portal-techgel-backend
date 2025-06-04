@@ -30,81 +30,94 @@ public class LeaveRequestWorkflowService : BaseService<
         _logger = logger;
     }
 
-    public async Task<List<LeaveRequestNodeDTO>> GenerateStepsAsync(CreateLeaveRequestWorkflowDTO dto, int workflowId)
+    public async Task<List<LeaveRequestNodeDTO>> GenerateStepsAsync(
+        CreateLeaveRequestWorkflowDTO dto,
+        LeaveRequestWorkflow workflow)
     {
-        // Get last Id for increment [NOTE: THIS ASSUMES ID IS AUTO-INCREMENTED & DATABASE ALREADY HAS SOMETHING IN]
-        var lastId = _context.LeaveRequestNodes.Any()
-            ? _context.LeaveRequestNodes.Max(x => x.Id)
+        // Get the last node ID (handle empty table)
+        var lastId = await _context.LeaveRequestNodes.AnyAsync()
+            ? await _context.LeaveRequestNodes.MaxAsync(x => x.Id)
             : 0;
 
-        // Calculate total days from StartDate to EndDate
-        var totalDays = (dto.EndDate - dto.StartDate).Days + (dto.EndDateDayNightType - dto.StartDateDayNightType) * 0.5;
+        // Calculate number of leave days (min 0.5)
+        var totalDays = (dto.EndDate - dto.StartDate).Days +
+                        (dto.EndDateDayNightType - dto.StartDateDayNightType) * 0.5;
+        if (totalDays < 0.4)
+            throw new ArgumentException("End date must be after start date and at least half a day apart.");
 
-        if (totalDays < 0)
-        {
-            throw new ArgumentException("End date must be after start date.");
-        }
-
-        // Get managerID
-        var managerId = _context.Employees
+        // Fetch annual leave and update DTO
+        var employee = await _context.Employees
             .Where(e => e.Id == dto.EmployeeId)
-            .Select(e => e.RoleInfo.SupervisorId)
-            .FirstOrDefault();
+            .Select(e => new { e.CompanyInfo.AnnualLeaveTotalDays, e.RoleInfo.SupervisorId })
+            .FirstOrDefaultAsync();
 
-        if (managerId is null)
-        {
-            throw new InvalidOperationException(
-                $"Employee with ID {dto.EmployeeId} does not have a valid manager."
-            );
-        }
+        if (employee == null)
+            throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
 
-        // var steps = new List<LeaveRequestNode>();
-        var steps = new List<(string, int, List<int?>, List<int?>)>
-        {
-            ("Tạo yêu cầu nghỉ phép", 1, [dto.SenderId], [dto.SenderId]),
-            ("Quản lý trực thuộc ký", 0, [managerId], [])
-        };
+        dto.EmployeeAnnualLeaveTotalDays = employee.AnnualLeaveTotalDays;
+        dto.FinalEmployeeAnnualLeaveTotalDays = employee.AnnualLeaveTotalDays - (float)totalDays;
+
+        // Get Director (Executive) and HR Head
+        var directorId = await _context.OrganizationEntities
+            .Where(e => e.Id == 3)
+            .Select(e => e.ManagerId)
+            .FirstOrDefaultAsync();
+
+        if (employee.SupervisorId is null || directorId is null)
+            throw new InvalidOperationException("Workflow is missing required manager IDs.");
+
+        // Build up receiver IDs for workflow
+        workflow.ReceiverIds.AddRange(new[] { dto.SenderId, employee.SupervisorId.Value, directorId.Value });
+
+        // Compose workflow steps
+        var steps = new List<(string Name, LeaveApprovalStepType StepType, int Status, List<int> Approvers, List<int> Approved)>
+    {
+        ("Tạo yêu cầu nghỉ phép", LeaveApprovalStepType.CreateForm, 1, new() { dto.SenderId }, new() { dto.SenderId }),
+        ("Quản lý trực thuộc ký", LeaveApprovalStepType.ManagerApproval, 0, new() { employee.SupervisorId.Value }, new())
+    };
+
         if (totalDays >= 3.0)
         {
-            // NOTE: Assuming HR Head has a fixed ID of 11 & there is a manager for it
-            var hrHeadId = _context.OrganizationEntities
-                .Where(e => e.Id.Equals(11))
+            var hrHeadId = await _context.OrganizationEntities
+                .Where(e => e.Id == 11)
                 .Select(e => e.ManagerId)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
-            steps.Add(("Trưởng phòng nhân sự ký", 2, [hrHeadId], []));
+            if (hrHeadId is null)
+                throw new InvalidOperationException("HR Head does not have a valid manager.");
+
+            steps.Add(("Trưởng phòng nhân sự ký", LeaveApprovalStepType.HRHeadApproval, 2, new() { hrHeadId.Value }, new()));
+            workflow.ReceiverIds.Add(hrHeadId.Value);
         }
 
-        var DirectorExecuteId = _context.OrganizationEntities
-            .Where(e => e.Id.Equals(3)) // Assuming 12 is the ID for Executive
-            .Select(e => e.ManagerId)
-            .FirstOrDefault();
-        steps.Add(("Ký xác nhận cuối cùng", 2, [DirectorExecuteId], []));
+        steps.Add(("Ký xác nhận cuối cùng", LeaveApprovalStepType.ExecutiveApproval, 2, new() { directorId.Value }, new()));
 
+        // Build and add nodes
         var nodes = new List<LeaveRequestNode>();
         for (int i = 0; i < steps.Count; i++)
         {
+            var step = steps[i];
             var newId = lastId + i + 1;
-            // Ensure DraftedByIds are unique
+
             var node = new LeaveRequestNode
             {
-                LeaveRequestWorkflowId = workflowId,
-                StepType = (LeaveApprovalStepType)i,
-                MainId = "AS-S" + i.ToString() + '-' + DateTime.Now.ToString("dd.MM.yyyy") + '/' + newId.ToString(),
-                Name = steps[i].Item1,
-                SenderId = dto.SenderId, // Default to 0 if no DraftedByIds
-                Status = (GeneralWorkflowStatusType)steps[i].Item2,
-                ApprovedByIds = steps[i].Item3.Where(x => x.HasValue).Select(x => x.Value).ToList(),
-                HasBeenApprovedByIds = steps[i].Item4.Where(x => x.HasValue).Select(x => x.Value).ToList(),
-                ApprovedDates = [],
-                DocumentIds = [14]
+                LeaveRequestWorkflowId = workflow.Id,
+                StepType = step.StepType,
+                MainId = $"AS-S{i}-{DateTime.Now:dd.MM.yyyy}/{newId}",
+                Name = step.Name,
+                SenderId = dto.SenderId,
+                Status = (GeneralWorkflowStatusType)step.Status,
+                ApprovedByIds = step.Approvers,
+                HasBeenApprovedByIds = step.Approved,
+                ApprovedDates = new(),
+                DocumentIds = new() { 14 }
             };
+
             nodes.Add(node);
             _context.LeaveRequestNodes.Add(node);
         }
 
         await _context.SaveChangesAsync();
-
         return _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
     }
 
@@ -206,7 +219,7 @@ public class LeaveRequestWorkflowService : BaseService<
         );
 
         // ✅ Sinh node
-        var nodes = await GenerateStepsAsync(dto, entity.Id);
+        var nodes = await GenerateStepsAsync(dto, entity);
         var finalDto = _mapper.Map<LeaveRequestWorkflowDTO>(entity);
         // Populate thêm metadata nếu cần
         await PopulateMetadataAsync(finalDto);
@@ -278,6 +291,8 @@ public class LeaveRequestWorkflowService : BaseService<
 
         if (employee != null && assignee != null)
         {
+            workflow.SenderId = employee.Id;
+            workflow.SenderName = employee.FirstName + " " + employee.LastName;
             workflow.EmployeeName = employee.FirstName + " " + employee.LastName;
             workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.LastName;
             workflow.WorkAssignedToPosition = assignee.CompanyInfo.Position ?? "";
@@ -297,7 +312,7 @@ public class LeaveRequestWorkflowService : BaseService<
         {
             return await _context.Employees
                 .Where(e => ids.Contains(e.Id))
-                .Select(e => e.FirstName + " " + e.LastName)
+                .Select(e => e.FirstName + " " + e.MiddleName + " " + e.LastName)
                 .ToListAsync();
         }
 

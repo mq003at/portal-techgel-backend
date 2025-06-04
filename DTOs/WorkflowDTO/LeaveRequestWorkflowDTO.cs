@@ -15,6 +15,7 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO<LeaveRequestWorkflow>
 
     public int TotalDays => (EndDate - StartDate).Days + 1;
     public float EmployeeAnnualLeaveTotalDays { get; set; }
+    public float FinalEmployeeAnnualLeaveTotalDays { get; set; }
     public LeaveAprrovalCategory LeaveAprrovalCategory { get; set; }
     public int WorkAssignedToId { get; set; }
     public string? WorkAssignedToName { get; set; }
@@ -51,6 +52,10 @@ public class CreateLeaveRequestWorkflowDTO : CreateBaseWorkflowDTO<LeaveRequestW
     [Required]
 
     public required int WorkAssignedToId { get; set; }
+
+    public float? FinalEmployeeAnnualLeaveTotalDays { get; set; }
+    public float? EmployeeAnnualLeaveTotalDays { get; set; }
+
 }
 
 public class UpdateLeaveRequestWorkflowDTO : UpdateBaseWorkflowDTO<LeaveRequestWorkflow>

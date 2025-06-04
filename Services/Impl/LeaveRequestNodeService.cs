@@ -76,11 +76,26 @@ public class LeaveRequestNodeService : BaseService<
             {
                 var workflow = await _context.LeaveRequestWorkflows
                     .FindAsync(node.LeaveRequestWorkflowId);
-                if (workflow != null)
+                if (workflow is null)
                 {
-                    workflow.Status = GeneralWorkflowStatusType.Approved;
-                    _context.LeaveRequestWorkflows.Update(workflow);
+                    throw new InvalidOperationException(
+                        $"Workflow with ID {node.LeaveRequestWorkflowId} not found."
+                    );
                 }
+                workflow.Status = GeneralWorkflowStatusType.Approved;
+                _context.LeaveRequestWorkflows.Update(workflow);
+
+                var employee = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId);
+                if (employee is null)
+                {
+                    throw new InvalidOperationException(
+                        $"Employee with ID {workflow.EmployeeId} not found."
+                    );
+                }
+
+                employee.CompanyInfo.AnnualLeaveTotalDays = workflow.FinalEmployeeAnnualLeaveTotalDays;
+                _context.Employees.Update(employee);
             }
             else
             {

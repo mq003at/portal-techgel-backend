@@ -33,7 +33,7 @@ public abstract class CreateBaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkfl
     public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.Draft;
 
     public List<int> ReceiverIds { get; set; } = new List<int>();
-    public int SenderId { get; set; }
+    public required int SenderId { get; set; }
 }
 
 public abstract class UpdateBaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkflow
