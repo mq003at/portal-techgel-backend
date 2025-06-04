@@ -49,8 +49,20 @@ public class EmployeeConfiguration
             ri =>
             {
                 // map Supervisor & Group
-                ri.Property(r => r.SupervisorId).HasColumnName("SupervisorId");
-                ri.Property(r => r.GroupId).HasColumnName("GroupId");
+                ri.Property(r => r.SupervisorId).IsRequired(false).HasColumnName("SupervisorId");
+                ri.Property(r => r.GroupId).IsRequired(false).HasColumnName("GroupId");
+                ri.Property(r => r.ManagedOrganizationEntityIds)
+                    .HasConversion(
+                        v => string.Join(",", v),
+                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
+                    )
+                    .HasColumnName("ManagedOrganizationEntityIds");
+                ri.Property(r => r.SubordinateIds)
+                    .HasConversion(
+                        v => string.Join(",", v),
+                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
+                    )
+                    .HasColumnName("SubordinateIds");
 
                 // supervisor FK
                 ri.HasOne(r => r.Supervisor)
@@ -58,10 +70,6 @@ public class EmployeeConfiguration
                     .HasForeignKey(r => r.SupervisorId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // ignore the collections (they live in their own tables)
-                ri.Ignore(r => r.Subordinates);
-                ri.Ignore(r => r.ManagedOrganizationEntities);
-                ri.Ignore(r => r.OrganizationEntityEmployees);
             }
         );
     }

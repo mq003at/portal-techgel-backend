@@ -44,5 +44,6 @@ public class LeaveRequestNodeConfiguration : BaseModelConfiguration<LeaveRequest
         builder.Property(n => n.StepType)
                .HasConversion<int>()
                .IsRequired();
+
     }
 }

@@ -13,9 +13,9 @@ public class LeaveRequestNodeService : BaseService<
     UpdateLeaveRequestNodeDTO>,
     ILeaveRequestNodeService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IMapper _mapper;
-    private readonly ILogger<LeaveRequestNodeService> _logger;
+    private new readonly ApplicationDbContext _context;
+    private new readonly IMapper _mapper;
+    private new readonly ILogger<LeaveRequestNodeService> _logger;
 
     public LeaveRequestNodeService(
         ApplicationDbContext context,

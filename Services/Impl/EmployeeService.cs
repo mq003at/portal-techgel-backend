@@ -93,8 +93,8 @@ public class EmployeeService
 
         // 2) Validation checks
         if (
-            entity.RoleInfo.SupervisorId.HasValue
-            && !await _employees.AnyAsync(e => e.Id == entity.RoleInfo.SupervisorId.Value)
+            entity.RoleInfo.SupervisorId != 0
+            && !await _employees.AnyAsync(e => e.Id == entity.RoleInfo.SupervisorId)
         )
         {
             _logger.LogWarning(
@@ -111,7 +111,11 @@ public class EmployeeService
 
         await _context.SaveChangesAsync();
 
-        entity.MainId = "TG" + entity.Id;
+        entity.MainId = GenerateMainIdForEmployee(
+            "TG",
+            entity.Id
+        );
+
         _context.Employees.Update(entity);
         await _context.SaveChangesAsync();
 
@@ -193,16 +197,27 @@ public class EmployeeService
     }
 
     public async Task<List<string>> GetUserNamesByIdsAsync(List<int> userIds)
-{
-    // Replace Employee with your actual user entity name if needed
-    var employees = await _context.Set<Employee>()
-        .Where(e => userIds.Contains(e.Id))
-        .ToListAsync();
+    {
+        // Replace Employee with your actual user entity name if needed
+        var employees = await _context.Set<Employee>()
+            .Where(e => userIds.Contains(e.Id))
+            .ToListAsync();
 
-    // You can adjust formatting as needed
-    return employees
-        .OrderBy(e => userIds.IndexOf(e.Id)) // maintain original order
-        .Select(e => $"{e.FirstName} {e.LastName}".Trim())
-        .ToList();
-}
+        // You can adjust formatting as needed
+        return employees
+            .OrderBy(e => userIds.IndexOf(e.Id)) // maintain original order
+            .Select(e => $"{e.FirstName} {e.LastName}".Trim())
+            .ToList();
+    }
+
+    public static string GenerateMainIdForEmployee(string prefix, int number, int totalDigits = 5)
+    {
+        if (string.IsNullOrWhiteSpace(prefix))
+            throw new ArgumentException("Prefix cannot be empty.");
+
+        if (number < 0)
+            throw new ArgumentException("Number must be non-negative.");
+
+        return $"{prefix}{number.ToString().PadLeft(totalDigits, '0')}";
+    }
 }

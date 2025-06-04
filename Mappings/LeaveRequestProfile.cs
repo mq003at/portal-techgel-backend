@@ -18,16 +18,17 @@ public class LeaveRequestProfile : Profile
             .ForMember(dest => dest.LeaveRequestName, opt => opt.MapFrom(src => src.LeaveRequestWorkflow.Name));
 
         // ----------- CREATE MAPPING ----------- //
-        CreateMap<CreateLeaveRequestWorkflowDTO, LeaveRequestWorkflow>()
-            .ForMember(dest => dest.LeaveRequestNodes, opt => opt.MapFrom(src => src.LeaveRequestNodes));
+        CreateMap<CreateLeaveRequestWorkflowDTO, LeaveRequestWorkflow>();
 
         CreateMap<CreateLeaveRequestNodeDTO, LeaveRequestNode>();
 
         // ----------- UPDATE MAPPING ----------- //
         CreateMap<UpdateLeaveRequestWorkflowDTO, LeaveRequestWorkflow>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
         CreateMap<UpdateLeaveRequestNodeDTO, LeaveRequestNode>()
+             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
     }
 }

@@ -49,6 +49,16 @@ public class LeaveRequestWorkflowConfiguration : BaseModelConfiguration<LeaveReq
                 v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(DateTime.Parse).ToList()
             );
 
+        // Configure buoi sang hay chieu
+
+        builder.Property(n => n.StartDateDayNightType)
+            .HasConversion<int>()
+            .IsRequired();
+        builder.Property(n => n.EndDateDayNightType)
+            .HasConversion<int>()
+            .IsRequired();
+
+
         builder.HasMany(w => w.LeaveRequestNodes)
                .WithOne(n => n.LeaveRequestWorkflow)
                .HasForeignKey(n => n.LeaveRequestWorkflowId)
