@@ -6,7 +6,7 @@ using portal.Db;
 using portal.DTOs;
 using portal.Enums;
 using portal.Models;
-
+using Serilog;
 
 public class LeaveRequestWorkflowService : BaseService<
     LeaveRequestWorkflow,
@@ -195,11 +195,15 @@ public class LeaveRequestWorkflowService : BaseService<
     public override async Task<LeaveRequestWorkflowDTO?> GetByIdAsync(int id)
     {
         var workflow = await base.GetByIdAsync(id);
-        if (workflow != null)
+        if (workflow is null)
         {
-            // Populate metadata for the retrieved workflow
-            await PopulateMetadataAsync(workflow);
+            throw new KeyNotFoundException($"LeaveRequestWorkflow with ID {id} not found.");
         }
+        await PopulateMetadataAsync(workflow);
+        _logger.LogInformation(
+            "Retrieved LeaveRequestWorkflow with ID {Id} for Employee {EmployeeId}",
+            workflow.WorkAssignedToId, workflow.WorkAssignedToName
+        );
         return workflow;
     }
 
@@ -214,6 +218,7 @@ public class LeaveRequestWorkflowService : BaseService<
             await PopulateMetadataAsync(workflow);
         }
 
+
         return workflowList;
     }
 
@@ -227,10 +232,10 @@ public class LeaveRequestWorkflowService : BaseService<
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId);
         var assignee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.WorkAssignedToId);
         _logger.LogInformation(
-            "Found Employee {EmployeeId} with Name {EmployeeName}",
+            "Found Employee {EmployeeId} with Name {EmployeeName} with assignee {ass}",
             employee?.Id,
-            employee?.FirstName + " " + employee?.LastName
-
+            employee?.FirstName + " " + employee?.LastName,
+            assignee?.FirstName + " " + assignee?.LastName
         );
 
         if (employee != null && assignee != null)
@@ -242,6 +247,12 @@ public class LeaveRequestWorkflowService : BaseService<
             workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
             workflow.WorkAssignedToHomeAdress = assignee.PersonalInfo.Address ?? "";
         }
+
+        _logger.LogInformation(
+    "ASSIGNED Employee {name}, {phone}",
+    workflow.WorkAssignedToName,
+    workflow.WorkAssignedToPhone
+);
 
         // Populate names from IDs
         async Task<List<string>> GetNamesByIdsAsync(List<int> ids)

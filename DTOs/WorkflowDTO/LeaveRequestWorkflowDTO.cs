@@ -14,14 +14,14 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO<LeaveRequestWorkflow>
     public DateTime EndDate { get; set; }
 
     public int TotalDays => (EndDate - StartDate).Days + 1;
-    public float EmployeeAnnualLeaveTotalDays { get; set; } = 0f;
+    public float EmployeeAnnualLeaveTotalDays { get; set; }
     public LeaveAprrovalCategory LeaveAprrovalCategory { get; set; }
     public int WorkAssignedToId { get; set; }
-    public string WorkAssignedToName = string.Empty;
-    public string WorkAssignedToPosition = string.Empty;
-    public string WorkAssignedToPhone = string.Empty;
-    public string WorkAssignedToEmail = string.Empty;
-    public string WorkAssignedToHomeAdress = string.Empty;
+    public string? WorkAssignedToName { get; set; }
+    public string? WorkAssignedToPosition { get; set; }
+    public string? WorkAssignedToPhone { get; set; }
+    public string? WorkAssignedToEmail { get; set; }
+    public string? WorkAssignedToHomeAdress { get; set; }
 
     public List<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new List<LeaveRequestNodeDTO>();
 }
