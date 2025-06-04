@@ -66,14 +66,14 @@ public class LeaveRequestWorkflowService : BaseService<
                 .Select(e => e.ManagerId)
                 .FirstOrDefault();
 
-            steps.Add(("Trưởng phòng nhân sự ký", 0, [hrHeadId], []));
+            steps.Add(("Trưởng phòng nhân sự ký", 2, [hrHeadId], []));
         }
 
         var DirectorExecuteId = _context.OrganizationEntities
             .Where(e => e.Id.Equals(3)) // Assuming 12 is the ID for Executive
             .Select(e => e.ManagerId)
             .FirstOrDefault();
-        steps.Add(("Ký xác nhận cuối cùng", 0, [DirectorExecuteId], []));
+        steps.Add(("Ký xác nhận cuối cùng", 2, [DirectorExecuteId], []));
 
         var nodes = new List<LeaveRequestNode>();
         for (int i = 0; i < steps.Count; i++)

@@ -4,6 +4,7 @@ public enum GeneralWorkflowStatusType
 {
     Pending,
     Approved,
+    Onwaiting,
     Rejected,
     Cancelled,
     Expired,
