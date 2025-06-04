@@ -56,11 +56,22 @@ public class LeaveRequestNodeService : BaseService<
                 $"Node {nodeId} has already been approved by {approverId}."
             );
 
+        var workflow = await _context.LeaveRequestWorkflows
+            .FindAsync(node.LeaveRequestWorkflowId);
+
+        if (workflow is null)
+        {
+            throw new InvalidOperationException(
+                $"Workflow with ID {node.LeaveRequestWorkflowId} not found."
+            );
+        }
         // Thêm vào danh sách đã approve
         node.HasBeenApprovedByIds.Add(approverId);
+        workflow.HasBeenApprovedByIds.Add(approverId);
 
         node.ApprovedDates ??= new List<DateTime>();
         node.ApprovedDates.Add(DateTime.UtcNow);
+        workflow.ApprovedDates.Add(DateTime.UtcNow);
 
         // Check đã đủ approved hay chưa
         var hasNodeAllApproved = Helpers.ArrayHelper.AreArraysEqual(
@@ -74,14 +85,6 @@ public class LeaveRequestNodeService : BaseService<
             // Neu la node 3 (final node), update the workflow status
             if (node.StepType == LeaveApprovalStepType.ExecutiveApproval)
             {
-                var workflow = await _context.LeaveRequestWorkflows
-                    .FindAsync(node.LeaveRequestWorkflowId);
-                if (workflow is null)
-                {
-                    throw new InvalidOperationException(
-                        $"Workflow with ID {node.LeaveRequestWorkflowId} not found."
-                    );
-                }
                 workflow.Status = GeneralWorkflowStatusType.Approved;
                 _context.LeaveRequestWorkflows.Update(workflow);
 
@@ -118,4 +121,5 @@ public class LeaveRequestNodeService : BaseService<
         await _context.SaveChangesAsync();
         return true;
     }
+
 }

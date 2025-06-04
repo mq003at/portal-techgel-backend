@@ -251,10 +251,10 @@ public class LeaveRequestWorkflowService : BaseService<
             throw new KeyNotFoundException($"LeaveRequestWorkflow with ID {id} not found.");
         }
         await PopulateMetadataAsync(workflow);
-        _logger.LogInformation(
-            "Retrieved LeaveRequestWorkflow with ID {Id} for Employee {EmployeeId}",
-            workflow.WorkAssignedToId, workflow.WorkAssignedToName
-        );
+        foreach (var node in workflow.LeaveRequestNodes)
+        {
+            await PopulateMetadataAsync(node);
+        }
         return workflow;
     }
 
@@ -267,6 +267,10 @@ public class LeaveRequestWorkflowService : BaseService<
         foreach (var workflow in workflowList)
         {
             await PopulateMetadataAsync(workflow);
+            // foreach (var node in workflow.LeaveRequestNodes)
+            // {
+            //     await PopulateMetadataAsync(node);
+            // }
         }
 
 
@@ -300,23 +304,38 @@ public class LeaveRequestWorkflowService : BaseService<
             workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
             workflow.WorkAssignedToHomeAdress = assignee.PersonalInfo.Address ?? "";
         }
-
-        _logger.LogInformation(
-    "ASSIGNED Employee {name}, {phone}",
-    workflow.WorkAssignedToName,
-    workflow.WorkAssignedToPhone
-);
-
-        // Populate names from IDs
-        async Task<List<string>> GetNamesByIdsAsync(List<int> ids)
-        {
-            return await _context.Employees
-                .Where(e => ids.Contains(e.Id))
-                .Select(e => e.FirstName + " " + e.MiddleName + " " + e.LastName)
-                .ToListAsync();
-        }
-
         workflow.ReceiverNames = await GetNamesByIdsAsync(workflow.ReceiverIds.ToList());
         workflow.HasBeenApprovedByNames = await GetNamesByIdsAsync(workflow.HasBeenApprovedByIds.ToList());
+        workflow.LeaveRequestNodes = _context.LeaveRequestNodes
+            .Where(n => n.LeaveRequestWorkflowId == workflow.Id)
+            .Select(n => _mapper.Map<LeaveRequestNodeDTO>(n))
+            .ToList();
+    }
+
+    private async Task PopulateMetadataAsync(LeaveRequestNodeDTO node)
+    {
+        // Populate EmployeeName
+        _logger.LogInformation(
+            "Populating metadata for LeaveRequestNode with ID {Id} which has empid {empid}",
+            node.Id, node.SenderId
+        );
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == node.SenderId);
+        if (employee != null)
+        {
+            node.SenderName = employee.FirstName + " " + employee.LastName;
+        }
+
+        // Populate names from IDs
+
+
+        node.HasBeenApprovedByNames = await GetNamesByIdsAsync(node.HasBeenApprovedByIds.ToList());
+    }
+
+    private async Task<List<string>> GetNamesByIdsAsync(List<int> ids)
+    {
+        return await _context.Employees
+            .Where(e => ids.Contains(e.Id))
+            .Select(e => e.FirstName + " " + e.MiddleName + " " + e.LastName)
+            .ToListAsync();
     }
 }
