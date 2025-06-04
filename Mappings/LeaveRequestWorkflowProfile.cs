@@ -5,9 +5,9 @@ using portal.Models;
 namespace portal.Mappings;
 
 
-public class LeaveRequestProfile : Profile
+public class LeaveRequestWorkflowProfile : Profile
 {
-    public LeaveRequestProfile()
+    public LeaveRequestWorkflowProfile()
     {
         // ----------- GET MAPPING ----------- //
         CreateMap<LeaveRequestWorkflow, LeaveRequestWorkflowDTO>()

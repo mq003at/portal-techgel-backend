@@ -17,10 +17,10 @@ public class GeneralDocumentInfo
     public int OrganizationEntityResponsibleId { get; set; }
     public string OrganizationEntityResponsibleName { get; set; } = string.Empty;
 
-    public ICollection<string> Tag { get; set; } = new List<string>();
+    public List<string> Tag { get; set; } = new List<string>();
     public string Description { get; set; } = null!;
     public string Url { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
 
-    public ICollection<int> GeneralWorkflowIds { get; set; } = new List<int>();
+    public List<int> GeneralWorkflowIds { get; set; } = new List<int>();
 }

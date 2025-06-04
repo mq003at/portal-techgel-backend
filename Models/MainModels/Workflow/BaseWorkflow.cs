@@ -12,21 +12,21 @@ public abstract class BaseWorkflow : BaseModel
     public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.Draft;
 
     // Who can see the workflow?
-    public ICollection<int> ReceiverIds { get; set; } = new List<int>();
+    public List<int> ReceiverIds { get; set; } = new List<int>();
     [NotMapped]
-    public ICollection<string> ReceiverNames { get; set; } = new List<string>();
+    public List<string> ReceiverNames { get; set; } = new List<string>();
 
 
     // Metadata about who created or approved the workflow
 
-    public ICollection<int> DraftedByIds { get; set; } = new List<int>();
+    public List<int> DraftedByIds { get; set; } = new List<int>();
     [NotMapped]
-    public ICollection<string> DraftedByNames { get; set; } = new List<string>();
+    public List<string> DraftedByNames { get; set; } = new List<string>();
 
-    public ICollection<int> HasBeenApprovedByIds { get; set; } = new List<int>();
+    public List<int> HasBeenApprovedByIds { get; set; } = new List<int>();
 
     [NotMapped]
-    public ICollection<string> HasBeenApprovedByNames { get; set; } = new List<string>();
+    public List<string> HasBeenApprovedByNames { get; set; } = new List<string>();
 
-    public ICollection<DateTime> ApprovedDates { get; set; } = new List<DateTime>();
+    public List<DateTime> ApprovedDates { get; set; } = new List<DateTime>();
 }

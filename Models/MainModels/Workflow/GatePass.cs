@@ -9,5 +9,5 @@ public class GatePass : BaseWorkflow
     public string Reason { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public ICollection<GatePassNodes> GatePassNodes { get; set; } = new List<GatePassNodes>();
+    public List<GatePassNodes> GatePassNodes { get; set; } = new List<GatePassNodes>();
 }

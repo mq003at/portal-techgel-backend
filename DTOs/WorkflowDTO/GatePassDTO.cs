@@ -12,5 +12,5 @@ public class GatePassDTO : BaseWorkflowDTO<GatePass>
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 
-    // public ICollection<GatePassNodeDTO> GatePassNodes { get; set; } = new List<GatePassNodeDTO>();
+    // public List<GatePassNodeDTO> GatePassNodes { get; set; } = new List<GatePassNodeDTO>();
 }

@@ -34,8 +34,8 @@ public class GeneralDocumentInfoDTO
     public string Url { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
 
-    public ICollection<int> GeneralWorkflowIds { get; set; } = new List<int>();
-    public ICollection<string> GeneralWorkflowNames { get; set; } = new List<string>();
+    public List<int> GeneralWorkflowIds { get; set; } = new List<int>();
+    public List<string> GeneralWorkflowNames { get; set; } = new List<string>();
 }
 public class CreateGeneralDocumentInfoDTO
 {
@@ -65,7 +65,7 @@ public class CreateGeneralDocumentInfoDTO
     public string Url { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
 
-    public ICollection<int> GeneralWorkflowIds { get; set; } = new List<int>();
+    public List<int> GeneralWorkflowIds { get; set; } = new List<int>();
 }
 
 public class UpdateGeneralDocumentInfoDTO
@@ -90,5 +90,5 @@ public class UpdateGeneralDocumentInfoDTO
     public string? Url { get; set; }
     public string? Version { get; set; }
 
-    public ICollection<int>? GeneralWorkflowIds { get; set; }
+    public List<int>? GeneralWorkflowIds { get; set; }
 }

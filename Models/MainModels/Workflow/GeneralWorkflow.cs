@@ -7,8 +7,8 @@
 // {
 //     public GeneralWorkflowInfo GeneralWorkflowInfo { get; set; } = new();
 
-//     public ICollection<int> ApprovalWorkflowNodesIds { get; set; } = new List<int>();
-//     public ICollection<ApprovalWorkflowNode> ApprovalWorkflowNodes { get; set; } =
+//     public List<int> ApprovalWorkflowNodesIds { get; set; } = new List<int>();
+//     public List<ApprovalWorkflowNode> ApprovalWorkflowNodes { get; set; } =
 //         new List<ApprovalWorkflowNode>();
 // }
 
@@ -22,13 +22,13 @@
 //     public GeneralWorkflowStatusType Status { get; set; }
 //     // public GeneralWorkflowLogicType WorkflowLogic { get; set; }
 
-//     public ICollection<int> ApprovedByIds { get; set; } = new List<int>();
+//     public List<int> ApprovedByIds { get; set; } = new List<int>();
 //     [NotMapped]
-//     public ICollection<string> ApprovedByNames { get; set; } = new List<string>();
+//     public List<string> ApprovedByNames { get; set; } = new List<string>();
 
-//     public ICollection<int> DraftedByIds { get; set; } = new List<int>();
+//     public List<int> DraftedByIds { get; set; } = new List<int>();
 //     [NotMapped]
-//     public ICollection<string> DraftedByNames { get; set; } = new List<string>();
+//     public List<string> DraftedByNames { get; set; } = new List<string>();
 
 //     // public int? Quota { get; set; }
 // }

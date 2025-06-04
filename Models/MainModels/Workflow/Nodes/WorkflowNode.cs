@@ -12,19 +12,19 @@ abstract public class WorkflowNode : BaseModel
     public int SenderId { get; set; }
     [NotMapped]
     public string SenderName { get; set; } = string.Empty;
-    public ICollection<int>? ApprovedByIds { get; set; }
+    public List<int>? ApprovedByIds { get; set; } = new List<int>();
 
     [NotMapped]
-    public ICollection<string>? ApprovedByNames { get; set; }
+    public List<string>? ApprovedByNames { get; set; } = new List<string>();
 
-    public ICollection<int>? HasBeenApprovedByIds { get; set; }
+    public List<int>? HasBeenApprovedByIds { get; set; } = new List<int>();
     [NotMapped]
-    public ICollection<string>? HasBeenApprovedByNames { get; set; }
-    public ICollection<DateTime>? ApprovedDates { get; set; }
-    public ICollection<int>? DocumentIds { get; set; }
+    public List<string>? HasBeenApprovedByNames { get; set; } = new List<string>();
+    public List<DateTime>? ApprovedDates { get; set; } = new List<DateTime>();
+    public List<int>? DocumentIds { get; set; } = new List<int>();
 
     [NotMapped]
-    public ICollection<string>? DocumentNames { get; set; }
+    public List<string>? DocumentNames { get; set; } = new List<string>();
     [NotMapped]
-    public ICollection<string>? DocumentUrls { get; set; }
+    public List<string>? DocumentUrls { get; set; } = new List<string>();
 }

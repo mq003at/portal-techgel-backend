@@ -35,6 +35,7 @@ public class EmployeeConfiguration
         builder.OwnsOne(e => e.InsuranceInfo);
         builder.OwnsOne(e => e.EmergencyContactInfo);
         builder.OwnsOne(e => e.ScheduleInfo);
+        builder.OwnsOne(e => e.RoleInfo);
 
         // 5) Signature relationship
         builder
@@ -45,32 +46,26 @@ public class EmployeeConfiguration
 
         // 6) RoleInfo (owned one-to-one)
         builder.OwnsOne(
-            e => e.RoleInfo,
-            ri =>
-            {
-                // map Supervisor & Group
-                ri.Property(r => r.SupervisorId).IsRequired(false).HasColumnName("SupervisorId");
-                ri.Property(r => r.GroupId).IsRequired(false).HasColumnName("GroupId");
-                ri.Property(r => r.ManagedOrganizationEntityIds)
-                    .HasConversion(
-                        v => string.Join(",", v),
-                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-                    )
-                    .HasColumnName("ManagedOrganizationEntityIds");
-                ri.Property(r => r.SubordinateIds)
-                    .HasConversion(
-                        v => string.Join(",", v),
-                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-                    )
-                    .HasColumnName("SubordinateIds");
+    e => e.RoleInfo,
+    ri =>
+    {
+        // map Supervisor & Group
+        ri.Property(r => r.SupervisorId).IsRequired(false).HasColumnName("SupervisorId");
+        ri.Property(r => r.GroupId).IsRequired(false).HasColumnName("GroupId");
 
-                // supervisor FK
-                ri.HasOne(r => r.Supervisor)
-                    .WithMany()
-                    .HasForeignKey(r => r.SupervisorId)
-                    .OnDelete(DeleteBehavior.Restrict);
+        // Không cần HasConversion!
+        ri.Property(r => r.ManagedOrganizationEntityIds)
+            .HasColumnName("ManagedOrganizationEntityIds");
 
-            }
-        );
+        ri.Property(r => r.SubordinateIds)
+            .HasColumnName("SubordinateIds");
+
+        // supervisor FK
+        ri.HasOne(r => r.Supervisor)
+            .WithMany()
+            .HasForeignKey(r => r.SupervisorId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+);
     }
 }

@@ -8,21 +8,21 @@ public class RoleInfo
     [NotMapped]
     public Employee? Supervisor { get; set; }
 
-    public ICollection<int> SubordinateIds { get; set; } = new List<int>();
+    public List<int> SubordinateIds { get; set; } = new List<int>();
     // Subordinates relationship (one-to-many)    
     [NotMapped]
-    public ICollection<Employee> Subordinates { get; set; } = new HashSet<Employee>();
+    public List<Employee> Subordinates { get; set; } = new List<Employee>();
 
     // Entities this role manages (many-to-many)
-    public ICollection<int> ManagedOrganizationEntityIds { get; set; } = new List<int>();
+    public List<int> ManagedOrganizationEntityIds { get; set; } = new List<int>();
     [NotMapped]
-    public ICollection<OrganizationEntity> ManagedOrganizationEntities { get; set; } =
-        new HashSet<OrganizationEntity>();
+    public List<OrganizationEntity> ManagedOrganizationEntities { get; set; } =
+        new List<OrganizationEntity>();
 
 
     [NotMapped]
-    public ICollection<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } =
-        new HashSet<OrganizationEntityEmployee>();
+    public List<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } =
+        new List<OrganizationEntityEmployee>();
 
     // Optional grouping of roles into a higher-level Group
     public int? GroupId { get; set; }

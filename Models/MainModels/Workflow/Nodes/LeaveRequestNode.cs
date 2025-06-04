@@ -6,7 +6,7 @@ public class LeaveRequestNode : WorkflowNode
     public int LeaveRequestWorkflowId { get; set; }
 
     [NotMapped]
-    public LeaveRequestWorkflow LeaveRequestWorkflow { get; set; } = new();
+    public LeaveRequestWorkflow LeaveRequestWorkflow { get; set; }
 
     public LeaveApprovalStepType StepType { get; set; }
 }

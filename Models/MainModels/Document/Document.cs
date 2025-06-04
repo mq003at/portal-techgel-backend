@@ -9,6 +9,6 @@ public class Document : BaseModel
     public AdditionalDocumentInfo AdditionalDocumentInfo { get; set; } = new();
 
     // History of edits
-    public ICollection<EditDocumentInfo> EditDocumentInfo { get; set; } =
+    public List<EditDocumentInfo> EditDocumentInfo { get; set; } =
         new List<EditDocumentInfo>();
 }

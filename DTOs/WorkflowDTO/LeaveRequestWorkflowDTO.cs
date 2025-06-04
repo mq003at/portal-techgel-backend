@@ -23,16 +23,16 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO<LeaveRequestWorkflow>
     public string WorkAssignedToEmail = string.Empty;
     public string WorkAssignedToHomeAdress = string.Empty;
 
-    public ICollection<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new List<LeaveRequestNodeDTO>();
+    public List<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new List<LeaveRequestNodeDTO>();
 }
 
 public class CreateLeaveRequestWorkflowDTO : CreateBaseWorkflowDTO<LeaveRequestWorkflow>
 {
     [Required]
-    public int EmployeeId { get; set; }
+    public required int EmployeeId { get; set; }
     [Required]
 
-    public string Reason { get; set; }
+    public required string Reason { get; set; }
     [Required]
 
     public DateTime StartDate { get; set; }
@@ -50,12 +50,12 @@ public class CreateLeaveRequestWorkflowDTO : CreateBaseWorkflowDTO<LeaveRequestW
     public LeaveAprrovalCategory LeaveAprrovalCategory { get; set; }
     [Required]
 
-    public int WorkAssignedToId { get; set; }
+    public required int WorkAssignedToId { get; set; }
 }
 
 public class UpdateLeaveRequestWorkflowDTO : UpdateBaseWorkflowDTO<LeaveRequestWorkflow>
 {
     public string? Reason { get; set; }
 
-    public ICollection<UpdateLeaveRequestNodeDTO>? LeaveRequestNodes { get; set; }
+    public List<UpdateLeaveRequestNodeDTO>? LeaveRequestNodes { get; set; }
 }

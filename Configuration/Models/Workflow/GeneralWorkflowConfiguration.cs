@@ -35,7 +35,7 @@
 //         builder.Property(w => w.ApprovalWorkflowNodesIds)
 //             .HasConversion(
 //                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
-//                 v => JsonSerializer.Deserialize<ICollection<int>>(v, (JsonSerializerOptions)null) ?? new List<int>()
+//                 v => JsonSerializer.Deserialize<List<int>>(v, (JsonSerializerOptions)null) ?? new List<int>()
 //             );
 
 //         // One-to-many relationship with ApprovalWorkflowNodes

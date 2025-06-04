@@ -26,5 +26,5 @@ public class LeaveRequestWorkflow : BaseWorkflow
     public int TotalDays => (EndDate - StartDate).Days + 1;
     public float EmployeeAnnualLeaveTotalDays { get; set; } = 0f;
 
-    public ICollection<LeaveRequestNode> LeaveRequestNodes { get; set; } = new List<LeaveRequestNode>();
+    public List<LeaveRequestNode> LeaveRequestNodes { get; set; } = new List<LeaveRequestNode>();
 }

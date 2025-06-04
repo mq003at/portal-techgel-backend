@@ -24,40 +24,19 @@ public class LeaveRequestWorkflowConfiguration : BaseModelConfiguration<LeaveReq
         builder.Property(w => w.EndDate).IsRequired();
         builder.Property(w => w.EmployeeId).IsRequired();
 
-        // List<int> mappings
-        builder.Property(w => w.ReceiverIds)
-            .HasConversion(
-                v => string.Join(",", v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-            );
-
-        builder.Property(w => w.DraftedByIds)
-            .HasConversion(
-                v => string.Join(",", v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-            );
-
-        builder.Property(w => w.HasBeenApprovedByIds)
-            .HasConversion(
-                v => string.Join(",", v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-            );
-
-        builder.Property(w => w.ApprovedDates)
-            .HasConversion(
-                v => string.Join(",", v.Select(d => d.ToString("o"))),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(DateTime.Parse).ToList()
-            );
+        // Mapping array columns (no HasConversion needed)
+        builder.Property(w => w.ReceiverIds).HasColumnType("integer[]");
+        builder.Property(w => w.DraftedByIds).HasColumnType("integer[]");
+        builder.Property(w => w.HasBeenApprovedByIds).HasColumnType("integer[]");
+        builder.Property(w => w.ApprovedDates).HasColumnType("timestamptz[]");
 
         // Configure buoi sang hay chieu
-
         builder.Property(n => n.StartDateDayNightType)
             .HasConversion<int>()
             .IsRequired();
         builder.Property(n => n.EndDateDayNightType)
             .HasConversion<int>()
             .IsRequired();
-
 
         builder.HasMany(w => w.LeaveRequestNodes)
                .WithOne(n => n.LeaveRequestWorkflow)

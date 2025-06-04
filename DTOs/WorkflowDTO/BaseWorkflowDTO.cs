@@ -13,16 +13,16 @@ public abstract class BaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkflow
 
     public GeneralWorkflowStatusType Status { get; set; }
 
-    public ICollection<int> ReceiverIds { get; set; } = new List<int>();
-    public ICollection<string> ReceiverNames { get; set; } = new List<string>();
+    public List<int> ReceiverIds { get; set; } = new List<int>();
+    public List<string> ReceiverNames { get; set; } = new List<string>();
 
     public int SenderId { get; set; }
     public string SenderName { get; set; } = string.Empty;
 
-    public ICollection<int> HasBeenApprovedByIds { get; set; } = new List<int>();
-    public ICollection<string> HasBeenApprovedByNames { get; set; } = new List<string>();
+    public List<int> HasBeenApprovedByIds { get; set; } = new List<int>();
+    public List<string> HasBeenApprovedByNames { get; set; } = new List<string>();
 
-    public ICollection<DateTime> ApprovedDates { get; set; } = new List<DateTime>();
+    public List<DateTime> ApprovedDates { get; set; } = new List<DateTime>();
 }
 
 public abstract class CreateBaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkflow
@@ -32,7 +32,7 @@ public abstract class CreateBaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkfl
 
     public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.Draft;
 
-    public ICollection<int> ReceiverIds { get; set; } = new List<int>();
+    public List<int> ReceiverIds { get; set; } = new List<int>();
     public int SenderId { get; set; }
 }
 
@@ -43,7 +43,7 @@ public abstract class UpdateBaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkfl
 
     public GeneralWorkflowStatusType? Status { get; set; }
 
-    public ICollection<int>? ReceiverIds { get; set; }
-    public ICollection<int>? HasBeenApprovedByIds { get; set; }
-    public ICollection<DateTime>? ApprovedDates { get; set; }
+    public List<int>? ReceiverIds { get; set; }
+    public List<int>? HasBeenApprovedByIds { get; set; }
+    public List<DateTime>? ApprovedDates { get; set; }
 }

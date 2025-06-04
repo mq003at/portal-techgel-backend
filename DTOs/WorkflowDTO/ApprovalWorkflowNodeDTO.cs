@@ -82,7 +82,7 @@
 // public class DeleteFilesFromApprovalWorkflowNodesDTO : BaseDTO<ApprovalWorkflowNode>
 // {
 //     [Required]
-//     public ICollection<int> DocumentIds { get; set; } = new List<int>();
+//     public List<int> DocumentIds { get; set; } = new List<int>();
 // }
 
 // // DTOs for when files are modified in the approval workflow node

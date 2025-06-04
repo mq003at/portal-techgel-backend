@@ -30,10 +30,12 @@ public class LeaveRequestWorkflowService : BaseService<
         _logger = logger;
     }
 
-    public async Task<ICollection<LeaveRequestNodeDTO>> GenerateStepsAsync(CreateLeaveRequestWorkflowDTO dto, int workflowId)
+    public async Task<List<LeaveRequestNodeDTO>> GenerateStepsAsync(CreateLeaveRequestWorkflowDTO dto, int workflowId)
     {
         // Get last Id for increment [NOTE: THIS ASSUMES ID IS AUTO-INCREMENTED & DATABASE ALREADY HAS SOMETHING IN]
-        var lastId = _context.LeaveRequestNodes.Max(x => x.Id);
+        var lastId = _context.LeaveRequestNodes.Any()
+            ? _context.LeaveRequestNodes.Max(x => x.Id)
+            : 0;
 
         // Calculate total days from StartDate to EndDate
         var totalDays = (dto.EndDate - dto.StartDate).Days + (dto.EndDateDayNightType - dto.StartDateDayNightType) * 0.5;
@@ -51,9 +53,11 @@ public class LeaveRequestWorkflowService : BaseService<
 
 
         // var steps = new List<LeaveRequestNode>();
-        var steps = new List<(string, int, List<int?>, List<int?>)>();
-        steps.Add(("Tạo yêu cầu nghỉ phép", 1, [dto.SenderId], [dto.SenderId]));
-        steps.Add(("Quản lý trực thuộc ký", 0, [managerId], []));
+        var steps = new List<(string, int, List<int?>, List<int?>)>
+        {
+            ("Tạo yêu cầu nghỉ phép", 1, [dto.SenderId], [dto.SenderId]),
+            ("Quản lý trực thuộc ký", 0, [managerId], [])
+        };
         if (totalDays >= 3.0)
         {
             // NOTE: Assuming HR Head has a fixed ID of 11 & there is a manager for it
@@ -103,9 +107,13 @@ public class LeaveRequestWorkflowService : BaseService<
         var node = await _context.LeaveRequestNodes.FindAsync(nodeId);
         if (node == null) return false;
 
-        if (!node.HasBeenApprovedByIds.Contains(approverId))
+        if (node.HasBeenApprovedByIds != null && !node.HasBeenApprovedByIds.Contains(approverId))
         {
             node.HasBeenApprovedByIds.Add(approverId);
+            if (node.ApprovedDates == null)
+            {
+                node.ApprovedDates = new List<DateTime>();
+            }
             node.ApprovedDates.Add(DateTime.UtcNow);
         }
 
@@ -152,6 +160,12 @@ public class LeaveRequestWorkflowService : BaseService<
 
         _dbSet.Add(entity);
         await _context.SaveChangesAsync(); // Để có entity.Id
+
+        _logger.LogInformation(
+            "Created new LeaveRequestWorkflow with ID {Id} for Employee {EmployeeId}",
+            entity.Id,
+            entity.EmployeeId
+        );
 
         // ✅ Sinh node
         var nodes = await GenerateStepsAsync(dto, entity.Id);
@@ -206,19 +220,31 @@ public class LeaveRequestWorkflowService : BaseService<
     public async Task PopulateMetadataAsync(LeaveRequestWorkflowDTO workflow)
     {
         // Populate EmployeeName
-        var employee = await _context.Employees.FindAsync(workflow.EmployeeId);
-        if (employee != null)
+        _logger.LogInformation(
+            "Populating metadata for LeaveRequestWorkflow with ID {Id} which has empid {empid} and assignedid {ass}",
+            workflow.Id, workflow.EmployeeId, workflow.WorkAssignedToId
+        );
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId);
+        var assignee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.WorkAssignedToId);
+        _logger.LogInformation(
+            "Found Employee {EmployeeId} with Name {EmployeeName}",
+            employee?.Id,
+            employee?.FirstName + " " + employee?.LastName
+
+        );
+
+        if (employee != null && assignee != null)
         {
             workflow.EmployeeName = employee.FirstName + " " + employee.LastName;
-            workflow.WorkAssignedToName = workflow.EmployeeName;
-            workflow.WorkAssignedToPosition = employee.CompanyInfo.Position ?? "";
-            workflow.WorkAssignedToPhone = employee.CompanyInfo.CompanyPhoneNumber ?? "";
-            workflow.WorkAssignedToEmail = employee.CompanyInfo.CompanyEmail ?? "";
-            workflow.WorkAssignedToHomeAdress = employee.PersonalInfo.Address ?? "";
+            workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.LastName;
+            workflow.WorkAssignedToPosition = assignee.CompanyInfo.Position ?? "";
+            workflow.WorkAssignedToPhone = assignee.CompanyInfo.CompanyPhoneNumber ?? "";
+            workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
+            workflow.WorkAssignedToHomeAdress = assignee.PersonalInfo.Address ?? "";
         }
 
         // Populate names from IDs
-        async Task<ICollection<string>> GetNamesByIdsAsync(List<int> ids)
+        async Task<List<string>> GetNamesByIdsAsync(List<int> ids)
         {
             return await _context.Employees
                 .Where(e => ids.Contains(e.Id))

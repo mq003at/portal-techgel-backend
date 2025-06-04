@@ -13,7 +13,7 @@ public interface ILeaveRequestWorkflowService
     /// <summary>
     /// Tự động sinh các bước duyệt (nodes) dựa vào số ngày nghỉ
     /// </summary>
-    Task<ICollection<LeaveRequestNodeDTO>> GenerateStepsAsync(CreateLeaveRequestWorkflowDTO dto, int workflowId);
+    Task<List<LeaveRequestNodeDTO>> GenerateStepsAsync(CreateLeaveRequestWorkflowDTO dto, int workflowId);
 
     /// <summary>
     /// Xử lý duyệt 1 node cụ thể (ký, ghi nhận người duyệt)

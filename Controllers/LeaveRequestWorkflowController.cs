@@ -23,6 +23,7 @@ public class LeaveRequestWorkflowController : BaseController<
 
     // Tắt bớt các route nếu không cần → giữ nguyên GetAll, GetById, Create, Update, Delete
 
+
     // GET api/leave-requests/{id}/nodes
     [HttpGet("{id}/nodes")]
     public async Task<IActionResult> GetNodes(int id)

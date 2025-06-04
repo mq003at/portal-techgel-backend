@@ -17,33 +17,14 @@ public class LeaveRequestNodeConfiguration : BaseModelConfiguration<LeaveRequest
         builder.Property(n => n.Status).HasConversion<int>().IsRequired();
         builder.Property(n => n.SenderId).IsRequired();
 
-        builder.Property(n => n.ApprovedByIds)
-            .HasConversion(
-                v => string.Join(",", v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-            );
-
-        builder.Property(n => n.HasBeenApprovedByIds)
-            .HasConversion(
-                v => string.Join(",", v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-            );
-
-        builder.Property(n => n.ApprovedDates)
-            .HasConversion(
-                v => string.Join(",", v.Select(d => d.ToString("o"))),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(DateTime.Parse).ToList()
-            );
-
-        builder.Property(n => n.DocumentIds)
-            .HasConversion(
-                v => string.Join(",", v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
-            );
+        // KHÔNG CẦN HasConversion cho các mảng nữa!
+        builder.Property(n => n.ApprovedByIds).HasColumnType("integer[]");
+        builder.Property(n => n.HasBeenApprovedByIds).HasColumnType("integer[]");
+        builder.Property(n => n.DocumentIds).HasColumnType("integer[]");
+        builder.Property(n => n.ApprovedDates).HasColumnType("timestamptz[]");
 
         builder.Property(n => n.StepType)
                .HasConversion<int>()
                .IsRequired();
-
     }
 }
