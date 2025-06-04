@@ -51,6 +51,12 @@ public class LeaveRequestWorkflowService : BaseService<
             .Select(e => e.RoleInfo.SupervisorId)
             .FirstOrDefault();
 
+        if (managerId is null)
+        {
+            throw new InvalidOperationException(
+                $"Employee with ID {dto.EmployeeId} does not have a valid manager."
+            );
+        }
 
         // var steps = new List<LeaveRequestNode>();
         var steps = new List<(string, int, List<int?>, List<int?>)>

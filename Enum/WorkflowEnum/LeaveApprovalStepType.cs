@@ -4,7 +4,6 @@ public enum LeaveApprovalStepType
     SummaryTracking = 1,
     HRHeadApproval = 2,
     ExecutiveApproval = 3,
-    FinalizeToPayroll = 4
 }
 
 public enum LeaveAprrovalCategory

@@ -1,6 +1,7 @@
 namespace portal.Services;
 
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using portal.Db;
 using portal.DTOs;
 using portal.Enums;
@@ -37,11 +38,11 @@ public class LeaveRequestNodeService : BaseService<
         node.ApprovedByIds ??= new List<int>();
         node.HasBeenApprovedByIds ??= new List<int>();
 
-        // LOG
-        _logger.LogInformation(
-            "Approving node {NodeId} by approver {ApproverId} with comment: {Comment}",
-            nodeId, approverId, comment
-        );
+        // Block neu node status khong phai Pending
+        if (node.Status != GeneralWorkflowStatusType.Pending)
+            throw new InvalidOperationException(
+                $"Node {nodeId} is not in a pending state and cannot be approved."
+            );
 
         // Block nếu approverId không có quyền approve
         if (!node.ApprovedByIds.Contains(approverId))
@@ -69,6 +70,29 @@ public class LeaveRequestNodeService : BaseService<
         if (hasNodeAllApproved)
         {
             node.Status = GeneralWorkflowStatusType.Approved;
+
+            // Neu la node 3 (final node), update the workflow status
+            if (node.StepType == LeaveApprovalStepType.ExecutiveApproval)
+            {
+                var workflow = await _context.LeaveRequestWorkflows
+                    .FindAsync(node.LeaveRequestWorkflowId);
+                if (workflow != null)
+                {
+                    workflow.Status = GeneralWorkflowStatusType.Approved;
+                    _context.LeaveRequestWorkflows.Update(workflow);
+                }
+            }
+            else
+            {
+                // Neu khong phai final node, update the next node status to Pending
+                var nextNode = await _context.LeaveRequestNodes
+                    .FirstOrDefaultAsync(n => n.Id == nodeId + 1);
+                if (nextNode != null)
+                {
+                    nextNode.Status = GeneralWorkflowStatusType.Pending;
+                    _context.LeaveRequestNodes.Update(nextNode);
+                }
+            }
             _logger.LogInformation(
                 "Node {NodeId} has been fully approved by all required approvers.",
                 nodeId
