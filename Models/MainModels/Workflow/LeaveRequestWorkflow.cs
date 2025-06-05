@@ -25,7 +25,7 @@ public class LeaveRequestWorkflow : BaseWorkflow
     public DateTime EndDate { get; set; }
     [Required]
     public DayNightEnum EndDateDayNightType { get; set; } = DayNightEnum.Day;
-    public int TotalDays => (EndDate - StartDate).Days + 1;
+    public float TotalDays { get; set; } = 0f;
     public float EmployeeAnnualLeaveTotalDays { get; set; } = 0f;
     public float FinalEmployeeAnnualLeaveTotalDays { get; set; } = 0f;
 

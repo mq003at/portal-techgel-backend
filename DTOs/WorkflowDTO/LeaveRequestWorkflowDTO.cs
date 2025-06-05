@@ -8,13 +8,15 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO<LeaveRequestWorkflow>
 {
     public int EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty;
-
+    public string EmployeeMainId { get; set; } = string.Empty;
+    public DayNightEnum StartDateDayNightType { get; set; }
+    public DayNightEnum EndDateDayNightType { get; set; }
     public string Reason { get; set; } = string.Empty;
 
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 
-    public int TotalDays => (EndDate - StartDate).Days + 1;
+    public float TotalDays { get; set; }
     public float EmployeeAnnualLeaveTotalDays { get; set; }
     public float FinalEmployeeAnnualLeaveTotalDays { get; set; }
     public LeaveAprrovalCategory LeaveAprrovalCategory { get; set; }

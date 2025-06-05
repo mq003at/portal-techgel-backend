@@ -44,38 +44,39 @@ public class LeaveRequestWorkflowService : BaseService<
         // Calculate number of leave days (min 0.5)
         var totalDays = (dto.EndDate - dto.StartDate).Days +
                         (dto.EndDateDayNightType - dto.StartDateDayNightType) * 0.5;
+
         if (totalDays < 0.4)
             throw new ArgumentException("End date must be after start date and at least half a day apart.");
 
         // Fetch annual leave and update DTO
         var employee = await _context.Employees
             .Where(e => e.Id == dto.EmployeeId)
-            .Select(e => new { e.CompanyInfo.AnnualLeaveTotalDays, e.RoleInfo.SupervisorId })
             .FirstOrDefaultAsync();
 
         if (employee == null)
             throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
 
-        dto.EmployeeAnnualLeaveTotalDays = (float)totalDays;
-        dto.FinalEmployeeAnnualLeaveTotalDays = employee.AnnualLeaveTotalDays - (float)totalDays;
 
+        workflow.TotalDays = (float)totalDays;
+        workflow.EmployeeAnnualLeaveTotalDays = employee.CompanyInfo.AnnualLeaveTotalDays;
+        workflow.FinalEmployeeAnnualLeaveTotalDays = employee.CompanyInfo.AnnualLeaveTotalDays - (float)totalDays;
         // Get Director (Executive) and HR Head
         var directorId = await _context.OrganizationEntities
             .Where(e => e.Id == 3)
             .Select(e => e.ManagerId)
             .FirstOrDefaultAsync();
 
-        if (employee.SupervisorId is null || directorId is null)
+        if (employee.RoleInfo.SupervisorId is null || directorId is null)
             throw new InvalidOperationException("Workflow is missing required manager IDs.");
 
         // Build up receiver IDs for workflow
-        workflow.ReceiverIds.AddRange(new[] { dto.SenderId, employee.SupervisorId.Value, directorId.Value });
+        workflow.ReceiverIds.AddRange(new[] { dto.SenderId, employee.RoleInfo.SupervisorId.Value, directorId.Value });
 
         // Compose workflow steps
         var steps = new List<(string Name, LeaveApprovalStepType StepType, int Status, List<int> Approvers, List<int> Approved)>
     {
         ("Tạo yêu cầu nghỉ phép", LeaveApprovalStepType.CreateForm, 1, new() { dto.SenderId }, new() { dto.SenderId }),
-        ("Quản lý trực thuộc ký", LeaveApprovalStepType.ManagerApproval, 0, new() { employee.SupervisorId.Value }, new())
+        ("Quản lý trực thuộc ký", LeaveApprovalStepType.ManagerApproval, 0, new() { employee.RoleInfo.SupervisorId.Value }, new())
     };
 
         if (totalDays >= 3.0)
@@ -118,7 +119,7 @@ public class LeaveRequestWorkflowService : BaseService<
             nodes.Add(node);
             _context.LeaveRequestNodes.Add(node);
         }
-
+        _context.LeaveRequestWorkflows.Update(workflow);
         await _context.SaveChangesAsync();
         return _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
     }
@@ -223,6 +224,11 @@ public class LeaveRequestWorkflowService : BaseService<
         // ✅ Sinh node
         var nodes = await GenerateStepsAsync(dto, entity);
         var finalDto = _mapper.Map<LeaveRequestWorkflowDTO>(entity);
+        _logger.LogError(
+            "Generated {NodeCount} employeeAnualLeave for this {WorkflowId} in dto",
+            entity.EmployeeAnnualLeaveTotalDays,
+            finalDto.EmployeeAnnualLeaveTotalDays
+        );
         // Populate thêm metadata nếu cần
         await PopulateMetadataAsync(finalDto);
         finalDto.LeaveRequestNodes = nodes;
@@ -301,7 +307,7 @@ public class LeaveRequestWorkflowService : BaseService<
         if (employee != null && assignee != null)
         {
             workflow.SenderId = employee.Id;
-
+            workflow.EmployeeMainId = employee.MainId ?? "";
             workflow.SenderName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
             workflow.EmployeeName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
             workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName;
@@ -326,12 +332,11 @@ public class LeaveRequestWorkflowService : BaseService<
         if (workflow.Status == GeneralWorkflowStatusType.Approved)
         {
             // If the workflow is approved, generate the document
-            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.StartDate, workflow.EndDate, true);
+            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.TotalDays, workflow.StartDate, workflow.EndDate, true);
         }
         else
         {
-            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.StartDate, workflow.EndDate, false);
-
+            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.TotalDays, workflow.StartDate, workflow.EndDate, false);
         }
 
         docxStream.Position = 0; // Reset stream for reading
@@ -369,22 +374,24 @@ public class LeaveRequestWorkflowService : BaseService<
             .ToListAsync();
     }
 
-    private MemoryStream GenerateLeaveRequestDocument(Employee employee, Employee assignee, float finalEmployeeAnnualLeaveTotalDays, Employee hr, Employee generalDirector, string reason, string supervisorName, string supervisorPosition, float employeeAnnualLeaveTotalDays, DateTime leaveRequestStartHour, DateTime leaveRequestEndHour, bool isSigned = false)
+    private MemoryStream GenerateLeaveRequestDocument(Employee employee, Employee assignee, float finalEmployeeAnnualLeaveTotalDays, Employee hr, Employee generalDirector, string reason, string supervisorName, string supervisorPosition, float employeeAnnualLeaveTotalDays, float totalDays, DateTime leaveRequestStartHour, DateTime leaveRequestEndHour, bool isSigned = false)
     {
         // You can call your DocxBookmarkInserter or whatever helper you wrote here
         string templatePath = Path.Combine("Helpers", "Documents", "Template", "TEMPLATE-LeaveRequestTemplate.docx");
         var props = new LeaveRequestProps(templatePath,
                 DateTime.UtcNow,
                 employee.FirstName + " " + employee.MiddleName + " " + employee.LastName,
+                employee.PersonalInfo.Birthplace ?? "",
                 employee.CompanyInfo.Position ?? "",
-                employee.PersonalInfo.PersonalPhoneNumber ?? "",
+                employee.CompanyInfo.Department ?? "",
                 (DateTime)employee.CompanyInfo.StartDate,
                 12.0f,
                 finalEmployeeAnnualLeaveTotalDays,
                 employeeAnnualLeaveTotalDays,
+                totalDays,
                 assignee.PersonalInfo.Address ?? "",
                 assignee.PersonalInfo.IdCardNumber ?? "",
-                "Chưa điền",
+                assignee.PersonalInfo.IdCardIssuePlace ?? "",
                 (DateTime)assignee.PersonalInfo.IdCardIssueDate,
                 (DateTime)leaveRequestStartHour,
                 (DateTime)leaveRequestEndHour,

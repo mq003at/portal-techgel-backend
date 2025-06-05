@@ -25,12 +25,13 @@ public class DocxBookmarkInserter
             InsertTextAtBookmark(wordDoc, "employmentStartDate", props.EmploymentStartDate.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "annualLeavePerYear", props.AnnualLeaveDaysPerYear.ToString());
             InsertTextAtBookmark(wordDoc, "finalEmployeeAnnualLeaveTotalDays", props.FinalEmployeeAnnualLeaveTotalDays.ToString());
-            InsertTextAtBookmark(wordDoc, "employeeAnnualLeaveTotalDays", props.EmployeeAnnualLeaveTotalDays.ToString());
+            InsertTextAtBookmark(wordDoc, "employeeAnnualLeaveTotalDays", props.TotalDays.ToString());
             InsertTextAtBookmark(wordDoc, "leaveRequestStartHour", props.LeaveRequestStartHour.ToString("HH:mm"));
             InsertTextAtBookmark(wordDoc, "leaveRequestEndHour", props.LeaveRequestEndHour.ToString("HH:mm"));
             InsertTextAtBookmark(wordDoc, "leaveRequestStartDate", props.LeaveRequestStartHour.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "leaveRequestEndDate", props.LeaveRequestEndHour.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "employeeNameTop", props.EmployeeName);
+            InsertTextAtBookmark(wordDoc, "birthPlace", props.BirthPlace);
 
             InsertTextAtBookmark(wordDoc, "address", props.AssigneeAddress);
             InsertTextAtBookmark(wordDoc, "idCardNumber", props.AssigneeIdCardNumber);
