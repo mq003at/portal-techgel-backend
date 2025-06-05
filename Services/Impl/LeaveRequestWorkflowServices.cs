@@ -2,7 +2,9 @@ namespace portal.Services;
 
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using portal.Db;
+using portal.Documents.Props;
 using portal.DTOs;
 using portal.Enums;
 using portal.Models;
@@ -15,19 +17,19 @@ public class LeaveRequestWorkflowService : BaseService<
     UpdateLeaveRequestWorkflowDTO>,
     ILeaveRequestWorkflowService
 {
-    private new readonly IMapper _mapper;
-    private new readonly ApplicationDbContext _context;
-    private new readonly ILogger<LeaveRequestWorkflowService> _logger;
+    private new readonly IFileStorageService _storage;
+    private new readonly DocumentOptions _docOpts;
 
     public LeaveRequestWorkflowService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<LeaveRequestWorkflowService> logger
+        ILogger<LeaveRequestWorkflowService> logger,
+        IOptions<DocumentOptions> docOpts,
+        IFileStorageService storage
     ) : base(context, mapper, logger)
     {
-        _context = context;
-        _mapper = mapper;
-        _logger = logger;
+        _docOpts = docOpts.Value;
+        _storage = storage;
     }
 
     public async Task<List<LeaveRequestNodeDTO>> GenerateStepsAsync(
@@ -286,10 +288,20 @@ public class LeaveRequestWorkflowService : BaseService<
         );
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId);
         var assignee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.WorkAssignedToId);
+        var hr = await _context.Employees.FirstOrDefaultAsync(e => e.Id == 4);
+        var generalDirector = await _context.Employees.FirstOrDefaultAsync(e => e.Id == 1);
+
+        // Get supervisor from employee.RoleInfo.SupervisorId
+        var supervisor = await _context.Employees.FirstOrDefaultAsync(e => e.Id == employee.RoleInfo.SupervisorId);
+        var supervisorName = supervisor != null
+        ? supervisor.FirstName + " " + supervisor.MiddleName + " " + supervisor.LastName
+        : "";
+        var supervisorPosition = supervisor?.CompanyInfo.Position ?? "";
 
         if (employee != null && assignee != null)
         {
             workflow.SenderId = employee.Id;
+
             workflow.SenderName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
             workflow.EmployeeName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
             workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName;
@@ -310,6 +322,34 @@ public class LeaveRequestWorkflowService : BaseService<
             await PopulateMetadataAsync(node, workflow.SenderName);
         }
 
+        var docxStream = new MemoryStream();
+        if (workflow.Status == GeneralWorkflowStatusType.Approved)
+        {
+            // If the workflow is approved, generate the document
+            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, true);
+        }
+        else
+        {
+            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, false);
+
+        }
+
+        docxStream.Position = 0; // Reset stream for reading
+        var attachment = new Attachment
+        {
+            FileName = "INFO-LeaveRequestForm.docx",
+            ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            FileContent = docxStream.ToArray()
+        };
+
+        if (workflow.Attachments == null)
+        {
+            workflow.Attachments = new List<Attachment> { attachment };
+        }
+        else
+        {
+            workflow.Attachments.Add(attachment);
+        }
     }
 
     private async Task PopulateMetadataAsync(LeaveRequestNodeDTO node, string SenderName)
@@ -328,4 +368,43 @@ public class LeaveRequestWorkflowService : BaseService<
             .Select(e => e.FirstName + " " + e.MiddleName + " " + e.LastName)
             .ToListAsync();
     }
+
+    private MemoryStream GenerateLeaveRequestDocument(Employee employee, Employee assignee, float finalEmployeeAnnualLeaveTotalDays, Employee hr, Employee generalDirector, string reason, string supervisorName, string supervisorPosition, bool isSigned = false)
+    {
+        // You can call your DocxBookmarkInserter or whatever helper you wrote here
+        string templatePath = Path.Combine("Helpers", "Documents", "Template", "TEMPLATE-LeaveRequestTemplate.docx");
+        var props = new LeaveRequestProps(templatePath,
+                DateTime.UtcNow,
+                employee.FirstName + " " + employee.MiddleName + " " + employee.LastName,
+                employee.CompanyInfo.Position ?? "",
+                employee.PersonalInfo.PersonalPhoneNumber ?? "",
+                (DateTime)employee.CompanyInfo.StartDate,
+                12.0f,
+                finalEmployeeAnnualLeaveTotalDays,
+                hr.FirstName + " " + hr.MiddleName + " " + hr.LastName,
+                assignee.PersonalInfo.IdCardNumber ?? "",
+                "string",
+                (DateTime)assignee.PersonalInfo.IdCardIssueDate,
+                assignee.PersonalInfo.PersonalPhoneNumber ?? "",
+                reason,
+                supervisorName,
+                supervisorPosition,
+                assignee.PersonalInfo.DateOfBirth,
+                assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName,
+                generalDirector.FirstName + " " + generalDirector.MiddleName + " " + generalDirector.LastName,
+                isSigned ? "Đã ký" : null,
+                isSigned ? "Đã ký" : null,
+                isSigned ? "Đã ký" : null,
+                isSigned ? "Đã ký" : null
+            );
+        return DocxBookmarkInserter.InsertEmployeeData(props);
+    }
+
+}
+
+public class Attachment
+{
+    public string FileName { get; set; } = "";
+    public string ContentType { get; set; } = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    public byte[] FileContent { get; set; } = Array.Empty<byte>();
 }

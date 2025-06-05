@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
@@ -154,6 +155,23 @@ builder.Services.AddScoped<ILeaveRequestWorkflowService, LeaveRequestWorkflowSer
 
 
 var app = builder.Build();
+
+// Testing template
+// app.MapGet("/generate-leave-request", async context =>
+// {
+//     string templatePath = Path.Combine("Helpers", "Documents", "Template", "TEMPLATE-LeaveRequestTemplate.docx");
+
+//     var docxStream = DocxBookmarkInserter.InsertEmployeeData(
+//         templatePath, "Nguyen Hoang Minh Quan", "Lap trinh vien", "Khối Công nghệ");
+
+//     string fileName = $"LeaveRequest_{DateTime.Now:yyyyMMddHHmmssfff}.docx";
+
+//     docxStream.Position = 0; // Ensure stream is at start
+
+//     context.Response.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+//     context.Response.Headers.ContentDisposition = $"attachment; filename={fileName}";
+//     await docxStream.CopyToAsync(context.Response.Body);
+// });
 
 // Enable Swagger
 // if (app.Environment.IsDevelopment())

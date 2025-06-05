@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using portal.Models;
+using portal.Services;
 
 namespace portal.DTOs;
 
@@ -23,6 +24,7 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO<LeaveRequestWorkflow>
     public string? WorkAssignedToPhone { get; set; }
     public string? WorkAssignedToEmail { get; set; }
     public string? WorkAssignedToHomeAdress { get; set; }
+    public List<Attachment>? Attachments { get; set; }
 
     public List<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new List<LeaveRequestNodeDTO>();
 }
