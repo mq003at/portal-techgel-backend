@@ -30,11 +30,12 @@ public class DocxBookmarkInserter
             InsertTextAtBookmark(wordDoc, "leaveRequestEndHour", props.LeaveRequestEndHour.ToString("HH:mm"));
             InsertTextAtBookmark(wordDoc, "leaveRequestStartDate", props.LeaveRequestStartHour.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "leaveRequestEndDate", props.LeaveRequestEndHour.ToString("dd/MM/yyyy"));
+            InsertTextAtBookmark(wordDoc, "employeeNameTop", props.EmployeeName);
 
-            InsertTextAtBookmark(wordDoc, "assigneeAddress", props.AssigneeAddress);
-            InsertTextAtBookmark(wordDoc, "assigneeIdCardNumber", props.AssigneeIdCardNumber);
-            InsertTextAtBookmark(wordDoc, "assigneeIdCardIssuedLocation", props.AssigneeIdCardIssuedLocation);
-            InsertTextAtBookmark(wordDoc, "assigneeIdCardIssuedDate", props.AssigneeIdCardIssuedDate.ToString("dd/MM/yyyy"));
+            InsertTextAtBookmark(wordDoc, "address", props.AssigneeAddress);
+            InsertTextAtBookmark(wordDoc, "idCardNumber", props.AssigneeIdCardNumber);
+            InsertTextAtBookmark(wordDoc, "idCardIssuedLocation", props.AssigneeIdCardIssuedLocation);
+            InsertTextAtBookmark(wordDoc, "idCardIssuedDate", props.AssigneeIdCardIssuedDate.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "hrName", props.HrName);
             InsertTextAtBookmark(wordDoc, "generalDirectorName", props.GeneralDirectorName);
             InsertTextAtBookmark(wordDoc, "idCardIssuedDate", props.AssigneeIdCardIssuedDate.ToString("dd/MM/yyyy"));

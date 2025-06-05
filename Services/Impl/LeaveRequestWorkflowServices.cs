@@ -56,7 +56,7 @@ public class LeaveRequestWorkflowService : BaseService<
         if (employee == null)
             throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
 
-        dto.EmployeeAnnualLeaveTotalDays = employee.AnnualLeaveTotalDays;
+        dto.EmployeeAnnualLeaveTotalDays = (float)totalDays;
         dto.FinalEmployeeAnnualLeaveTotalDays = employee.AnnualLeaveTotalDays - (float)totalDays;
 
         // Get Director (Executive) and HR Head
