@@ -44,20 +44,6 @@ namespace portal_techgel_api.Migrations
                 oldClrType: typeof(string),
                 oldType: "text");
 
-            migrationBuilder.AddColumn<float>(
-                name: "FinalEmployeeAnnualLeaveTotalDays",
-                table: "LeaveRequestWorkflows",
-                type: "real",
-                nullable: false,
-                defaultValue: 0f);
-
-            migrationBuilder.AddColumn<int>(
-                name: "SenderId",
-                table: "LeaveRequestWorkflows",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
-
             migrationBuilder.AlterColumn<List<int>>(
                 name: "HasBeenApprovedByIds",
                 table: "LeaveRequestNodes",
@@ -105,9 +91,7 @@ namespace portal_techgel_api.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "FinalEmployeeAnnualLeaveTotalDays",
-                table: "LeaveRequestWorkflows");
+
 
             migrationBuilder.DropColumn(
                 name: "SenderId",
