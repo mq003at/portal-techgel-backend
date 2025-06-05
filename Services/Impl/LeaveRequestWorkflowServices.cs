@@ -326,11 +326,11 @@ public class LeaveRequestWorkflowService : BaseService<
         if (workflow.Status == GeneralWorkflowStatusType.Approved)
         {
             // If the workflow is approved, generate the document
-            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, true);
+            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.StartDate, workflow.EndDate, true);
         }
         else
         {
-            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, false);
+            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.StartDate, workflow.EndDate, false);
 
         }
 
@@ -369,7 +369,7 @@ public class LeaveRequestWorkflowService : BaseService<
             .ToListAsync();
     }
 
-    private MemoryStream GenerateLeaveRequestDocument(Employee employee, Employee assignee, float finalEmployeeAnnualLeaveTotalDays, Employee hr, Employee generalDirector, string reason, string supervisorName, string supervisorPosition, bool isSigned = false)
+    private MemoryStream GenerateLeaveRequestDocument(Employee employee, Employee assignee, float finalEmployeeAnnualLeaveTotalDays, Employee hr, Employee generalDirector, string reason, string supervisorName, string supervisorPosition, float employeeAnnualLeaveTotalDays, DateTime leaveRequestStartHour, DateTime leaveRequestEndHour, bool isSigned = false)
     {
         // You can call your DocxBookmarkInserter or whatever helper you wrote here
         string templatePath = Path.Combine("Helpers", "Documents", "Template", "TEMPLATE-LeaveRequestTemplate.docx");
@@ -381,10 +381,14 @@ public class LeaveRequestWorkflowService : BaseService<
                 (DateTime)employee.CompanyInfo.StartDate,
                 12.0f,
                 finalEmployeeAnnualLeaveTotalDays,
-                hr.FirstName + " " + hr.MiddleName + " " + hr.LastName,
+                employeeAnnualLeaveTotalDays,
+                assignee.PersonalInfo.Address ?? "",
                 assignee.PersonalInfo.IdCardNumber ?? "",
-                "string",
+                "Chưa điền",
                 (DateTime)assignee.PersonalInfo.IdCardIssueDate,
+                (DateTime)leaveRequestStartHour,
+                (DateTime)leaveRequestEndHour,
+                hr.FirstName + " " + hr.MiddleName + " " + hr.LastName,
                 assignee.PersonalInfo.PersonalPhoneNumber ?? "",
                 reason,
                 supervisorName,

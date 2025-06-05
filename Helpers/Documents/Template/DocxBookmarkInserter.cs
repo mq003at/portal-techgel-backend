@@ -23,14 +23,21 @@ public class DocxBookmarkInserter
             InsertTextAtBookmark(wordDoc, "position", " " + props.Position);
             InsertTextAtBookmark(wordDoc, "department", props.Department);
             InsertTextAtBookmark(wordDoc, "employmentStartDate", props.EmploymentStartDate.ToString("dd/MM/yyyy"));
-            InsertTextAtBookmark(wordDoc, "annualLeaveDaysPerYear", props.AnnualLeaveDaysPerYear.ToString());
+            InsertTextAtBookmark(wordDoc, "annualLeavePerYear", props.AnnualLeaveDaysPerYear.ToString());
             InsertTextAtBookmark(wordDoc, "finalEmployeeAnnualLeaveTotalDays", props.FinalEmployeeAnnualLeaveTotalDays.ToString());
+            InsertTextAtBookmark(wordDoc, "employeeAnnualLeaveTotalDays", props.EmployeeAnnualLeaveTotalDays.ToString());
+            InsertTextAtBookmark(wordDoc, "leaveRequestStartHour", props.LeaveRequestStartHour.ToString("HH:mm"));
+            InsertTextAtBookmark(wordDoc, "leaveRequestEndHour", props.LeaveRequestEndHour.ToString("HH:mm"));
+            InsertTextAtBookmark(wordDoc, "leaveRequestStartDate", props.LeaveRequestStartHour.ToString("dd/MM/yyyy"));
+            InsertTextAtBookmark(wordDoc, "leaveRequestEndDate", props.LeaveRequestEndHour.ToString("dd/MM/yyyy"));
+
+            InsertTextAtBookmark(wordDoc, "assigneeAddress", props.AssigneeAddress);
+            InsertTextAtBookmark(wordDoc, "assigneeIdCardNumber", props.AssigneeIdCardNumber);
+            InsertTextAtBookmark(wordDoc, "assigneeIdCardIssuedLocation", props.AssigneeIdCardIssuedLocation);
+            InsertTextAtBookmark(wordDoc, "assigneeIdCardIssuedDate", props.AssigneeIdCardIssuedDate.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "hrName", props.HrName);
             InsertTextAtBookmark(wordDoc, "generalDirectorName", props.GeneralDirectorName);
-
-            InsertTextAtBookmark(wordDoc, "idCardIssuedDate", props.IdCardIssuedDate.ToString("dd/MM/yyyy"));
-            InsertTextAtBookmark(wordDoc, "workAssignedIdCardIssuedLocation", props.WorkAssignedIdCardIssuedLocation);
-            InsertTextAtBookmark(wordDoc, "workAssignedIdCardNumber", props.WorkAssignedIdCardNumber);
+            InsertTextAtBookmark(wordDoc, "idCardIssuedDate", props.AssigneeIdCardIssuedDate.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "phoneNumber", props.PhoneNumber);
             InsertTextAtBookmark(wordDoc, "reason", props.Reason);
             InsertTextAtBookmark(wordDoc, "supervisorName", props.SupervisorName);
