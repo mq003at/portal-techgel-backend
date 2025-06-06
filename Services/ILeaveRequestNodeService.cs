@@ -10,4 +10,6 @@ public interface ILeaveRequestNodeService
         UpdateLeaveRequestNodeDTO>
 {
     Task<bool> ApproveAsync(int nodeId, int approverId, string? comment = null);
+    Task<bool> RejectNodeAsync(int nodeId, int approverId, string? comment = null);
+
 }

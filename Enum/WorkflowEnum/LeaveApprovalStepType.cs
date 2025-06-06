@@ -20,7 +20,6 @@ public enum LeaveAprrovalCategory
     MaternityLeave = 2,
     PaternityLeave = 3,
     UnpaidLeave = 4,
-    Other = 5,
 }
 
 public enum DayNightEnum

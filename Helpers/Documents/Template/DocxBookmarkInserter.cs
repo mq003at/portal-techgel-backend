@@ -8,7 +8,7 @@ public class DocxBookmarkInserter
     public static MemoryStream InsertEmployeeData(LeaveRequestProps props)
     {
         // Read template into memory (must be available so that in normal or vps environment, the path is still correct)
-        byte[] byteArray = File.ReadAllBytes(props.templatePath);
+        byte[] byteArray = File.ReadAllBytes(props.TemplatePath);
         var memoryStream = new MemoryStream();
         memoryStream.Write(byteArray, 0, byteArray.Length);
         memoryStream.Position = 0;
@@ -16,36 +16,27 @@ public class DocxBookmarkInserter
         using (var wordDoc = WordprocessingDocument.Open(memoryStream, true))
         {
             // Insert data into bookmarks
-            InsertTextAtBookmark(wordDoc, "today", props.DraftDate.ToString("dd"));
-            InsertTextAtBookmark(wordDoc, "tdMonth", props.DraftDate.ToString("MM"));
-            InsertTextAtBookmark(wordDoc, "tdYear", props.DraftDate.ToString("yyyy"));
-            InsertTextAtBookmark(wordDoc, "employeeName", props.EmployeeName);
-            InsertTextAtBookmark(wordDoc, "position", " " + props.Position);
-            InsertTextAtBookmark(wordDoc, "department", props.Department);
-            InsertTextAtBookmark(wordDoc, "employmentStartDate", props.EmploymentStartDate.ToString("dd/MM/yyyy"));
-            InsertTextAtBookmark(wordDoc, "annualLeavePerYear", props.AnnualLeaveDaysPerYear.ToString());
-            InsertTextAtBookmark(wordDoc, "finalEmployeeAnnualLeaveTotalDays", props.FinalEmployeeAnnualLeaveTotalDays.ToString());
-            InsertTextAtBookmark(wordDoc, "employeeAnnualLeaveTotalDays", props.TotalDays.ToString());
-            InsertTextAtBookmark(wordDoc, "leaveRequestStartHour", props.LeaveRequestStartHour.ToString("HH:mm"));
-            InsertTextAtBookmark(wordDoc, "leaveRequestEndHour", props.LeaveRequestEndHour.ToString("HH:mm"));
-            InsertTextAtBookmark(wordDoc, "leaveRequestStartDate", props.LeaveRequestStartHour.ToString("dd/MM/yyyy"));
-            InsertTextAtBookmark(wordDoc, "leaveRequestEndDate", props.LeaveRequestEndHour.ToString("dd/MM/yyyy"));
             InsertTextAtBookmark(wordDoc, "employeeNameTop", props.EmployeeName);
-            InsertTextAtBookmark(wordDoc, "birthPlace", props.BirthPlace);
-
-            InsertTextAtBookmark(wordDoc, "address", props.AssigneeAddress);
-            InsertTextAtBookmark(wordDoc, "idCardNumber", props.AssigneeIdCardNumber);
-            InsertTextAtBookmark(wordDoc, "idCardIssuedLocation", props.AssigneeIdCardIssuedLocation);
-            InsertTextAtBookmark(wordDoc, "idCardIssuedDate", props.AssigneeIdCardIssuedDate.ToString("dd/MM/yyyy"));
-            InsertTextAtBookmark(wordDoc, "hrName", props.HrName);
-            InsertTextAtBookmark(wordDoc, "generalDirectorName", props.GeneralDirectorName);
-            InsertTextAtBookmark(wordDoc, "idCardIssuedDate", props.AssigneeIdCardIssuedDate.ToString("dd/MM/yyyy"));
-            InsertTextAtBookmark(wordDoc, "phoneNumber", props.PhoneNumber);
+            InsertTextAtBookmark(wordDoc, "leaveRequestStartDate", props.LeaveRequestStartHour.ToString("HH:mm dd/MM/yyyy"));
+            InsertTextAtBookmark(wordDoc, "department", props.Department);
+            InsertTextAtBookmark(wordDoc, "leaveRequestEndDate", props.LeaveRequestEndHour.ToString("HH:mm dd/MM/yyyy"));
+            InsertTextAtBookmark(wordDoc, "position", " " + props.Position);
             InsertTextAtBookmark(wordDoc, "reason", props.Reason);
-            InsertTextAtBookmark(wordDoc, "supervisorName", props.SupervisorName);
-            InsertTextAtBookmark(wordDoc, "supervisorPosition", props.SupervisorPosition);
-            InsertTextAtBookmark(wordDoc, "workAssignedToDateOfBirth", props.WorkAssignedToDateOfBirth.ToString("dd/MM/yyyy"));
-            InsertTextAtBookmark(wordDoc, "workAssignedToName", props.WorkAssignedToName);
+            InsertTextAtBookmark(wordDoc, "leaveApprovalCategory", props.LeaveApprovalCategory);
+            InsertTextAtBookmark(wordDoc, "totalDaysTop", props.TotalDays.ToString() + " ngày");
+
+            InsertTextAtBookmark(wordDoc, "assigneeName", props.AssigneeName);
+            InsertTextAtBookmark(wordDoc, "assigneePersonalNumber", props.AssigneePhoneNumber);
+            InsertTextAtBookmark(wordDoc, "assigneeEmail", props.AssigneeEmail);
+            InsertTextAtBookmark(wordDoc, "assigneeAddress", props.AssigneeAddress);
+            InsertTextAtBookmark(wordDoc, "employeeAnnualLeaveTotalDays", props.EmployeeAnnualLeaveTotalDays.ToString() + " ngày");
+            InsertTextAtBookmark(wordDoc, "finalEmployeeAnnualLeaveTotalDays", props.FinalEmployeeAnnualLeaveTotalDays.ToString() + " ngày");
+            InsertTextAtBookmark(wordDoc, "totalDays", props.TotalDays.ToString() + " ngày");
+
+            InsertTextAtBookmark(wordDoc, "employeeSignDate", props.EmployeeSignDate?.ToString() ?? string.Empty);
+            InsertTextAtBookmark(wordDoc, "supervisorSignDate", props.SupervisorSignDate?.ToString() ?? string.Empty);
+            InsertTextAtBookmark(wordDoc, "hrSignDate", props.HrSignDate?.ToString() ?? string.Empty);
+            InsertTextAtBookmark(wordDoc, "generalDirectorSignDate", props.GeneralDirectorSignDate?.ToString() ?? string.Empty);
 
             if (!string.IsNullOrEmpty(props.EmployeeSignature))
                 InsertTextAtBookmark(wordDoc, "employeeSignature", props.EmployeeSignature);
@@ -55,6 +46,11 @@ public class DocxBookmarkInserter
                 InsertTextAtBookmark(wordDoc, "hrSignature", props.HrSignature);
             if (!string.IsNullOrEmpty(props.SupervisorSignature))
                 InsertTextAtBookmark(wordDoc, "supervisorSignature", props.SupervisorSignature);
+
+            InsertTextAtBookmark(wordDoc, "employeeName", props.EmployeeName);
+            InsertTextAtBookmark(wordDoc, "hrName", props.HrName);
+            InsertTextAtBookmark(wordDoc, "supervisorName", props.SupervisorName);
+            InsertTextAtBookmark(wordDoc, "generalDirectorName", props.GeneralDirectorName);
 
             // Save changes to the document
             wordDoc.MainDocumentPart.Document.Save();

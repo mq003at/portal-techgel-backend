@@ -1,33 +1,41 @@
 namespace portal.Documents.Props;
 
 public record LeaveRequestProps(
-    string templatePath,
-    DateTime DraftDate,
+    string TemplatePath,
+    // --- Top Section ---
     string EmployeeName,
-    string BirthPlace,
-    string Position,
-    string Department,
-    DateTime EmploymentStartDate,
-    float AnnualLeaveDaysPerYear,
-    float FinalEmployeeAnnualLeaveTotalDays,
-    float EmployeeAnnualLeaveTotalDays,
-    float TotalDays,
-    string AssigneeAddress,
-    string AssigneeIdCardNumber,
-    string AssigneeIdCardIssuedLocation,
-    DateTime AssigneeIdCardIssuedDate,
     DateTime LeaveRequestStartHour,
+    string Department,
     DateTime LeaveRequestEndHour,
-    string HrName,
-    string PhoneNumber,
+    string Position,
     string Reason,
-    string SupervisorName,
-    string SupervisorPosition,
-    DateTime WorkAssignedToDateOfBirth,
-    string WorkAssignedToName,
-    string GeneralDirectorName,
-    string? GeneralDirectorSignature,
+    string LeaveApprovalCategory,
+
+    // --- Assignee Section ---
+    string AssigneeName,
+    string AssigneePhoneNumber,
+    string AssigneeEmail,
+    string AssigneeAddress,
+
+    // --- Leave Stats ---
+    float EmployeeAnnualLeaveTotalDays,
+    float FinalEmployeeAnnualLeaveTotalDays,
+    float TotalDays,
+
+    // --- Sign Dates ---
+    DateTime? EmployeeSignDate,
+    DateTime? SupervisorSignDate,
+    DateTime? HrSignDate,
+    DateTime? GeneralDirectorSignDate,
+
+    // --- Signatures ---
     string? EmployeeSignature,
+    string? GeneralDirectorSignature,
     string? HrSignature,
-    string? SupervisorSignature
+    string? SupervisorSignature,
+
+    // --- Names (Signers) ---
+    string HrName,
+    string SupervisorName,
+    string GeneralDirectorName
 );

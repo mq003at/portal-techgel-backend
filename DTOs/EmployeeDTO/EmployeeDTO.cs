@@ -91,3 +91,19 @@ public class LoginRequestDTO
     public string MainId { get; set; } = null!;
     public string Password { get; set; } = null!;
 }
+
+// public class EmployeeShortDTO
+// {
+//     public int Id { get; set; }
+//     public string MainId { get; set; } = null!;
+//     public string FirstName { get; set; } = null!;
+//     public string MiddleName { get; set; } = null!;
+//     public string LastName { get; set; } = null!;
+//     public string FullName => $"{FirstName} {MiddleName} {LastName}";
+//     public string? Avatar { get; set; }
+//     public string Department { get; set; } = null!;
+//     public string Position { get; set; } = null!;
+// }
+
+
+

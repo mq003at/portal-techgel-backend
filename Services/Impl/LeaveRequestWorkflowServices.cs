@@ -7,6 +7,7 @@ using portal.Db;
 using portal.Documents.Props;
 using portal.DTOs;
 using portal.Enums;
+using portal.Helpers;
 using portal.Models;
 using Serilog;
 
@@ -42,8 +43,7 @@ public class LeaveRequestWorkflowService : BaseService<
             : 0;
 
         // Calculate number of leave days (min 0.5)
-        var totalDays = (dto.EndDate - dto.StartDate).Days +
-                        (dto.EndDateDayNightType - dto.StartDateDayNightType) * 0.5;
+        var totalDays = DateHelper.CalculateLeaveDays(dto.StartDate, (int)dto.StartDateDayNightType, dto.EndDate, (int)dto.EndDateDayNightType);
 
         if (totalDays < 0.4)
             throw new ArgumentException("End date must be after start date and at least half a day apart.");
@@ -211,6 +211,11 @@ public class LeaveRequestWorkflowService : BaseService<
     {
 
         var entity = _mapper.Map<LeaveRequestWorkflow>(dto);
+        var employeeMainId = await _context.Employees.Where(e => e.Id == dto.EmployeeId).Select(e => e.MainId).FirstOrDefaultAsync();
+
+        // Tự điền thông tin
+        entity.Name = "AL-" + employeeMainId + "/" + entity.StartDate.ToString("dd.MM") + entity.EndDate.ToString("dd.MM");
+        entity.Name = "Hố sơ nghỉ phép nhân viên" + employeeMainId + "Từ: " + entity.StartDate.ToString("HH:mm DD/dd/MM/yyyy") + " tới ngày " + entity.EndDate.ToString("HH:mm DD/dd/MM/yyyy");
 
         _dbSet.Add(entity);
         await _context.SaveChangesAsync(); // Để có entity.Id
@@ -297,64 +302,90 @@ public class LeaveRequestWorkflowService : BaseService<
         var hr = await _context.Employees.FirstOrDefaultAsync(e => e.Id == 4);
         var generalDirector = await _context.Employees.FirstOrDefaultAsync(e => e.Id == 1);
 
-        // Get supervisor from employee.RoleInfo.SupervisorId
-        var supervisor = await _context.Employees.FirstOrDefaultAsync(e => e.Id == employee.RoleInfo.SupervisorId);
-        var supervisorName = supervisor != null
-        ? supervisor.FirstName + " " + supervisor.MiddleName + " " + supervisor.LastName
-        : "";
-        var supervisorPosition = supervisor?.CompanyInfo.Position ?? "";
-
-        if (employee != null && assignee != null)
+        if (employee == null || assignee == null || hr == null || generalDirector == null)
         {
-            workflow.SenderId = employee.Id;
-            workflow.EmployeeMainId = employee.MainId ?? "";
-            workflow.SenderName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
-            workflow.EmployeeName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
-            workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName;
-            workflow.WorkAssignedToPosition = assignee.CompanyInfo.Position ?? "";
-            workflow.WorkAssignedToPhone = assignee.CompanyInfo.CompanyPhoneNumber ?? "";
-            workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
-            workflow.WorkAssignedToHomeAdress = assignee.PersonalInfo.Address ?? "";
-        }
-        workflow.ReceiverNames = await GetNamesByIdsAsync(workflow.ReceiverIds.ToList());
-        workflow.HasBeenApprovedByNames = await GetNamesByIdsAsync(workflow.HasBeenApprovedByIds.ToList());
-        workflow.LeaveRequestNodes = _context.LeaveRequestNodes
-            .Where(n => n.LeaveRequestWorkflowId == workflow.Id)
-            .Select(n => _mapper.Map<LeaveRequestNodeDTO>(n))
-            .ToList();
-
-        foreach (var node in workflow.LeaveRequestNodes)
-        {
-            await PopulateMetadataAsync(node, workflow.SenderName);
-        }
-
-        var docxStream = new MemoryStream();
-        if (workflow.Status == GeneralWorkflowStatusType.Approved)
-        {
-            // If the workflow is approved, generate the document
-            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.TotalDays, workflow.StartDate, workflow.EndDate, true);
+            throw new InvalidOperationException("One or more required employees (employee, assignee, hr, generalDirector) could not be found.");
         }
         else
         {
-            docxStream = GenerateLeaveRequestDocument(employee, assignee, workflow.FinalEmployeeAnnualLeaveTotalDays, hr, generalDirector, workflow.Reason, supervisorName, supervisorPosition, workflow.EmployeeAnnualLeaveTotalDays, workflow.TotalDays, workflow.StartDate, workflow.EndDate, false);
+            // Get supervisor from employee.RoleInfo.SupervisorId
+            var supervisor = await _context.Employees.FirstOrDefaultAsync(e => e.Id == employee.RoleInfo.SupervisorId);
+            var supervisorName = supervisor != null
+            ? supervisor.FirstName + " " + supervisor.MiddleName + " " + supervisor.LastName
+            : "";
+            var supervisorPosition = supervisor?.CompanyInfo.Position ?? "";
+
+            if (employee != null && assignee != null)
+            {
+                workflow.SenderId = employee.Id;
+                workflow.EmployeeMainId = employee.MainId ?? "";
+                workflow.SenderName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
+                workflow.EmployeeName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
+                workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName;
+                workflow.WorkAssignedToPosition = assignee.CompanyInfo.Position ?? "";
+                workflow.WorkAssignedToPhone = assignee.CompanyInfo.CompanyPhoneNumber ?? "";
+                workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
+                workflow.WorkAssignedToHomeAdress = assignee.PersonalInfo.Address ?? "";
+            }
+            workflow.ReceiverNames = await GetNamesByIdsAsync(workflow.ReceiverIds.ToList());
+            workflow.HasBeenApprovedByNames = await GetNamesByIdsAsync(workflow.HasBeenApprovedByIds.ToList());
+            workflow.LeaveRequestNodes = _context.LeaveRequestNodes
+                .Where(n => n.LeaveRequestWorkflowId == workflow.Id)
+                .Select(n => _mapper.Map<LeaveRequestNodeDTO>(n))
+                .ToList();
+
+            foreach (var node in workflow.LeaveRequestNodes)
+            {
+                await PopulateMetadataAsync(node, workflow.SenderName);
+            }
+
+            var docxStream = new MemoryStream();
+            if (workflow.Status == GeneralWorkflowStatusType.Approved)
+            {
+                // If the workflow is approved, generate the document
+                docxStream = GenerateLeaveRequestDocument(
+                employee,
+                assignee,
+                hr,
+                generalDirector,
+                supervisor,
+                workflow,
+                true
+                );
+            }
+            else
+            {
+                docxStream = GenerateLeaveRequestDocument(
+                employee,
+                assignee,
+                hr,
+                generalDirector,
+                supervisor,
+                workflow,
+                false
+                );
+            }
+
+            docxStream.Position = 0; // Reset stream for reading
+            var fileName = (workflow.Status == GeneralWorkflowStatusType.Approved ? "SIGNED" : "INFO") + " -LeaveRequestForm.docx";
+            var attachment = new Attachment
+            {
+                FileName = fileName,
+                ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                FileContent = docxStream.ToArray()
+            };
+
+            if (workflow.Attachments == null)
+            {
+                workflow.Attachments = new List<Attachment> { attachment };
+            }
+            else
+            {
+                workflow.Attachments.Add(attachment);
+            }
         }
 
-        docxStream.Position = 0; // Reset stream for reading
-        var attachment = new Attachment
-        {
-            FileName = "INFO-LeaveRequestForm.docx",
-            ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            FileContent = docxStream.ToArray()
-        };
 
-        if (workflow.Attachments == null)
-        {
-            workflow.Attachments = new List<Attachment> { attachment };
-        }
-        else
-        {
-            workflow.Attachments.Add(attachment);
-        }
     }
 
     private async Task PopulateMetadataAsync(LeaveRequestNodeDTO node, string SenderName)
@@ -374,40 +405,56 @@ public class LeaveRequestWorkflowService : BaseService<
             .ToListAsync();
     }
 
-    private MemoryStream GenerateLeaveRequestDocument(Employee employee, Employee assignee, float finalEmployeeAnnualLeaveTotalDays, Employee hr, Employee generalDirector, string reason, string supervisorName, string supervisorPosition, float employeeAnnualLeaveTotalDays, float totalDays, DateTime leaveRequestStartHour, DateTime leaveRequestEndHour, bool isSigned = false)
+    private MemoryStream GenerateLeaveRequestDocument(Employee employee, Employee assignee, Employee hr, Employee generalDirector, Employee supervisor, LeaveRequestWorkflowDTO leaveRequest, bool isSigned = false)
     {
-        // You can call your DocxBookmarkInserter or whatever helper you wrote here
         string templatePath = Path.Combine("Helpers", "Documents", "Template", "TEMPLATE-LeaveRequestTemplate.docx");
-        var props = new LeaveRequestProps(templatePath,
-                DateTime.UtcNow,
-                employee.FirstName + " " + employee.MiddleName + " " + employee.LastName,
-                employee.PersonalInfo.Birthplace ?? "",
-                employee.CompanyInfo.Position ?? "",
-                employee.CompanyInfo.Department ?? "",
-                (DateTime)employee.CompanyInfo.StartDate,
-                12.0f,
-                finalEmployeeAnnualLeaveTotalDays,
-                employeeAnnualLeaveTotalDays,
-                totalDays,
-                assignee.PersonalInfo.Address ?? "",
-                assignee.PersonalInfo.IdCardNumber ?? "",
-                assignee.PersonalInfo.IdCardIssuePlace ?? "",
-                (DateTime)assignee.PersonalInfo.IdCardIssueDate,
-                (DateTime)leaveRequestStartHour,
-                (DateTime)leaveRequestEndHour,
-                hr.FirstName + " " + hr.MiddleName + " " + hr.LastName,
-                assignee.PersonalInfo.PersonalPhoneNumber ?? "",
-                reason,
-                supervisorName,
-                supervisorPosition,
-                assignee.PersonalInfo.DateOfBirth,
-                assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName,
-                generalDirector.FirstName + " " + generalDirector.MiddleName + " " + generalDirector.LastName,
-                isSigned ? "Đã ký" : null,
-                isSigned ? "Đã ký" : null,
-                isSigned ? "Đã ký" : null,
-                isSigned ? "Đã ký" : null
-            );
+
+        DateTime? employeeSignDate = leaveRequest.ApprovedDates?.FirstOrDefault();
+        DateTime? supervisorSignDate = leaveRequest.ApprovedDates?.ElementAtOrDefault(1);
+        DateTime? hrSignDate = leaveRequest.ApprovedDates?.ElementAtOrDefault(2);
+        DateTime? generalDirectorSignDate = leaveRequest.ApprovedDates?.ElementAtOrDefault(3);
+
+
+        var props = new LeaveRequestProps(
+    templatePath,
+
+    // --- Top Section ---
+    employee.FirstName + " " + employee.MiddleName + " " + employee.LastName, // EmployeeName
+    (DateTime)leaveRequest.StartDate,                                           // LeaveRequestStartHour
+    employee.CompanyInfo.Department ?? "",                                     // Department
+    (DateTime)leaveRequest.EndDate,                                             // LeaveRequestEndHour
+    employee.CompanyInfo.Position ?? "",                                       // Position
+    leaveRequest.Reason,                                                                    // Reason
+    leaveRequest.LeaveAprrovalCategory.ToString(),                                          // LeaveApprovalCategory
+
+    // --- Assignee Section ---
+    assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName + (employee.Id == assignee.Id ? " (Sẵn sàng nhận điện thoại / Hỗ trợ từ xa)" : ""),  // AssigneeName
+    assignee.PersonalInfo.PersonalPhoneNumber ?? "",                           // AssigneePhoneNumber
+    assignee.CompanyInfo.CompanyEmail ?? "",                                   // AssigneeEmail (you might want to confirm which field)
+    assignee.PersonalInfo.Address ?? "",                                       // AssigneeAddress
+
+    // --- Leave Stats ---
+    leaveRequest.EmployeeAnnualLeaveTotalDays,                                              // EmployeeAnnualLeaveTotalDays
+    leaveRequest.FinalEmployeeAnnualLeaveTotalDays,                                         // FinalEmployeeAnnualLeaveTotalDays
+    leaveRequest.TotalDays,                                                                 // TotalDays
+
+    // --- Sign Dates ---
+    employeeSignDate,
+    supervisorSignDate,                                                        // SupervisorSignDate (define this value appropriately)
+    hrSignDate,                                                                // HrSignDate (define this value appropriately)
+    generalDirectorSignDate,                                                   // GeneralDirectorSignDate (define this value appropriately)
+
+    // --- Signatures ---
+    isSigned ? "Đã ký" : null,                                                 // EmployeeSignature
+    isSigned ? "Đã ký" : null,                                                 // GeneralDirectorSignature
+    isSigned ? "Đã ký" : null,                                                 // HrSignature
+    isSigned ? "Đã ký" : null,                                                 // SupervisorSignature
+
+    // --- Names (Signers) ---
+    hr.FirstName + " " + hr.MiddleName + " " + hr.LastName,                    // HrName
+    supervisor.FirstName + " " + supervisor.MiddleName + " " + supervisor.LastName,
+    generalDirector.FirstName + " " + generalDirector.MiddleName + " " + generalDirector.LastName
+);
         return DocxBookmarkInserter.InsertEmployeeData(props);
     }
 
