@@ -131,7 +131,7 @@ public class OrganizationEntityService
 
         dto.EmployeeIds = employees.Select(e => e.Id.ToString()).ToList();
         dto.EmployeeNames = employees
-            .Select(e => $"{e.FirstName} {e.MiddleName} {e.LastName}")
+            .Select(e => $"{e.LastName} {e.MiddleName} {e.FirstName}")
             .ToList();
 
         return dto;

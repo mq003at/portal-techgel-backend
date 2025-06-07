@@ -26,14 +26,14 @@ public class EmployeeProfile : Profile
                 o =>
                     o.MapFrom(s =>
                         s.Supervisor != null
-                            ? s.Supervisor.FirstName + " " + s.Supervisor.LastName
+                            ? s.Supervisor.FirstName + " " + s.Supervisor.MiddleName + " " + s.Supervisor.LastName
                             : null
                     )
             )
             .ForMember(d => d.SubordinateIds, o => o.MapFrom(s => s.Subordinates.Select(x => x.Id)))
             .ForMember(
                 d => d.SubordinateNames,
-                o => o.MapFrom(s => s.Subordinates.Select(x => x.FirstName + " " + x.LastName))
+                o => o.MapFrom(s => s.Subordinates.Select(x => x.LastName))
             )
             .ForMember(
                 d => d.ManagedOrganizationEntityIds,

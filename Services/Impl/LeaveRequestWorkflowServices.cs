@@ -311,7 +311,7 @@ public class LeaveRequestWorkflowService : BaseService<
             // Get supervisor from employee.RoleInfo.SupervisorId
             var supervisor = await _context.Employees.FirstOrDefaultAsync(e => e.Id == employee.RoleInfo.SupervisorId);
             var supervisorName = supervisor != null
-            ? supervisor.FirstName + " " + supervisor.MiddleName + " " + supervisor.LastName
+            ? supervisor.LastName + " " + supervisor.MiddleName + " " + supervisor.FirstName
             : "";
             var supervisorPosition = supervisor?.CompanyInfo.Position ?? "";
 
@@ -319,9 +319,9 @@ public class LeaveRequestWorkflowService : BaseService<
             {
                 workflow.SenderId = employee.Id;
                 workflow.EmployeeMainId = employee.MainId ?? "";
-                workflow.SenderName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
-                workflow.EmployeeName = employee.FirstName + " " + employee.MiddleName + " " + employee.LastName;
-                workflow.WorkAssignedToName = assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName;
+                workflow.SenderName = employee.LastName + " " + employee.MiddleName + " " + employee.FirstName;
+                workflow.EmployeeName = employee.LastName + " " + employee.MiddleName + " " + employee.FirstName;
+                workflow.WorkAssignedToName = assignee.LastName + " " + assignee.MiddleName + " " + assignee.FirstName;
                 workflow.WorkAssignedToPosition = assignee.CompanyInfo.Position ?? "";
                 workflow.WorkAssignedToPhone = assignee.CompanyInfo.CompanyPhoneNumber ?? "";
                 workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
@@ -401,7 +401,7 @@ public class LeaveRequestWorkflowService : BaseService<
     {
         return await _context.Employees
             .Where(e => ids.Contains(e.Id))
-            .Select(e => e.FirstName + " " + e.MiddleName + " " + e.LastName)
+            .Select(e => e.LastName + " " + e.MiddleName + " " + e.FirstName)
             .ToListAsync();
     }
 
@@ -419,7 +419,7 @@ public class LeaveRequestWorkflowService : BaseService<
     templatePath,
 
     // --- Top Section ---
-    employee.FirstName + " " + employee.MiddleName + " " + employee.LastName, // EmployeeName
+    employee.LastName + " " + employee.MiddleName + " " + employee.FirstName, // EmployeeName
     (DateTime)leaveRequest.StartDate,                                           // LeaveRequestStartHour
     employee.CompanyInfo.Department ?? "",                                     // Department
     (DateTime)leaveRequest.EndDate,                                             // LeaveRequestEndHour
@@ -428,7 +428,7 @@ public class LeaveRequestWorkflowService : BaseService<
     leaveRequest.LeaveAprrovalCategory.ToString(),                                          // LeaveApprovalCategory
 
     // --- Assignee Section ---
-    assignee.FirstName + " " + assignee.MiddleName + " " + assignee.LastName + (employee.Id == assignee.Id ? " (Sẵn sàng nhận điện thoại / Hỗ trợ từ xa)" : ""),  // AssigneeName
+    assignee.LastName + " " + assignee.MiddleName + " " + assignee.FirstName + (employee.Id == assignee.Id ? " (Sẵn sàng nhận điện thoại / Hỗ trợ từ xa)" : ""),  // AssigneeName
     assignee.PersonalInfo.PersonalPhoneNumber ?? "",                           // AssigneePhoneNumber
     assignee.CompanyInfo.CompanyEmail ?? "",                                   // AssigneeEmail (you might want to confirm which field)
     assignee.PersonalInfo.Address ?? "",                                       // AssigneeAddress
@@ -451,9 +451,9 @@ public class LeaveRequestWorkflowService : BaseService<
     isSigned ? "Đã ký" : null,                                                 // SupervisorSignature
 
     // --- Names (Signers) ---
-    hr.FirstName + " " + hr.MiddleName + " " + hr.LastName,                    // HrName
-    supervisor.FirstName + " " + supervisor.MiddleName + " " + supervisor.LastName,
-    generalDirector.FirstName + " " + generalDirector.MiddleName + " " + generalDirector.LastName
+    hr.LastName + " " + hr.MiddleName + " " + hr.FirstName,                    // HrName
+    supervisor.LastName + " " + supervisor.MiddleName + " " + supervisor.FirstName,
+    generalDirector.LastName + " " + generalDirector.MiddleName + " " + generalDirector.FirstName
 );
         return DocxBookmarkInserter.InsertEmployeeData(props);
     }

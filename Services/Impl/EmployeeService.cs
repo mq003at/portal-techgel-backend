@@ -48,7 +48,7 @@ public class EmployeeService
 
         dto.RoleInfo.SubordinateIds = subs.Select(e => e.Id).ToList();
 
-        dto.RoleInfo.SubordinateNames = subs.Select(e => e.FirstName + " " + e.LastName).ToList();
+        dto.RoleInfo.SubordinateNames = subs.Select(e => e.LastName + " " + e.MiddleName + " " + e.LastName).ToList();
     }
 
     public override async Task<IEnumerable<EmployeeDTO>> GetAllAsync()

@@ -11,7 +11,7 @@ public class LeaveRequestWorkflowProfile : Profile
     {
         // ----------- GET MAPPING ----------- //
         CreateMap<LeaveRequestWorkflow, LeaveRequestWorkflowDTO>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FirstName + " " + src.Employee.LastName));
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.LastName + " " + src.Employee.MiddleName + " " + src.Employee.LastName));
 
         CreateMap<LeaveRequestNode, LeaveRequestNodeDTO>()
             .ForMember(dest => dest.LeaveRequestName, opt => opt.MapFrom(src => src.LeaveRequestWorkflow.Name));
