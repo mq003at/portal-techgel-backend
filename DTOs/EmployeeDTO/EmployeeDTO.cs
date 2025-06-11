@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using portal.Enums;
 using portal.Models;
 
-public class EmployeeDTO : BaseDTO<Employee>
+public class EmployeeDTO : BaseModelDTO<Employee>
 {
     // Thông tin cơ bản
     public string FirstName { get; set; } = null!;
@@ -32,7 +32,7 @@ public class EmployeeDTO : BaseDTO<Employee>
     public RoleInfoDTO RoleInfo { get; set; } = null!;
 }
 
-public class CreateEmployeeDTO : BaseDTO<Employee>
+public class CreateEmployeeDTO : BaseModelDTO<Employee>
 {
     [Required]
     public string FirstName { get; set; } = null!;
@@ -67,7 +67,7 @@ public class CreateEmployeeDTO : BaseDTO<Employee>
     public RoleInfoDTO RoleInfo { get; set; } = null!;
 }
 
-public class UpdateEmployeeDTO : BaseDTO<Employee>
+public class UpdateEmployeeDTO : BaseModelDTO<Employee>
 {
     public string? FirstName { get; set; }
     public string? MiddleName { get; set; }

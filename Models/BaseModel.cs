@@ -9,9 +9,17 @@ public abstract class BaseModel
     public int Id { get; set; } // Primary Key, auto-generated
     public string MainId { get; set; } = string.Empty;
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Required]
     public DateTime CreatedAt { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Required]
     public DateTime UpdatedAt { get; set; }
 }
+
+public abstract class BaseModelWithOnlyId
+{
+    [Key]
+    public int Id { get; set; }
+}
+
+

@@ -9,7 +9,7 @@ public class SignDocumentUploadDTO
     public IFormFile File { get; set; } = default!;
 }
 
-public class DocumentDTO : BaseDTO<Document>
+public class DocumentDTO : BaseModelDTO<Document>
 {
     public IFormFile? File { get; set; } // For file upload scenarios
     public GeneralDocumentInfoDTO GeneralDocumentInfo { get; set; } = new();
@@ -19,7 +19,7 @@ public class DocumentDTO : BaseDTO<Document>
     public List<EditDocumentInfoDTO> EditDocumentInfo { get; set; } = new();
 }
 
-public class CreateDocumentDTO : BaseDTO<Document>
+public class CreateDocumentDTO : BaseModelDTO<Document>
 {
     public IFormFile? File { get; set; } // For file upload scenarios
 
@@ -30,10 +30,10 @@ public class CreateDocumentDTO : BaseDTO<Document>
     public CreateLegalDocumentInfoDTO LegalDocumentInfo { get; set; } = new();
     public SecurityDocumentInfo SecurityDocumentInfo { get; set; } = new();
     public AdditionalDocumentInfo AdditionalDocumentInfo { get; set; } = new();
-    public List<EditDocumentInfoDTO> EditDocumentInfo{ get; set; } = new();
+    public List<EditDocumentInfoDTO> EditDocumentInfo { get; set; } = new();
 }
 
-public class UpdateDocumentDTO : BaseDTO<Document>
+public class UpdateDocumentDTO : BaseModelDTO<Document>
 {
     public IFormFile? File { get; set; } // For file upload scenarios
 

@@ -93,3 +93,10 @@ public enum DocumentConfidentialityLevelEnum
     SECRET,
     SELF
 }
+
+public static class DocumentAssociationTypes
+{
+    public const string Workflow = "Workflow";
+    public const string WorkflowNode = "WorkflowNode";
+    public const string LeaveRequest = "LeaveRequest";
+}

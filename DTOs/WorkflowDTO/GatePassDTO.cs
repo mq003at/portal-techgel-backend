@@ -2,7 +2,7 @@ using portal.Models;
 
 namespace portal.DTOs;
 
-public class GatePassDTO : BaseWorkflowDTO<GatePass>
+public class GatePassDTO : BaseWorkflowDTO
 {
     public int EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty;

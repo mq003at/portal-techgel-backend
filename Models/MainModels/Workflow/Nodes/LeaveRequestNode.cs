@@ -1,12 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace portal.Models;
 
-public class LeaveRequestNode : WorkflowNode
+public class LeaveRequestNode : BaseWorkflowNode
 {
-    public int LeaveRequestWorkflowId { get; set; }
-
-    [NotMapped]
-    public LeaveRequestWorkflow LeaveRequestWorkflow { get; set; }
-
+    // Indicates the step in this workflow (used with participants' steps to perform services)
     public LeaveApprovalStepType StepType { get; set; }
 }

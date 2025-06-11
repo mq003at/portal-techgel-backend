@@ -10,9 +10,9 @@ namespace portal.Controllers;
 
 public abstract class BaseController<TModel, TReadDTO, TCreateDTO, TUpdateDTO> : ApiControllerBase
     where TModel : BaseModel
-    where TReadDTO : BaseDTO<TModel>
-    where TCreateDTO : BaseDTO<TModel>
-    where TUpdateDTO : BaseDTO<TModel>
+    where TReadDTO : BaseModelDTO<TModel>
+    where TCreateDTO : BaseModelDTO<TModel>
+    where TUpdateDTO : BaseModelDTO<TModel>
 {
     protected readonly IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO> _service;
 

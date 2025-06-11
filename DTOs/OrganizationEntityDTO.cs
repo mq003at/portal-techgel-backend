@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using portal.Enums;
 using portal.Models;
 
-public class OrganizationEntitySummaryDTO : BaseDTO<OrganizationEntity>
+public class OrganizationEntitySummaryDTO : BaseModelDTO<OrganizationEntity>
 {
     // Tên đơn vị
     public string Name { get; set; } = null!;
@@ -49,7 +49,7 @@ public class OrganizationEntitySummaryDTO : BaseDTO<OrganizationEntity>
     public int DocumentCounts { get; set; }
 }
 
-public class CreateOrganizationEntityDTO : BaseDTO<OrganizationEntity>
+public class CreateOrganizationEntityDTO : BaseModelDTO<OrganizationEntity>
 {
     [Required]
     public string Name { get; set; } = null!;
@@ -71,7 +71,7 @@ public class CreateOrganizationEntityDTO : BaseDTO<OrganizationEntity>
     public int? SortOrder { get; set; }
 }
 
-public class UpdateOrganizationEntityDTO : BaseDTO<OrganizationEntity>
+public class UpdateOrganizationEntityDTO : BaseModelDTO<OrganizationEntity>
 {
     public string? Name { get; set; }
 

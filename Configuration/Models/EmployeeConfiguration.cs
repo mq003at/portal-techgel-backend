@@ -44,6 +44,8 @@ public class EmployeeConfiguration
             .HasForeignKey<Signature>(s => s.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
 
+
+
         // 6) RoleInfo (owned one-to-one)
         builder.OwnsOne(
     e => e.RoleInfo,

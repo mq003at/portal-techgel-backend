@@ -7,17 +7,24 @@ public abstract class BaseModelConfiguration<T> : IEntityTypeConfiguration<T>
 {
     public virtual void Configure(EntityTypeBuilder<T> builder)
     {
+        // Primary Key, auto-increment
         builder.HasKey(e => e.Id);
-
-        builder.Property(e => e.MainId).HasDefaultValue("").IsRequired();
-
-        builder
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+        builder.Property(e => e.Id)
             .ValueGeneratedOnAdd();
 
-        builder
-            .Property(e => e.UpdatedAt)
+        // MainId: Required, Default to empty string
+        builder.Property(e => e.MainId)
+            .IsRequired()
+            .HasDefaultValue(string.Empty);
+
+        // CreatedAt: Required, default value SQL, set at DB insert
+        builder.Property(e => e.CreatedAt)
+            .IsRequired()
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        // UpdatedAt: Required, default value SQL, updated by DB on update
+        builder.Property(e => e.UpdatedAt)
+            .IsRequired()
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .ValueGeneratedOnAddOrUpdate();
     }

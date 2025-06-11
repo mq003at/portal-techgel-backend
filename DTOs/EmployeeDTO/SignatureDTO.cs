@@ -4,7 +4,7 @@ using portal.Models;
 
 namespace portal.DTOs;
 
-public class SignatureDTO : BaseDTO<Signature>
+public class SignatureDTO : BaseModelDTO<Signature>
 {
     [Required]
     public int EmployeeId { get; set; }
@@ -16,7 +16,7 @@ public class SignatureDTO : BaseDTO<Signature>
     public string FileUrl { get; set; } = null!;
 }
 
-public class UploadSignatureDTO : BaseDTO<Signature>
+public class UploadSignatureDTO : BaseModelDTO<Signature>
 {
     [Required]
     public int EmployeeId { get; set; }
@@ -36,7 +36,7 @@ public class UploadSignatureDTO : BaseDTO<Signature>
     public string FileName { get; set; } = null!;
 }
 
-public class UpdateSignatureDTO : BaseDTO<Signature>
+public class UpdateSignatureDTO : BaseModelDTO<Signature>
 {
     [AllowedExtensions([".svg"], ErrorMessage = "Only SVG files are allowed.")]
     [MaxFileSize(3 * 1024 * 1024, ErrorMessage = "File size cannot exceed 3 MB.")]

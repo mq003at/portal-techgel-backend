@@ -600,7 +600,7 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("WorkAssignedToId")
+                    b.Property<int>("AssigneeId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");

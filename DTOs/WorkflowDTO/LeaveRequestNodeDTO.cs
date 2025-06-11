@@ -2,21 +2,18 @@ using portal.Models;
 
 namespace portal.DTOs;
 
-public class LeaveRequestNodeDTO : WorkflowNodeDTO<LeaveRequestNode>
+public class LeaveRequestNodeDTO : WorkflowNodeDTO
 {
-    public int LeaveRequestWorkflowId { get; set; }
-    public string LeaveRequestName { get; set; } = string.Empty;
+    public LeaveApprovalStepType StepType { get; set; }
+    public string StepTypeName { get; set; } = string.Empty;
+}
 
+public class LeaveRequestNodeCreateDTO : WorkflowNodeCreateDTO
+{
     public LeaveApprovalStepType StepType { get; set; }
 }
 
-public class CreateLeaveRequestNodeDTO : CreateWorkflowNodeDTO<LeaveRequestNode>
+public class LeaveRequestNodeUpdateDTO : WorkflowNodeUpdateDTO
 {
-    public int LeaveRequestWorkflowId { get; set; }
     public LeaveApprovalStepType StepType { get; set; }
-}
-public class UpdateLeaveRequestNodeDTO : UpdateWorkflowNodeDTO<LeaveRequestNode>
-{
-    public int? LeaveRequestWorkflowId { get; set; }
-    public LeaveApprovalStepType? StepType { get; set; }
 }

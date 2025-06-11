@@ -10,35 +10,41 @@ using portal.Models;
 
 public class AppDbContextSaveChangesInterceptor : SaveChangesInterceptor
 {
+    public override InterceptionResult<int> SavingChanges(
+        DbContextEventData eventData,
+        InterceptionResult<int> result)
+    {
+        SetTimestamps(eventData.Context);
+        return base.SavingChanges(eventData, result);
+    }
+
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
-        CancellationToken cancellationToken = default
-    )
+        CancellationToken cancellationToken = default)
     {
-        var context = eventData.Context;
-        if (context == null)
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        SetTimestamps(eventData.Context);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    private static void SetTimestamps(DbContext? context)
+    {
+        if (context == null) return;
 
         var utcNow = DateTime.UtcNow;
 
-        foreach (var entry in context.ChangeTracker.Entries())
+        foreach (var entry in context.ChangeTracker.Entries<BaseModel>())
         {
-            if (entry.Entity is BaseModel baseModel)
+            if (entry.State == EntityState.Added)
             {
-                if (entry.State == EntityState.Added)
-                {
-                    baseModel.CreatedAt = utcNow;
-                    baseModel.UpdatedAt = utcNow;
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    baseModel.UpdatedAt = utcNow;
-                    entry.Property(nameof(baseModel.CreatedAt)).IsModified = false; // Don't overwrite CreatedAt
-                }
+                entry.Entity.CreatedAt = utcNow;
+                entry.Entity.UpdatedAt = utcNow;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Property(nameof(BaseModel.CreatedAt)).IsModified = false;
+                entry.Entity.UpdatedAt = utcNow;
             }
         }
-
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 }

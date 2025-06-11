@@ -1,49 +1,32 @@
-using System.ComponentModel.DataAnnotations;
 using portal.Enums;
-using portal.Models;
 namespace portal.DTOs;
 
-public abstract class BaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkflow
+public class BaseWorkflowDTO : BaseModelDTO
 {
-    [Required]
-
     public string Name { get; set; } = string.Empty;
-
     public string Description { get; set; } = string.Empty;
-
     public GeneralWorkflowStatusType Status { get; set; }
 
-    public List<int> ReceiverIds { get; set; } = new List<int>();
-    public List<string> ReceiverNames { get; set; } = new List<string>();
-
-    public int SenderId { get; set; }
-    public string SenderName { get; set; } = string.Empty;
-
-    public List<int> HasBeenApprovedByIds { get; set; } = new List<int>();
-    public List<string> HasBeenApprovedByNames { get; set; } = new List<string>();
-
-    public List<DateTime> ApprovedDates { get; set; } = new List<DateTime>();
+    public List<WorkflowParticipantDTO> WorkflowParticipants { get; set; } = new();
+    public List<DocumentAssociationDTO> DocumentAssociations { get; set; } = new();
 }
 
-public abstract class CreateBaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkflow
+public class BaseWorkflowCreateDTO : BaseModelCreateDTO
 {
     public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public GeneralWorkflowStatusType Status { get; set; }
 
-    public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.Draft;
-
-    public List<int> ReceiverIds { get; set; } = new List<int>();
-    public required int SenderId { get; set; }
+    public List<int> WorkflowParticipantIds { get; set; } = new();
+    public List<int> DocumentAssociationIds { get; set; } = new();
 }
 
-public abstract class UpdateBaseWorkflowDTO<T> : BaseDTO<T> where T : BaseWorkflow
+public class BaseWorkflowUpdateDTO : BaseModelUpdateDTO
 {
-    public string? Name { get; set; }
-    public string? Description { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public GeneralWorkflowStatusType Status { get; set; }
 
-    public GeneralWorkflowStatusType? Status { get; set; }
-
-    public List<int>? ReceiverIds { get; set; }
-    public List<int>? HasBeenApprovedByIds { get; set; }
-    public List<DateTime>? ApprovedDates { get; set; }
+    public List<int> WorkflowParticipantIds { get; set; } = new();
+    public List<int> DocumentAssociationIds { get; set; } = new();
 }

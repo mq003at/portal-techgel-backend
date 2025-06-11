@@ -18,7 +18,7 @@ namespace portal_techgel_api.Migrations
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
-                name: "WorkAssignedToId",
+                name: "AssigneeId",
                 table: "LeaveRequestWorkflows",
                 type: "integer",
                 nullable: false,
@@ -33,7 +33,7 @@ namespace portal_techgel_api.Migrations
                 table: "LeaveRequestWorkflows");
 
             migrationBuilder.DropColumn(
-                name: "WorkAssignedToId",
+                name: "AssigneeId",
                 table: "LeaveRequestWorkflows");
         }
     }

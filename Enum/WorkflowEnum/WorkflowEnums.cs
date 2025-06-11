@@ -19,3 +19,12 @@ public enum GeneralWorkflowLogicType
     Quorum,
     AbsoluteMajority
 }
+
+public enum WorkflowParticipantRoleType
+{
+    Responsible,
+    Accountable,
+    Consulted,
+    Informed,
+    QualityAssurance
+}

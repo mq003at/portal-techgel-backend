@@ -295,10 +295,10 @@ public class LeaveRequestWorkflowService : BaseService<
         // Populate EmployeeName
         _logger.LogInformation(
             "Populating metadata for LeaveRequestWorkflow with ID {Id} which has empid {empid} and assignedid {ass}",
-            workflow.Id, workflow.EmployeeId, workflow.WorkAssignedToId
+            workflow.Id, workflow.EmployeeId, workflow.AssigneeId
         );
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId);
-        var assignee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.WorkAssignedToId);
+        var assignee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == workflow.AssigneeId);
         var hr = await _context.Employees.FirstOrDefaultAsync(e => e.Id == 4);
         var generalDirector = await _context.Employees.FirstOrDefaultAsync(e => e.Id == 1);
 
@@ -321,11 +321,11 @@ public class LeaveRequestWorkflowService : BaseService<
                 workflow.EmployeeMainId = employee.MainId ?? "";
                 workflow.SenderName = employee.LastName + " " + employee.MiddleName + " " + employee.FirstName;
                 workflow.EmployeeName = employee.LastName + " " + employee.MiddleName + " " + employee.FirstName;
-                workflow.WorkAssignedToName = assignee.LastName + " " + assignee.MiddleName + " " + assignee.FirstName;
-                workflow.WorkAssignedToPosition = assignee.CompanyInfo.Position ?? "";
-                workflow.WorkAssignedToPhone = assignee.CompanyInfo.CompanyPhoneNumber ?? "";
-                workflow.WorkAssignedToEmail = assignee.CompanyInfo.CompanyEmail ?? "";
-                workflow.WorkAssignedToHomeAdress = assignee.PersonalInfo.Address ?? "";
+                workflow.AssigneeName = assignee.LastName + " " + assignee.MiddleName + " " + assignee.FirstName;
+                workflow.AssigneePosition = assignee.CompanyInfo.Position ?? "";
+                workflow.AssigneePersonalPhoneNumber = assignee.CompanyInfo.CompanyPhoneNumber ?? "";
+                workflow.AssigneeEmail = assignee.CompanyInfo.CompanyEmail ?? "";
+                workflow.AssigneeAddress = assignee.PersonalInfo.Address ?? "";
             }
             workflow.ReceiverNames = await GetNamesByIdsAsync(workflow.ReceiverIds.ToList());
             workflow.HasBeenApprovedByNames = await GetNamesByIdsAsync(workflow.HasBeenApprovedByIds.ToList());
