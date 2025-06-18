@@ -10,8 +10,8 @@ namespace portal.Controllers;
 public class LeaveRequestNodeController : BaseController<
     LeaveRequestNode,
     LeaveRequestNodeDTO,
-    CreateLeaveRequestNodeDTO,
-    UpdateLeaveRequestNodeDTO>
+    LeaveRequestNodeCreateDTO,
+    LeaveRequestNodeUpdateDTO>
 {
     private readonly ILeaveRequestNodeService _nodeService;
 
@@ -23,17 +23,17 @@ public class LeaveRequestNodeController : BaseController<
 
     // PUT api/leave-request-nodes/{id}/approve?approverId=123
     [HttpPut("{id}/approve")]
-    public async Task<IActionResult> Approve(int id, [FromQuery] int approverId, [FromQuery] string? comment = null)
+    public async Task<IActionResult> Approve(int id, [FromQuery] int approverId)
     {
-        var success = await _nodeService.ApproveAsync(id, approverId, comment);
-        return success ? Ok("Node approved.") : BadRequest("Approval failed.");
+        var success = await _nodeService.ApproveAsync(id, approverId);
+        return Ok(success);
     }
 
     // PUT api/leave-request-nodes/{id}/reject?approverId=123
     [HttpPut("{id}/reject")]
-    public async Task<IActionResult> Reject(int id, [FromQuery] int approverId, [FromQuery] string? comment = null)
+    public async Task<IActionResult> Reject(int id, [FromQuery] int approverId)
     {
-        var success = await _nodeService.RejectNodeAsync(id, approverId, comment);
-        return success ? Ok("Node rejected.") : BadRequest("Rejection failed.");
+        var success = await _nodeService.RejectAsync(id, approverId);
+        return Ok(success);
     }
 }

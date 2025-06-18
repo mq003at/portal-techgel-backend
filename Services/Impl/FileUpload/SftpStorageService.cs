@@ -102,14 +102,35 @@ public class SftpFileStorageService : IFileStorageService
             );
 
             client.Connect();
+
+            // // Get all directories
+            // var directories = client.ListDirectory("/")
+            //     .Where(f => f.IsDirectory && f.Name != "." && f.Name != "..")
+            //     .Select(d => d.FullName)
+            //     .ToList();
+
+            // // list all directories
+            // foreach (var dir in directories)
+            // {
+            //     _logger.LogInformation("Checking directory: {Directory}", dir);
+            // }
+
             var directory = Path.GetDirectoryName(remotePath)?.Replace('\\', '/');
             if (!string.IsNullOrEmpty(directory) && !client.Exists(directory))
             {
-                client.CreateDirectory(directory);
+                // _logger.LogInformation("Creating directory: {Directory}", directory);
+                // client.CreateDirectory(directory);
+                throw new DirectoryNotFoundException($"Remote directory not found: {directory}");
+            }
+
+            // Check if the file already exists
+            if (client.Exists(remotePath))
+            {
+                _logger.LogWarning("File already exists at remote path: {RemotePath}", remotePath);
+                throw new IOException($"File already exists at remote path: {remotePath}");
             }
 
             fileStream.Position = 0;
-            _logger.LogInformation("Uploading file to SFTP: {RemotePath}", remotePath);
             _logger.LogInformation("Uploading file to Diretory: {Directory}", directory);
             _logger.LogInformation("File size: {Size} bytes", fileStream.Length);
             client.UploadFile(fileStream, remotePath, true);

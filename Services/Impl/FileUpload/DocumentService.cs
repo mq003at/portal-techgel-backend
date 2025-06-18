@@ -8,262 +8,279 @@ using portal.Models;
 using portal.Options;
 using Renci.SshNet;
 using portal.Helpers;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace portal.Services;
 
 public class DocumentService : IDocumentService
 {
-    private readonly ApplicationDbContext _ctx;
+    private readonly ApplicationDbContext _context;
+    private readonly IFileStorageService _fileStorage;
     private readonly IMapper _mapper;
-    private readonly IFileStorageService _storage;
-    private readonly DocumentOptions _docOpts;
-    private readonly ILogger<DocumentService> _logger;
-    private readonly string _baseUrl;
+    private readonly string _basePath;
 
-    public DocumentService(
-        ApplicationDbContext ctx,
-        IMapper mapper,
-        IFileStorageService storage,
-        IOptions<DocumentOptions> docOpts,
-        ILogger<DocumentService> logger
-    )
+    public DocumentService(ApplicationDbContext context, IFileStorageService fileStorage, IMapper mapper)
     {
-        _ctx = ctx;
+        _context = context;
+        _fileStorage = fileStorage;
         _mapper = mapper;
-        _storage = storage;
-        _docOpts = docOpts.Value;
-        _baseUrl = _docOpts.PublicBaseUrl.TrimEnd('/');
-        _logger = logger;
+        _basePath = AppDomain.CurrentDomain.BaseDirectory; // Or set this to your desired base path
     }
 
-    // Create a new document entry, not storing files
-    public async Task<DocumentDTO> CreateMetaDataAsync(CreateDocumentDTO dto)
-    {
-        var entity = _mapper.Map<Document>(dto);
-        _ctx.Documents.Add(entity);
-        await _ctx.SaveChangesAsync();
+    // --------------------------- METADATA ---------------------------
 
+    public async Task<DocumentDTO> CreateMetaDataAsync(DocumentCreateDTO dto)
+    {
+        var entity = _mapper.Map<Models.Document>(dto);
+        _context.Documents.Add(entity);
+        await _context.SaveChangesAsync();
         return _mapper.Map<DocumentDTO>(entity);
     }
 
-    // Update the document metadata, but not the file itself
-    public async Task<DocumentDTO> UpdateAsync(int id, UpdateDocumentDTO dto)
+    public async Task<DocumentDTO> UpdateMetaDataAsync(int id, DocumentUpdateDTO dto)
     {
-        _logger.LogInformation(
-            "Updating document {Id} with new metadata: {@Dto}",
-            id,
-            dto.GeneralDocumentInfo.SubType
-        );
-        var entity =
-            await _ctx.Documents.FindAsync(id)
-            ?? throw new KeyNotFoundException($"Document {id} not found.");
-        _logger.LogInformation(
-            "Before mapping, Updating document {Id}, name {name} with new metadata: {@Dto}, {entity}, {description}",
-            id,
-            entity.GeneralDocumentInfo.Name,
-            dto.GeneralDocumentInfo.SubType,
-            entity.GeneralDocumentInfo.SubType,
-            entity.GeneralDocumentInfo.Description
-        );
+        var doc = await _context.Documents.FindAsync(id);
+        if (doc == null) throw new KeyNotFoundException("Document not found");
 
-        _mapper.Map(dto, entity);
-
-
-        _logger.LogInformation(
-            "After mapping, Updating document {Id}, name {name} with new metadata: {@Dto}, {entity}, {description}",
-            id,
-            entity.GeneralDocumentInfo.Name,
-            dto.GeneralDocumentInfo.SubType,
-            entity.GeneralDocumentInfo.SubType,
-            entity.GeneralDocumentInfo.Description
-        );
-        _ctx.Documents.Update(entity);
-        await _ctx.SaveChangesAsync();
-        return await GetByIdAsync(id)
-            ?? throw new InvalidOperationException("Failed to retrieve document after update.");
+        _mapper.Map(dto, doc);
+        await _context.SaveChangesAsync();
+        return _mapper.Map<DocumentDTO>(doc);
     }
 
-    // Delete the document and its associated file from storage
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<DocumentDTO?> GetMetaDataByIdAsync(int id)
     {
-        var entity = await _ctx.Documents.FindAsync(id);
-        if (entity == null)
-            return false;
+        var doc = await _context.Documents.Include(d => d.Signatures).FirstOrDefaultAsync(d => d.Id == id);
+        return doc == null ? null : _mapper.Map<DocumentDTO>(doc);
+    }
 
-        var category = entity.GeneralDocumentInfo.Category.ToString();
-        var fileName = entity.GeneralDocumentInfo.Name;
+    public async Task<IEnumerable<DocumentDTO>> GetAllMetaDataAsync()
+    {
+        var docs = await _context.Documents.Include(d => d.Signatures).ToListAsync();
+        return _mapper.Map<List<DocumentDTO>>(docs);
+    }
 
-        var remotePath = $"{_docOpts.StorageDir}/{category}/{fileName}";
-
-        try
-        {
-            await _storage.DeleteAsync(remotePath);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Failed to delete SFTP file {RemotePath} for Document {Id}",
-                remotePath,
-                id
-            );
-        }
-
-        _ctx.Documents.Remove(entity);
-        await _ctx.SaveChangesAsync();
+    public async Task<bool> DeleteMetaDataAsync(int id)
+    {
+        var doc = await _context.Documents.FindAsync(id);
+        if (doc == null) return false;
+        _context.Documents.Remove(doc);
+        await _context.SaveChangesAsync();
         return true;
     }
 
-    // Get the metadata and attach file into DTO
-    public async Task<DocumentDTO?> GetByIdAsync(int id)
+    // --------------------------- FILES ---------------------------
+
+    public async Task<DocumentDTO> UploadDocumentAsync(DocumentCreateDTO dto)
     {
-        var entity = await _ctx.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
+        if (dto.File == null || dto.File.Length == 0)
+            throw new ArgumentException("File is required");
 
-        if (entity is null)
-            return null;
+        var fileName = dto.File.FileName;
+        var fileStream = dto.File.OpenReadStream();
 
-        var dto = _mapper.Map<DocumentDTO>(entity);
+        var savedPath = await _fileStorage.UploadAsync(fileStream, fileName);
 
-        var fileUrl = entity.GeneralDocumentInfo?.Url;
-        // if (!string.IsNullOrWhiteSpace(fileUrl))
-        {
-            try
-            {
-                var stream = await _storage.DownloadAsync(fileUrl);
-                dto.File = new FormFile(
-                    stream,
-                    0,
-                    stream.Length,
-                    "file",
-                    Path.GetFileName(fileUrl)
-                );
-            }
-            catch (FileNotFoundException)
-            {
-                _logger.LogWarning("File not found for document {Id} at {Url}", id, fileUrl);
-            }
-        }
+        var entity = _mapper.Map<Models.Document>(dto);
+        entity.Url = savedPath;
+        entity.FileExtension = Path.GetExtension(fileName);
+        entity.SizeInBytes = dto.File.Length;
 
-        return dto;
-    }
-
-    // Get all metadata without files
-    public async Task<IEnumerable<DocumentDTO>> GetAllMetaDataAsync()
-    {
-        var entities = await _ctx.Documents.ToListAsync();
-        return _mapper.Map<List<DocumentDTO>>(entities);
-    }
-
-    // Upload a new document file and create metadata entry
-    public async Task<DocumentDTO> UploadDocumentAsync(CreateDocumentDTO dto)
-    {
-        var file = dto.File;
-        if (file == null || file.Length == 0)
-            throw new ArgumentException("File is required.");
-
-        var fileName = dto.GeneralDocumentInfo.Name;
-        if (string.IsNullOrWhiteSpace(fileName))
-            throw new ArgumentException("Document name is required in GeneralDocumentInfo.Name");
-
-        // Check for existing document name in DB
-        var nameExists = await _ctx.Documents.AnyAsync(d => d.GeneralDocumentInfo.Name == fileName);
-        if (nameExists)
-            throw new InvalidOperationException(
-                $"A document named '{fileName}' already exists in database."
-            );
-
-        // Determine category
-        var category = dto.GeneralDocumentInfo?.Category ?? DocumentCategoryEnum.EQUIPMENT;
-
-        // Construct remote path
-        var remotePath = Path.Combine(_docOpts.StorageDir, category.ToString(), fileName)
-            .Replace("\\", "/");
-
-        // Check if file exists on SFTP
-        var fileExists = await _storage.Exists(remotePath);
-        if (fileExists)
-            throw new InvalidOperationException(
-                $"A file named '{fileName}' already exists on SFTP."
-            );
-
-        // Upload file
-        using (var stream = file.OpenReadStream())
-        {
-            await _storage.UploadAsync(stream, remotePath);
-        }
-
-        // Set URL
-        dto.GeneralDocumentInfo.Url = $"{_docOpts.PublicBaseUrl}/{category}/{fileName}";
-
-        // Save metadata
-        var entity = _mapper.Map<Document>(dto);
-        _ctx.Documents.Add(entity);
-        await _ctx.SaveChangesAsync();
-
+        _context.Documents.Add(entity);
+        await _context.SaveChangesAsync();
         return _mapper.Map<DocumentDTO>(entity);
     }
 
-    // Upload a new document file and replace existing metadata entry and the file
-    public async Task<DocumentDTO> UploadAndReplaceDocumentAsync(UpdateDocumentDTO dto, int id)
+    public async Task<DocumentDTO> UploadAndReplaceDocumentAsync(DocumentUpdateDTO dto, int id)
     {
-        if (dto.File == null)
-            throw new ArgumentException("No file uploaded.");
+        var doc = await _context.Documents.FindAsync(id);
+        if (doc == null) throw new KeyNotFoundException("Document not found");
 
-        if (string.IsNullOrWhiteSpace(dto.GeneralDocumentInfo.Name))
-            throw new ArgumentException("Document name is required.");
+        if (dto.File == null || dto.File.Length == 0)
+            throw new ArgumentException("File is required");
 
-        if (dto.GeneralDocumentInfo.Category == null)
-            throw new ArgumentException("Document category is required.");
+        var fileName = dto.File.FileName;
+        var fileStream = dto.File.OpenReadStream();
 
-        var category = dto.GeneralDocumentInfo.Category.ToString();
-        var fileName = dto.GeneralDocumentInfo.Name;
-        var relativePath = $"{category}/{fileName}";
-        var fullPath = $"{_docOpts.StorageDir.TrimEnd('/')}/{relativePath}";
+        await _fileStorage.ReplaceFileAsync(doc.Url, fileStream);
+        doc.FileExtension = Path.GetExtension(fileName);
+        doc.SizeInBytes = dto.File.Length;
+        doc.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
 
-        if (await _storage.Exists(fullPath))
-        {
-            await _storage.DeleteAsync(fullPath);
-        }
-
-        await using var stream = dto.File.OpenReadStream();
-        await _storage.UploadAsync(stream, fullPath);
-
-        // Update the URL field in GeneralDocumentInfo
-        dto.GeneralDocumentInfo.Url = $"{_docOpts.PublicBaseUrl.TrimEnd('/')}/{relativePath}";
-
-        return await UpdateAsync(id, dto);
+        return _mapper.Map<DocumentDTO>(doc);
     }
 
-    // Check the document status based on its metadata
-    public async Task<DocumentStatusEnum> CheckDocumentStatusAsync(int id)
+    public async Task<bool> IsFileExistAsync(string category, string fileName)
     {
-        var entity = await _ctx.Documents.FindAsync(id);
-        if (entity == null)
-            throw new KeyNotFoundException($"Document {id} not found.");
+        var path = Path.Combine(category, fileName).Replace("\\", "/");
+        return await _fileStorage.Exists(path);
+    }
 
-        // Assuming status is determined by some logic in the GeneralDocumentInfo
-        return entity.GeneralDocumentInfo?.Status ?? DocumentStatusEnum.UNKNOWN;
+    public async Task<bool> IsUrlAccessibleAsync(string url)
+    {
+        return await _fileStorage.Exists(url);
+    }
+
+    public async Task<DocumentStatusEnum> CheckDocumentSignStatusAsync(int id)
+    {
+        var doc = await _context.Documents.Include(d => d.Signatures).FirstOrDefaultAsync(d => d.Id == id);
+        return doc?.Signatures?.Any() == true ? DocumentStatusEnum.APPROVED : DocumentStatusEnum.REJECTED;
     }
 
     public async Task<bool> SignFileAsync(int documentId, Stream signedFileStream)
-{
-    // Step 1: Check if document exists in DB
-    var doc = await _ctx.Documents.FindAsync(documentId);
-    if (doc == null)
-        throw new FileNotFoundException($"Document with ID {documentId} not found.");
-
-    // Step 2: Replace file in storage
-    bool replaced = await _storage.ReplaceFileAsync(doc.GeneralDocumentInfo.Url, signedFileStream);
-    if (!replaced)
-        throw new FileNotFoundException($"File '{doc.GeneralDocumentInfo.Url}' does not exist in storage.");
-    // Optionally: update metadata, e.g. mark as signed, update timestamp
-    return true;
-}
-
-    // Check if a file exists in the storage. Helper funcs
-    public async Task<bool> IsFileExistAsync(string category, string fileName)
     {
-        var remotePath = Path.Combine(_docOpts.StorageDir, category, fileName).Replace("\\", "/");
-        return await _storage.Exists(remotePath);
+        var doc = await _context.Documents.FindAsync(documentId);
+        if (doc == null) return false;
+
+        await _fileStorage.ReplaceFileAsync(doc.Url, signedFileStream);
+        doc.Status = DocumentStatusEnum.APPROVED;
+        await _context.SaveChangesAsync();
+        return true;
     }
+
+    public async Task<List<DocumentDTO>> SearchByTagsAsync(List<string> tags)
+    {
+        var docs = await _context.Documents
+            .Where(d => d.Tag.Any(t => tags.Contains(t)))
+            .ToListAsync();
+        return _mapper.Map<List<DocumentDTO>>(docs);
+    }
+
+    // --------------------------- TEMPLATES ---------------------------
+
+    public async Task<DocumentDTO> CreateTemplateAsync(DocumentTemplateCreateDTO dto)
+    {
+        if (dto.File == null || dto.File.Length == 0)
+            throw new ArgumentException("File is required");
+            
+        var today = DateTime.UtcNow;
+
+        // Generate filename + path
+        var documentPath = Path.Combine("erp", "documents").Replace("\\", "/");
+        var fileName = $"{today:yyyy-MM-dd}-{dto.Division}-BM-v01{Path.GetExtension(dto.File.FileName)}";
+        var directoryPath = Path.Combine(documentPath,dto.Division, "Bieu_Mau").Replace("\\", "/");
+        var targetPath = Path.Combine(directoryPath, fileName).Replace("\\", "/");
+        var fullPath = Path.Combine(_basePath, targetPath);
+
+        using var stream = dto.File.OpenReadStream();
+        await _fileStorage.UploadAsync(stream, targetPath);
+
+        var document = _mapper.Map<Models.Document>(dto);
+        document.Name = fileName;
+        document.Url = targetPath;
+        document.FileExtension = Path.GetExtension(fileName);
+        document.SizeInBytes = dto.File.Length;
+
+        _context.Documents.Add(document);
+        await _context.SaveChangesAsync();
+
+        return _mapper.Map<DocumentDTO>(document);
+    }
+    public async Task<DocumentDTO> GetTemplateAsync(string templateKey)
+    {
+        var doc = await _context.Documents.FirstOrDefaultAsync(d => d.TemplateKey == templateKey);
+        if (doc == null) throw new KeyNotFoundException("Template not found");
+        return _mapper.Map<DocumentDTO>(doc);
+    }
+
+    public async Task<DocumentDTO> UpdateTemplateAsync(DocumentUpdateDTO dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.TemplateKey))
+            throw new ArgumentException("Template key required");
+
+        var doc = await _context.Documents.FirstOrDefaultAsync(d => d.TemplateKey == dto.TemplateKey);
+        if (doc == null) throw new KeyNotFoundException("Template not found");
+
+        _mapper.Map(dto, doc);
+        await _context.SaveChangesAsync();
+        return _mapper.Map<DocumentDTO>(doc);
+    }
+
+
+    private async Task<MemoryStream> FillPlaceholdersAsync(Stream templateStream, Dictionary<string, string> placeholders)
+    {
+        var output = new MemoryStream();
+        await templateStream.CopyToAsync(output);
+        output.Position = 0;
+        return output;
+    }
+    
+    public async Task<DocumentDTO> FillInTemplateAsync(FillInTemplateDTO dto)
+    {
+        var templateDoc = await _context.Documents.FirstOrDefaultAsync(d => d.TemplateKey == dto.TemplateKey);
+        if (templateDoc == null) throw new KeyNotFoundException("Template not found");
+
+        var filledFileName = dto.OutputFileName ?? ($"{Guid.NewGuid() + dto.TemplateKey}.docx");
+        var filledFilePath = await ReplaceTextInFileAsync(new ReplaceDocumentPlaceholdersDTO
+        {
+            DocumentId = templateDoc.Id,
+            PlaceholderSets = dto.Placeholders,
+            OutputFileName = filledFileName,
+            Overwrite = false
+        });
+
+        var newDoc = new Models.Document
+        {
+            Name = filledFileName,
+            Url = filledFilePath,
+            TemplateKey = templateDoc.TemplateKey,
+            Description = "Filled from template",
+            Tag = templateDoc.Tag,
+            Category = templateDoc.Category,
+            FileExtension = ".docx",
+            SizeInBytes = new FileInfo(Path.Combine(_basePath, filledFilePath)).Length,
+            Status = DocumentStatusEnum.DRAFT,
+            Version = "1.0"
+        };
+
+        _context.Documents.Add(newDoc);
+        await _context.SaveChangesAsync();
+        return _mapper.Map<DocumentDTO>(newDoc);
+    }
+
+    public async Task<string> ReplaceTextInFileAsync(ReplaceDocumentPlaceholdersDTO dto)
+    {
+        var doc = await _context.Documents.FindAsync(dto.DocumentId);
+        if (doc == null) throw new KeyNotFoundException("Document not found");
+
+        var originalPath = Path.Combine(_basePath, doc.Url);
+        var targetFileName = dto.Overwrite ? doc.Url : dto.OutputFileName ?? ($"filled_{Guid.NewGuid()}.docx");
+        var targetPath = Path.Combine(_basePath, targetFileName);
+
+        if (!dto.Overwrite)
+        {
+            File.Copy(originalPath, targetPath, true);
+        }
+
+        using var wordDoc = WordprocessingDocument.Open(targetPath, true);
+        var body = wordDoc.MainDocumentPart?.Document?.Body;
+        if (body == null)
+            throw new InvalidDataException("Invalid Word document");
+
+        foreach (var text in body.Descendants<Text>())
+        {
+            if (text.Text.Contains("{{"))
+            {
+                foreach (var placeholders in dto.PlaceholderSets)
+                {
+                    foreach (var kvp in placeholders)
+                    {
+                        text.Text = text.Text.Replace($"{{{{{kvp.Key}}}}}", kvp.Value);
+                    }
+                }
+            }
+        }
+
+        if (wordDoc.MainDocumentPart?.Document != null)
+        {
+            wordDoc.MainDocumentPart.Document.Save();
+        }
+        else
+        {
+            throw new InvalidDataException("Invalid Word document: Document part is missing.");
+        }
+        return dto.Overwrite ? doc.Url : targetFileName;
+    }
+
 }

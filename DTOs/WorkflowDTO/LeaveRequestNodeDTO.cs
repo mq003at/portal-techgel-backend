@@ -5,7 +5,7 @@ namespace portal.DTOs;
 public class LeaveRequestNodeDTO : WorkflowNodeDTO
 {
     public LeaveApprovalStepType StepType { get; set; }
-    public string StepTypeName { get; set; } = string.Empty;
+    public string StepTypeName { get; set; } = null!;
 }
 
 public class LeaveRequestNodeCreateDTO : WorkflowNodeCreateDTO

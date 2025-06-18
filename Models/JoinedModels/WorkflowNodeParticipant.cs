@@ -12,20 +12,18 @@ public class WorkflowNodeParticipant : BaseModelWithOnlyId
     public Employee? Employee { get; set; }
     [Required]
     public int WorkflowNodeId { get; set; }
-    public BaseWorkflowNode? BaseWorkflowNode { get; set; }
-    // RACIQ in the current workflow
-    public WorkflowParticipantRoleType RaciRole { get; set; }
 
-    // Specific role in the workflow (are they the Sender, Leaver, etc.)
-    [Required]
-    public required string WorkflowRole { get; set; }
+    // Order in the nodes
+    public int Order { get; set; }
+    // [Required]
+    // public required WorkflowRole WorkflowRole { get; set; }
 
     // Workflow's step in a node (step 1,2,3,4 depending on what is defined so that one person can approve in many different steps)
     public int WorkflowNodeStepType { get; set; }
     // Approval related properties
     public DateTime? ApprovalDate { get; set; }
     public DateTime? ApprovalDeadline { get; set; }
-    public bool? IsApproved { get; set; }
-    public bool? IsRejected { get; set; }
-    public TimeSpan TAT { get; set; } = TimeSpan.Zero;
+    public bool? HasApproved { get; set; }
+    public bool? HasRejected { get; set; }
+    public TimeSpan? TAT { get; set; } = TimeSpan.Zero;
 }

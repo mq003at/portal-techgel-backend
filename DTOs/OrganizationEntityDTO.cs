@@ -1,10 +1,12 @@
+using DocumentFormat.OpenXml.Math;
+
 namespace portal.DTOs;
 
 using System.ComponentModel.DataAnnotations;
 using portal.Enums;
 using portal.Models;
 
-public class OrganizationEntitySummaryDTO : BaseModelDTO<OrganizationEntity>
+public class OrganizationEntitySummaryDTO : BaseModelDTO
 {
     // Tên đơn vị
     public string Name { get; set; } = null!;
@@ -49,7 +51,7 @@ public class OrganizationEntitySummaryDTO : BaseModelDTO<OrganizationEntity>
     public int DocumentCounts { get; set; }
 }
 
-public class CreateOrganizationEntityDTO : BaseModelDTO<OrganizationEntity>
+public class CreateOrganizationEntityDTO : BaseModelCreateDTO
 {
     [Required]
     public string Name { get; set; } = null!;
@@ -71,7 +73,7 @@ public class CreateOrganizationEntityDTO : BaseModelDTO<OrganizationEntity>
     public int? SortOrder { get; set; }
 }
 
-public class UpdateOrganizationEntityDTO : BaseModelDTO<OrganizationEntity>
+public class UpdateOrganizationEntityDTO : BaseModelUpdateDTO
 {
     public string? Name { get; set; }
 

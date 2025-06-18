@@ -32,7 +32,7 @@ public class DocumentController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
-        var dto = await _documentService.GetByIdAsync(id);
+        var dto = await _documentService.GetMetaDataByIdAsync(id);
         if (dto is null)
             return NotFound();
         return Ok(dto);
@@ -41,7 +41,7 @@ public class DocumentController : ControllerBase
     // POST: api/document/metadata
     // Creates metadata for a document without uploading the file
     [HttpPost("metadata")]
-    public async Task<IActionResult> CreateMetaData([FromBody] CreateDocumentDTO dto)
+    public async Task<IActionResult> CreateMetaData([FromBody] DocumentCreateDTO dto)
     {
         var created = await _documentService.CreateMetaDataAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -51,7 +51,7 @@ public class DocumentController : ControllerBase
     // Uploads the document file and creates metadata
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadDocument([FromForm] CreateDocumentDTO dto)
+    public async Task<IActionResult> UploadDocument([FromForm] DocumentCreateDTO dto)
     {
         if (dto.File is null)
             return BadRequest("File is required.");
@@ -65,10 +65,10 @@ public class DocumentController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateMetadata(
         [FromRoute] int id,
-        [FromBody] UpdateDocumentDTO dto
+        [FromBody] DocumentUpdateDTO dto
     )
     {
-        var updated = await _documentService.UpdateAsync(id, dto);
+        var updated = await _documentService.UpdateMetaDataAsync(id, dto);
         return Ok(updated);
     }
 
@@ -103,7 +103,7 @@ public class DocumentController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> ReplaceFile(
         [FromRoute] int id,
-        [FromForm] UpdateDocumentDTO dto
+        [FromForm] DocumentUpdateDTO dto
     )
     {
         if (dto.File is null)
@@ -118,7 +118,7 @@ public class DocumentController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
-        var deleted = await _documentService.DeleteAsync(id);
+        var deleted = await _documentService.DeleteMetaDataAsync(id);
         return deleted ? NoContent() : NotFound();
     }
 
@@ -133,4 +133,14 @@ public class DocumentController : ControllerBase
         var exists = await _documentService.IsFileExistAsync(category, fileName);
         return exists ? Ok() : NotFound();
     }
+
+    // template handling
+    // POST: api/document/template
+    [HttpPost("template")]
+    public async Task<ActionResult<DocumentDTO>> CreateTemplate([FromForm] DocumentTemplateCreateDTO dto)
+    {
+        var result = await _documentService.CreateTemplateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
 }

@@ -14,9 +14,9 @@ namespace portal.Services;
 public class BaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
     : IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
     where TModel : BaseModel, new()
-    where TReadDTO : BaseModelDTO<TModel>, new()
-    where TCreateDTO : BaseModelDTO<TModel>
-    where TUpdateDTO : BaseModelDTO<TModel>
+    where TReadDTO : BaseModelDTO
+    where TCreateDTO : BaseModelCreateDTO
+    where TUpdateDTO : BaseModelUpdateDTO
 {
     protected readonly ApplicationDbContext _context;
     protected readonly DbSet<TModel> _dbSet;

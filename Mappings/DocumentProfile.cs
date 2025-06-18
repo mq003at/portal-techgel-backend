@@ -4,84 +4,40 @@ namespace portal.Mappings;
 
 using AutoMapper;
 using portal.DTOs;
+using portal.Enums;
 using portal.Helpers;
 using portal.Models;
 
-public class DocumentProfile : Profile
+public class DocumentProfile : BaseModelProfile<
+    Document,
+    DocumentDTO,
+    DocumentCreateDTO,
+    DocumentUpdateDTO>
 {
     public DocumentProfile()
     {
-        // ----- NESTED/OWNED TYPE MAPPINGS (skip nulls on update) -----
-        CreateMap<GeneralDocumentInfo, GeneralDocumentInfoDTO>().ReverseMap();
-        CreateMap<CreateGeneralDocumentInfoDTO, GeneralDocumentInfo>().ReverseMap();
-        CreateMap<UpdateGeneralDocumentInfoDTO, GeneralDocumentInfo>()
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
-
-        CreateMap<LegalDocumentInfo, LegalDocumentInfoDTO>().ReverseMap();
-        CreateMap<CreateLegalDocumentInfoDTO, LegalDocumentInfo>().ReverseMap();
-        CreateMap<UpdateLegalDocumentInfoDTO, LegalDocumentInfo>()
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
-
-        CreateMap<SecurityDocumentInfo, SecurityDocumentInfoDTO>().ReverseMap();
-        CreateMap<AdditionalDocumentInfo, AdditionalDocumentInfoDTO>().ReverseMap();
-        CreateMap<EditDocumentInfo, EditDocumentInfoDTO>().ReverseMap();
-        // Add similar update DTO → entity mappings if you PATCH these nested types
-
-        // ----- DOCUMENT <-> DOCUMENTDTO -----
+        // Map Document.Signatures → List<SignaturesInDocumentDTO>
         CreateMap<Document, DocumentDTO>()
-            .ForMember(d => d.File, o => o.Ignore())
-            .ForMember(d => d.GeneralDocumentInfo, o => o.MapFrom(s => s.GeneralDocumentInfo))
-            .ForMember(d => d.LegalDocumentInfo, o => o.MapFrom(s => s.LegalDocumentInfo))
-            .ForMember(d => d.SecurityDocumentInfo, o => o.MapFrom(s => s.SecurityDocumentInfo))
-            .ForMember(d => d.AdditionalDocumentInfo, o => o.MapFrom(s => s.AdditionalDocumentInfo))
-            .ForMember(d => d.EditDocumentInfo, o => o.MapFrom(s => s.EditDocumentInfo));
+            .ForMember(dest => dest.Signatures, opt => opt.MapFrom(src =>
+                src.Signatures.Select(s => new SignaturesInDocumentDTO
+                {
+                    EmployeeName = $"{s.Employee.LastName} {s.Employee.MiddleName} {s.Employee.FirstName}",
+                    SignedAt = s.SignedAt.ToString("yyyy-MM-dd HH:mm")
+                }).ToList()))
+            .ReverseMap();
 
-        // ----- CREATEDOCUMENTDTO -> DOCUMENT -----
-        CreateMap<CreateDocumentDTO, Document>()
-            .ForMember(dest => dest.Id, o => o.Ignore())
-            .ForMember(dest => dest.MainId, o => o.Ignore())
-            .ForMember(dest => dest.CreatedAt, o => o.Ignore())
-            .ForMember(dest => dest.UpdatedAt, o => o.Ignore())
-            .ForMember(d => d.GeneralDocumentInfo, o => o.MapFrom(s => s.GeneralDocumentInfo))
-            .ForMember(d => d.LegalDocumentInfo, o => o.MapFrom(s => s.LegalDocumentInfo))
-            .ForMember(d => d.SecurityDocumentInfo, o => o.MapFrom(s => s.SecurityDocumentInfo))
-            .ForMember(d => d.AdditionalDocumentInfo, o => o.MapFrom(s => s.AdditionalDocumentInfo))
-            .ForMember(d => d.EditDocumentInfo, o => o.MapFrom(s => s.EditDocumentInfo));
-
-        // ----- UPDATEDOCUMENTDTO -> DOCUMENT (skip null nested types) -----
-        CreateMap<UpdateDocumentDTO, Document>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(d => d.GeneralDocumentInfo, o =>
-                o.Condition((src, dest, srcMember) => src.GeneralDocumentInfo != null)
-            )
-            .ForMember(d => d.GeneralDocumentInfo, o =>
-                o.MapFrom(s => s.GeneralDocumentInfo)
-            )
-            .ForMember(d => d.LegalDocumentInfo, o =>
-                o.Condition((src, dest, srcMember) => src.LegalDocumentInfo != null)
-            )
-            .ForMember(d => d.LegalDocumentInfo, o =>
-                o.MapFrom(s => s.LegalDocumentInfo)
-            )
-            .ForMember(d => d.SecurityDocumentInfo, o =>
-                o.Condition((src, dest, srcMember) => src.SecurityDocumentInfo != null)
-            )
-            .ForMember(d => d.SecurityDocumentInfo, o =>
-                o.MapFrom(s => s.SecurityDocumentInfo)
-            )
-            .ForMember(d => d.AdditionalDocumentInfo, o =>
-                o.Condition((src, dest, srcMember) => src.AdditionalDocumentInfo != null)
-            )
-            .ForMember(d => d.AdditionalDocumentInfo, o =>
-                o.MapFrom(s => s.AdditionalDocumentInfo)
-            )
-            .ForMember(d => d.EditDocumentInfo, o =>
-                o.Condition((src, dest, srcMember) => src.EditDocumentInfo != null)
-            )
-            .ForMember(d => d.EditDocumentInfo, o =>
-                o.MapFrom(s => s.EditDocumentInfo)
-            )
-            // Scalar props: do not map nulls
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
-    }
+        // Template area
+        CreateMap<DocumentTemplateCreateDTO, Document>()
+        .ForMember(dest => dest.TemplateKey, opt => opt.MapFrom(src => src.TemplateKey))
+        .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
+        .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+        .ForMember(dest => dest.FileExtension, opt => opt.MapFrom(src => Path.GetExtension(src.File.FileName)))
+        .ForMember(dest => dest.SizeInBytes, opt => opt.MapFrom(src => src.File.Length))
+        .ForMember(dest => dest.Version, opt => opt.MapFrom(_ => "1.0"))
+        .ForMember(dest => dest.Status, opt => opt.MapFrom(_ => DocumentStatusEnum.DRAFT))
+        .ForMember(dest => dest.Tag, opt => opt.MapFrom(_ => new List<string>())) // Optional fallback
+        .ForMember(dest => dest.Url, opt => opt.Ignore())
+        .ForMember(dest => dest.Name, opt => opt.Ignore())
+        .ForMember(dest => dest.Signatures, opt => opt.Ignore());
+        }
 }

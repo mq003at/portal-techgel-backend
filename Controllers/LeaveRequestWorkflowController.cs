@@ -10,8 +10,8 @@ namespace portal.Controllers;
 public class LeaveRequestWorkflowController : BaseController<
     LeaveRequestWorkflow,
     LeaveRequestWorkflowDTO,
-    CreateLeaveRequestWorkflowDTO,
-    UpdateLeaveRequestWorkflowDTO>
+    LeaveRequestWorkflowCreateDTO,
+    LeaveRequestWorkflowUpdateDTO>
 {
     private readonly ILeaveRequestWorkflowService _workflowService;
 

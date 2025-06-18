@@ -5,17 +5,27 @@ namespace portal.Services;
 
 public interface IDocumentService
 {
-    // Generic CRUD
-    Task<DocumentDTO> CreateMetaDataAsync(CreateDocumentDTO dto);
-    Task<DocumentDTO> UpdateAsync(int id, UpdateDocumentDTO dto);
-    Task<bool> DeleteAsync(int id);
-    Task<DocumentDTO?> GetByIdAsync(int id);
+    // Generic CRUD for metadata only
+    Task<DocumentDTO> CreateMetaDataAsync(DocumentCreateDTO dto);
+    Task<DocumentDTO> UpdateMetaDataAsync(int id, DocumentUpdateDTO dto);
+    Task<DocumentDTO?> GetMetaDataByIdAsync(int id);
     Task<IEnumerable<DocumentDTO>> GetAllMetaDataAsync();
+    Task<bool> DeleteMetaDataAsync(int id);
+
 
     // File operations
-    Task<DocumentDTO> UploadDocumentAsync(CreateDocumentDTO dto);
-    Task<DocumentDTO> UploadAndReplaceDocumentAsync(UpdateDocumentDTO dto, int id);
+    Task<DocumentDTO> UploadDocumentAsync(DocumentCreateDTO dto);
+    Task<DocumentDTO> UploadAndReplaceDocumentAsync(DocumentUpdateDTO dto, int id);
     Task<bool> IsFileExistAsync(string category, string fileName);
-    Task<DocumentStatusEnum> CheckDocumentStatusAsync(int id);
+    Task<bool> IsUrlAccessibleAsync(string url);
+    Task<DocumentStatusEnum> CheckDocumentSignStatusAsync(int id);
     Task<bool> SignFileAsync(int documentId, Stream signedFileStream);
+    Task<List<DocumentDTO>> SearchByTagsAsync(List<string> tags);
+
+
+    //Template handling
+    Task<DocumentDTO> GetTemplateAsync(string templateKey);
+    Task<DocumentDTO> UpdateTemplateAsync(DocumentUpdateDTO dto);
+    Task<DocumentDTO> FillInTemplateAsync(FillInTemplateDTO dto);
+    Task<DocumentDTO> CreateTemplateAsync(DocumentTemplateCreateDTO dto);
 }

@@ -31,9 +31,24 @@ public enum DocumentStatusEnum
     UNKNOWN
 }
 
-public enum DocumentSubTypeEnum
+public enum DocumentCategoryEnum
 {
     RESOLUTION,
+    NOTIFICATION,
+    TEMPLATE,
+    LETTER,
+    MEMO,
+    AGREEMENT,
+    POLICY,
+    PROCEDURE,
+    INSTRUCTION,
+    MANUAL,
+    FORM,
+    REPORT,
+    PROPOSAL,
+    REQUEST,
+    APPLICATION,
+    
     DECISION,
     DIRECTIVE,
     RULES,
@@ -42,13 +57,11 @@ public enum DocumentSubTypeEnum
     PLAN,
     PROJECT_PROPOSAL,
     SCHEME,
-    REPORT,
     MINUTES,
     SUBMISSION,
     CONTRACT,
     CORRESPONDANCE,
     MEMORANDUM,
-    AGREEMENT,
     AUTHORIZATION_DOCUMENT,
     INVITATION_DOCUMENT,
     INTRODUCTION_DOCUMENT,
@@ -58,30 +71,12 @@ public enum DocumentSubTypeEnum
     OFFICIAL_LETTER,
     PROGRAM,
     PROJECT,
-    POLICY,
     REGULATION,
     OTHER,
-    NOTIFICATION
+    
 }
 
-/// <summary>
-/// Top-level categories for grouping documents.
-/// </summary>
-public enum DocumentCategoryEnum
-{
-    LEGAL,
-    EMPLOYMENT,
-    ACCOUNTING,
-    INTERNAL,
-    PROJECT,
-    DESIGN,
-    EQUIPMENT,
-    GUIDELINE,
-    CLIENT,
-    PR,
-    COPYRIGHT,
-    ARCHIVE
-}
+
 
 /// <summary>
 /// Confidentiality levels for document access control.

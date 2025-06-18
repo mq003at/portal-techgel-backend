@@ -1,4 +1,5 @@
 using portal.DTOs;
+using portal.Enums;
 using portal.Models;
 
 namespace portal.Mappings;
@@ -24,6 +25,12 @@ public abstract class BaseWorkflowProfile<
 {
     public BaseWorkflowProfile()
     {
+
+        // ✨ Register base mappings explicitly
+        CreateMap<BaseWorkflow, BaseWorkflowDTO>().ReverseMap();
+        CreateMap<BaseWorkflowCreateDTO, BaseWorkflow>().ReverseMap();
+        CreateMap<BaseWorkflowUpdateDTO, BaseWorkflow>().ReverseMap();
+
         // Entity <-> DTO (for main DTOs, including navigations)
         CreateMap<TWorkflow, TWorkflowDto>()
             .IncludeBase<TModel, TModelDto>()
@@ -35,7 +42,9 @@ public abstract class BaseWorkflowProfile<
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-            ;
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(_ => GeneralWorkflowStatusType.Pending))
+            .ForMember(dest => dest.WorkflowParticipants, opt => opt.MapFrom(_ => new List<WorkflowNodeParticipant>()))
+            .ForMember(dest => dest.DocumentAssociations, opt => opt.MapFrom(_ => new List<DocumentAssociation>()));
 
         // Update DTO -> Entity (client -> server)
         CreateMap<TWorkflowUpdateDto, TWorkflow>()

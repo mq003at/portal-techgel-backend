@@ -24,13 +24,28 @@ public abstract class BaseWorkflowNodeProfile<
 {
     public BaseWorkflowNodeProfile()
     {
+        // Explicitly register base mappings to avoid AutoMapper error
+        CreateMap<BaseWorkflowNode, WorkflowNodeDTO>()
+            .IncludeBase<BaseModel, BaseModelDTO>()
+            .ForMember(dest => dest.Participants, opt => opt.MapFrom(src => src.WorkflowParticipants))
+            .ForMember(dest => dest.DocumentAssociations, opt => opt.MapFrom(src => src.DocumentAssociations))
+            .ReverseMap();
+
+        CreateMap<WorkflowNodeCreateDTO, BaseWorkflowNode>()
+            .IncludeBase<BaseModelCreateDTO, BaseModel>();
+
+        CreateMap<WorkflowNodeUpdateDTO, BaseWorkflowNode>()
+            .IncludeBase<BaseModelUpdateDTO, BaseModel>();
+
         // Entity <-> DTO (allow navigation, reverse when safe)
         CreateMap<TNode, TNodeDto>()
+            .IncludeBase<BaseWorkflowNode, WorkflowNodeDTO>()
             .IncludeBase<TModel, TModelDto>()
             .ReverseMap();
 
         // Create DTO -> Entity
         CreateMap<TNodeCreateDto, TNode>()
+            .IncludeBase<WorkflowNodeCreateDTO, BaseWorkflowNode>()
             .IncludeBase<TModelCreateDto, TModel>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -38,6 +53,7 @@ public abstract class BaseWorkflowNodeProfile<
 
         // Update DTO -> Entity
         CreateMap<TNodeUpdateDto, TNode>()
+            .IncludeBase<WorkflowNodeUpdateDTO, BaseWorkflowNode>()
             .IncludeBase<TModelUpdateDto, TModel>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())

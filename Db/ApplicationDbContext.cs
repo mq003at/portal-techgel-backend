@@ -43,10 +43,12 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; }
     public DbSet<Signature> Signatures { get; set; }
     public DbSet<Document> Documents { get; set; }
+    public DbSet<DocumentSignature> DocumentSignatures { get; set; }
 
     public DbSet<LeaveRequestWorkflow> LeaveRequestWorkflows { get; set; }
     public DbSet<LeaveRequestNode> LeaveRequestNodes { get; set; }
 
-    // public DbSet<GeneralWorkflow> GeneralWorkflows { get; set; }
-    // public DbSet<ApprovalWorkflowNode> ApprovalWorkflowNodes { get; set; }
+    public DbSet<DocumentAssociation> DocumentAssociations { get; set; }
+    public DbSet<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; }
+
 }
