@@ -12,10 +12,9 @@ public class LeaveRequestNodeConfiguration : BaseWorkflowNodeConfiguration<Leave
 
         // Common navigation: workflow
         builder.HasOne(n => n.Workflow)
-            .WithMany()
-            .HasForeignKey("WorkflowId")
+            .WithMany(w => w.LeaveRequestNodes)
+            .HasForeignKey(n => n.WorkflowId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Any node-specific property configuration goes here.
     }
 }

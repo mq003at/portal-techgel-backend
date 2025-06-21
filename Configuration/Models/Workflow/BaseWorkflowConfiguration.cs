@@ -24,12 +24,6 @@ public abstract class BaseWorkflowConfiguration<TWorkflow> : BaseModelConfigurat
         builder.Property(w => w.Status)
             .IsRequired();
 
-        // Common relationship example:
-        builder.HasMany(w => w.WorkflowParticipants)
-            .WithOne()
-            .HasForeignKey("WorkflowId") // or explicit property if available
-            .OnDelete(DeleteBehavior.Cascade);
-
         // Add any other shared workflow configs here.
     }
 }

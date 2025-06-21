@@ -9,11 +9,11 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO
     public DateTime EndDate { get; set; }
     public DayNightEnum EndDateDayNightType { get; set; }
 
-    public float TotalDays { get; set; }
-    public float EmployeeAnnualLeaveTotalDays { get; set; }
-    public float FinalEmployeeAnnualLeaveTotalDays { get; set; }
-
+    public double TotalDays { get; set; }
+    public double EmployeeAnnualLeaveTotalDays { get; set; }
+    public double FinalEmployeeAnnualLeaveTotalDays { get; set; }
     public List<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new();
+    public string? RejectReason { get; set; }
 }
 
 // Create form
@@ -32,5 +32,5 @@ public class LeaveRequestWorkflowCreateDTO : BaseWorkflowCreateDTO
 // Update Workflow (only use Comment from BaseWorkflowUpdateDTO)
 public class LeaveRequestWorkflowUpdateDTO : BaseWorkflowUpdateDTO
 {
-
+    public string? Reason { get; set; }
 }

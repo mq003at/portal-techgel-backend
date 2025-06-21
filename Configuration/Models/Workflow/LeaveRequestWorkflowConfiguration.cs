@@ -11,10 +11,16 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         base.Configure(builder);
 
         builder.Property(w => w.Reason).IsRequired().HasMaxLength(1000);
+        builder.Property(w => w.RejectReason).IsRequired(false).HasMaxLength(1000);
 
-        builder.HasMany(x => x.LeaveRequestNodes)
+        builder.HasMany(w => w.WorkflowParticipants)
             .WithOne()
             .HasForeignKey("WorkflowId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(w => w.DocumentAssociations)
+            .WithOne()
+            .HasForeignKey(da => da.EntityId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -13,5 +13,7 @@ public class CompanyInfoDTO
     public DateTime? EndDate { get; set; }
     public DateTime? ProbationStartDate { get; set; }
     public DateTime? ProbationEndDate { get; set; }
-    public float? AnnualLeaveTotalDays { get; set; } = 0f;
+    public bool IsOnProbation { get; set; }
+    public double CompensatoryLeaveTotalDays { get; set; }
+    public double AnnualLeaveTotalDays { get; set; }
 }

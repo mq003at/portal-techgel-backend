@@ -55,12 +55,6 @@ public class DocumentConfiguration : BaseModelConfiguration<Document>
             .HasConversion(
                 v => string.Join(";", v),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList()
-            );
-
-        // Relationship to Signatures
-        builder.HasMany(d => d.Signatures)
-            .WithOne(s => s.Document)
-            .HasForeignKey(s => s.DocumentId)
-            .OnDelete(DeleteBehavior.Cascade); // Or Restrict if you want to prevent delete
+            );       
     }
 }

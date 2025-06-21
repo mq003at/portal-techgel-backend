@@ -18,46 +18,47 @@ public class EmployeeProfile : Profile
         CreateMap<EmergencyContactInfo, EmergencyContactInfoDTO>().ReverseMap();
         CreateMap<ScheduleInfo, ScheduleInfoDTO>().ReverseMap();
         CreateMap<Signature, SignatureDTO>().ReverseMap();
-        // RoleInfo → RoleInfoDTO
         CreateMap<RoleInfo, RoleInfoDTO>()
-            .ForMember(d => d.SupervisorId, o => o.MapFrom(s => s.SupervisorId))
-            .ForMember(
-                d => d.SupervisorName,
-                o =>
-                    o.MapFrom(s =>
-                        s.Supervisor != null
-                            ? s.Supervisor.FirstName + " " + s.Supervisor.MiddleName + " " + s.Supervisor.LastName
-                            : null
-                    )
-            )
-            .ForMember(d => d.SubordinateIds, o => o.MapFrom(s => s.Subordinates.Select(x => x.Id)))
-            .ForMember(
-                d => d.SubordinateNames,
-                o => o.MapFrom(s => s.Subordinates.Select(x => x.LastName))
-            )
-            .ForMember(
-                d => d.ManagedOrganizationEntityIds,
-                o => o.MapFrom(s => s.ManagedOrganizationEntities.Select(e => e.Id))
-            )
-            .ForMember(
-                d => d.ManagedOrganizationEntityNames,
-                o => o.MapFrom(s => s.ManagedOrganizationEntities.Select(e => e.Name))
-            )
-            .ForMember(
-                d => d.OrganizationEntityIds,
-                o =>
-                    o.MapFrom(s =>
-                        s.OrganizationEntityEmployees.Select(oee => oee.OrganizationEntityId)
-                    )
-            )
-            .ForMember(
-                d => d.OrganizationEntityNames,
-                o =>
-                    o.MapFrom(s =>
-                        s.OrganizationEntityEmployees.Select(oee => oee.OrganizationEntity.Name)
-                    )
-            )
-            .ForMember(d => d.GroupId, o => o.MapFrom(s => s.GroupId));
+        .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src =>
+            src.Supervisor != null
+                ? $"{src.Supervisor.LastName} {src.Supervisor.MiddleName} {src.Supervisor.FirstName}"
+                : null))
+
+        .ForMember(dest => dest.DeputySupervisorName, opt => opt.MapFrom(src =>
+            src.DeputySupervisor != null
+                ? $"{src.DeputySupervisor.LastName} {src.DeputySupervisor.MiddleName} {src.DeputySupervisor.FirstName}"
+                : null))
+
+        .ForMember(dest => dest.SubordinateIds, opt => opt.MapFrom(src =>
+            src.Subordinates.Select(e => e.Id).ToList()))
+
+        .ForMember(dest => dest.SubordinateNames, opt => opt.MapFrom((src, _, __, context) =>
+        {
+            var employees = context.Items.TryGetValue("Employees", out var rawList) && rawList is List<Employee> list
+                ? list
+                : new List<Employee>();
+
+            return src.SubordinateIds
+                .Select(id => employees.FirstOrDefault(e => e.Id == id))
+                .Where(e => e != null)
+                .Select(e => $"{e.LastName} {e.MiddleName} {e.FirstName}")
+                .ToList();
+        }))
+
+        .ForMember(dest => dest.ManagedOrganizationEntityIds, opt => opt.MapFrom(src =>
+            src.ManagedOrganizationEntities.Select(e => e.Id).ToList()))
+
+        .ForMember(dest => dest.ManagedOrganizationEntityNames, opt => opt.MapFrom(src =>
+            src.ManagedOrganizationEntities.Select(e => e.Name).ToList()))
+
+        .ForMember(dest => dest.OrganizationEntityIds, opt => opt.MapFrom(src =>
+            src.OrganizationEntityEmployees.Select(e => e.OrganizationEntityId).ToList()))
+
+        .ForMember(dest => dest.OrganizationEntityNames, opt => opt.MapFrom(src =>
+            src.OrganizationEntityEmployees.Select(e => e.OrganizationEntity != null ? e.OrganizationEntity.Name : "").ToList()));
+            
+        // RoleInfo → RoleInfoDTO
+
 
         // Employee → EmployeeDTO
         CreateMap<Employee, EmployeeDTO>()
@@ -74,7 +75,7 @@ public class EmployeeProfile : Profile
             .ForMember(d => d.CareerPathInfo, o => o.MapFrom(s => s.CareerPathInfo))
             .ForMember(d => d.TaxInfo, o => o.MapFrom(s => s.TaxInfo))
             .ForMember(d => d.InsuranceInfo, o => o.MapFrom(s => s.InsuranceInfo))
-            .ForMember(d => d.EmergencyContactInfo, o => o.MapFrom(s => s.EmergencyContactInfo))
+            .ForMember(d => d.EmergencyContactInfos, o => o.MapFrom(s => s.EmergencyContactInfos))
             .ForMember(d => d.ScheduleInfo, o => o.MapFrom(s => s.ScheduleInfo))
             .ForMember(d => d.Signature, o => o.MapFrom(s => s.Signature))
             // nested RoleInfoDTO

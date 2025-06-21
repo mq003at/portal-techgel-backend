@@ -29,3 +29,15 @@ public abstract class BaseModelConfiguration<T> : IEntityTypeConfiguration<T>
             .ValueGeneratedOnAddOrUpdate();
     }
 }
+
+public abstract class BaseModelWithOnlyIdConfiguration<T> : IEntityTypeConfiguration<T>
+    where T : BaseModelWithOnlyId
+{
+    public virtual void Configure(EntityTypeBuilder<T> builder)
+    {
+        // Primary Key, auto-increment
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id)
+            .ValueGeneratedOnAdd();
+    }
+}

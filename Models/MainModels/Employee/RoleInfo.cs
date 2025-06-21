@@ -1,29 +1,31 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using portal.Models;
 
-public class RoleInfo
+public class RoleInfo : BaseModelWithOnlyId
 {
-    // Supervisor relationship (one-to-many)
+    public int EmployeeId { get; set; }
+    public Employee Employee { get; set; } = null!;
+
+    // Supervisor (can be null if top-level)
     public int? SupervisorId { get; set; }
-    [NotMapped]
     public Employee? Supervisor { get; set; }
 
-    public List<int> SubordinateIds { get; set; } = new List<int>();
-    // Subordinates relationship (one-to-many)    
-    [NotMapped]
-    public List<Employee> Subordinates { get; set; } = new List<Employee>();
+    // Deputy Supervisor (optional)
+    public int? DeputySupervisorId { get; set; }
+    public Employee? DeputySupervisor { get; set; }
 
-    // Entities this role manages (many-to-many)
-    public List<int> ManagedOrganizationEntityIds { get; set; } = new List<int>();
-    [NotMapped]
-    public List<OrganizationEntity> ManagedOrganizationEntities { get; set; } =
-        new List<OrganizationEntity>();
+    // Subordinates (many-to-many logic may live elsewhere if needed)
+    public List<int> SubordinateIds { get; set; } = new();
+    public List<Employee> Subordinates { get; set; } = new();
 
+    // Managed organization units
+    public List<int> ManagedOrganizationEntityIds { get; set; } = new();
+    public List<OrganizationEntity> ManagedOrganizationEntities { get; set; } = new();
 
-    [NotMapped]
-    public List<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } =
-        new List<OrganizationEntityEmployee>();
+    // Direct links (e.g. for assignments)
+    public List<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } = new();
 
-    // Optional grouping of roles into a higher-level Group
+    // Grouping (optional)
     public int? GroupId { get; set; }
 }

@@ -26,6 +26,12 @@ public class ApplicationDbContext : IdentityDbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BaseModelConfiguration<>).Assembly);
     }
 
+    // CONVERT ENUM TO STRING -> CHANGE ALL INT ENUMS BEFOREHAND OR HASCONVERSION() THEM
+    // protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    // {
+    //     configurationBuilder.Properties<Enum>().HaveConversion<string>();
+    // }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         base.OnConfiguring(optionsBuilder);
@@ -50,5 +56,4 @@ public class ApplicationDbContext : IdentityDbContext
 
     public DbSet<DocumentAssociation> DocumentAssociations { get; set; }
     public DbSet<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; }
-
 }

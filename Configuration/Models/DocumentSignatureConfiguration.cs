@@ -19,11 +19,6 @@ public class DocumentSignatureConfiguration : IEntityTypeConfiguration<DocumentS
             .HasMaxLength(500)
             .IsRequired();
 
-        builder.HasOne(ds => ds.Document)
-            .WithMany(d => d.Signatures)
-            .HasForeignKey(ds => ds.DocumentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasOne(ds => ds.Employee)
             .WithMany() // Optional: .WithMany(e => e.DocumentSignatures) if backref exists
             .HasForeignKey(ds => ds.EmployeeId)

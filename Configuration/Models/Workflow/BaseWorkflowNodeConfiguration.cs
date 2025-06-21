@@ -22,14 +22,9 @@ public abstract class BaseWorkflowNodeConfiguration<TNode> : BaseModelConfigurat
             .HasConversion<int>(); 
 
         // Common navigation: participants
-        builder.HasMany("WorkflowParticipants") 
+        builder.HasMany(n => n.WorkflowParticipants)
             .WithOne()
             .HasForeignKey("WorkflowNodeId")
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany("DocumentAssociations")
-           .WithOne()
-           .HasForeignKey("WorkflowNodeId")
-           .OnDelete(DeleteBehavior.Cascade);
     }
 }

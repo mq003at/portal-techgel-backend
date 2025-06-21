@@ -45,8 +45,7 @@ namespace portal_techgel_api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<int?>("LeaveRequestWorkflowId")
-                        .HasColumnType("integer");
+
 
                     b.Property<int?>("WorkflowNodeId")
                         .HasColumnType("integer");
@@ -55,7 +54,6 @@ namespace portal_techgel_api.Migrations
 
                     b.HasIndex("DocumentId");
 
-                    b.HasIndex("LeaveRequestWorkflowId");
 
                     b.HasIndex("WorkflowNodeId");
 
@@ -506,7 +504,7 @@ namespace portal_techgel_api.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<float>("EmployeeAnnualLeaveTotalDays")
+                    b.Property<double>("EmployeeAnnualLeaveTotalDays")
                         .HasColumnType("real");
 
                     b.Property<DateTime>("EndDate")
@@ -515,7 +513,7 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("EndDateDayNightType")
                         .HasColumnType("integer");
 
-                    b.Property<float>("FinalEmployeeAnnualLeaveTotalDays")
+                    b.Property<double>("FinalEmployeeAnnualLeaveTotalDays")
                         .HasColumnType("real");
 
                     b.Property<int>("LeaveAprrovalCategory")
@@ -546,7 +544,7 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<float>("TotalDays")
+                    b.Property<double>("TotalDays")
                         .HasColumnType("real");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -729,10 +727,6 @@ namespace portal_techgel_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("portal.Models.LeaveRequestWorkflow", null)
-                        .WithMany("DocumentAssociations")
-                        .HasForeignKey("LeaveRequestWorkflowId");
-
                     b.HasOne("portal.Models.LeaveRequestNode", null)
                         .WithMany("DocumentAssociations")
                         .HasForeignKey("WorkflowNodeId")
@@ -899,7 +893,7 @@ namespace portal_techgel_api.Migrations
                             b1.Property<int>("EmployeeId")
                                 .HasColumnType("integer");
 
-                            b1.Property<float>("AnnualLeaveTotalDays")
+                            b1.Property<double>("AnnualLeaveTotalDays")
                                 .HasColumnType("real");
 
                             b1.Property<string>("CompanyEmail")

@@ -17,5 +17,7 @@ public abstract class BaseWorkflow : BaseModel
     // Participants reference (retrieved from nodes with LINQ) 
     public List<WorkflowNodeParticipant> WorkflowParticipants { get; set; } = new List<WorkflowNodeParticipant>();
     // Reference to document system  (retrieved from nodes with LINQ)
+    
+    [NotMapped]
     public List<DocumentAssociation> DocumentAssociations { get; set; } = new List<DocumentAssociation>();
 }

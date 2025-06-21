@@ -20,7 +20,7 @@ public static class DateHelper
         return date.HasValue && date.Value > DateTime.Now;
     }
 
-    public static float CalculateLeaveDays(DateTime startDate, int startDayNightType, DateTime endDate, int endDayNightType)
+    public static double CalculateLeaveDays(DateTime startDate, int startDayNightType, DateTime endDate, int endDayNightType)
     {
         // Ensure startDate <= endDate
         if (startDate > endDate)
@@ -59,6 +59,6 @@ public static class DateHelper
             totalDays += Math.Max(dayValue, 0);
         }
 
-        return (float)totalDays;
+        return (double)totalDays;
     }
 }

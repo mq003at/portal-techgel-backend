@@ -2,8 +2,10 @@ using portal.Enums;
 
 namespace portal.Models;
 
-public class PersonalInfo
+public class PersonalInfo : BaseModelWithOnlyId
 {
+    public int EmployeeId { get; set; }
+    public Employee Employee { get; set; } = null!;
     public Gender Gender { get; set; }
     public string Address { get; set; } = null!;
     public DateTime DateOfBirth { get; set; }

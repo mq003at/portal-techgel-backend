@@ -23,3 +23,16 @@ public enum EmploymentStatus
     TERMINATED,
     PROBATION
 }
+
+public enum QualificationType
+{
+    BACHELOR,
+    MASTER,
+    DOCTORATE,
+    DIPLOMA,
+    CERTIFICATE,
+    LICENSE,
+    SPECIALIZATION,
+    TRAINING,
+    OTHER
+}

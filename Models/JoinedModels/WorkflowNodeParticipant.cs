@@ -9,8 +9,10 @@ public class WorkflowNodeParticipant : BaseModelWithOnlyId
 {
     [Required]
     public int EmployeeId { get; set; }
-    public Employee? Employee { get; set; }
+    public Employee Employee { get; set; } = null!;
     [Required]
+
+    // Shallow map cuz it connects to parent node, not derived.
     public int WorkflowNodeId { get; set; }
 
     // Order in the nodes
@@ -20,7 +22,9 @@ public class WorkflowNodeParticipant : BaseModelWithOnlyId
 
     // Workflow's step in a node (step 1,2,3,4 depending on what is defined so that one person can approve in many different steps)
     public int WorkflowNodeStepType { get; set; }
-    // Approval related properties
+
+    // Approval related properties -> start date, end date, time approved, approved, or rejected, time to approve
+    public DateTime? ApprovalStartDate { get; set; }
     public DateTime? ApprovalDate { get; set; }
     public DateTime? ApprovalDeadline { get; set; }
     public bool? HasApproved { get; set; }

@@ -50,13 +50,13 @@ public class DocumentService : IDocumentService
 
     public async Task<DocumentDTO?> GetMetaDataByIdAsync(int id)
     {
-        var doc = await _context.Documents.Include(d => d.Signatures).FirstOrDefaultAsync(d => d.Id == id);
+        var doc = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id);
         return doc == null ? null : _mapper.Map<DocumentDTO>(doc);
     }
 
     public async Task<IEnumerable<DocumentDTO>> GetAllMetaDataAsync()
     {
-        var docs = await _context.Documents.Include(d => d.Signatures).ToListAsync();
+        var docs = await _context.Documents.ToListAsync();
         return _mapper.Map<List<DocumentDTO>>(docs);
     }
 
@@ -124,8 +124,8 @@ public class DocumentService : IDocumentService
 
     public async Task<DocumentStatusEnum> CheckDocumentSignStatusAsync(int id)
     {
-        var doc = await _context.Documents.Include(d => d.Signatures).FirstOrDefaultAsync(d => d.Id == id);
-        return doc?.Signatures?.Any() == true ? DocumentStatusEnum.APPROVED : DocumentStatusEnum.REJECTED;
+        var doc = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id);
+        return doc != null ? DocumentStatusEnum.APPROVED : DocumentStatusEnum.REJECTED;
     }
 
     public async Task<bool> SignFileAsync(int documentId, Stream signedFileStream)

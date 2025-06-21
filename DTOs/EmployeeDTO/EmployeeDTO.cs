@@ -24,7 +24,7 @@ public class EmployeeDTO : BaseModelDTO
     public CareerPathInfoDTO CareerPathInfo { get; set; } = null!;
     public TaxInfoDTO TaxInfo { get; set; } = null!;
     public InsuranceInfoDTO InsuranceInfo { get; set; } = null!;
-    public EmergencyContactInfoDTO EmergencyContactInfo { get; set; } = null!;
+    public EmergencyContactInfoDTO EmergencyContactInfos { get; set; } = null!;
     public ScheduleInfoDTO ScheduleInfo { get; set; } = null!;
     public Signature? Signature { get; set; }
 

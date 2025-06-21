@@ -19,5 +19,5 @@ public class BaseWorkflowCreateDTO : BaseModelCreateDTO
 
 public class BaseWorkflowUpdateDTO : BaseModelUpdateDTO
 {
-
+    public GeneralWorkflowStatusType? Status { get; set; }
 }

@@ -18,12 +18,7 @@ public class DocumentProfile : BaseModelProfile<
     {
         // Map Document.Signatures → List<SignaturesInDocumentDTO>
         CreateMap<Document, DocumentDTO>()
-            .ForMember(dest => dest.Signatures, opt => opt.MapFrom(src =>
-                src.Signatures.Select(s => new SignaturesInDocumentDTO
-                {
-                    EmployeeName = $"{s.Employee.LastName} {s.Employee.MiddleName} {s.Employee.FirstName}",
-                    SignedAt = s.SignedAt.ToString("yyyy-MM-dd HH:mm")
-                }).ToList()))
+
             .ReverseMap();
 
         // Template area
@@ -38,6 +33,6 @@ public class DocumentProfile : BaseModelProfile<
         .ForMember(dest => dest.Tag, opt => opt.MapFrom(_ => new List<string>())) // Optional fallback
         .ForMember(dest => dest.Url, opt => opt.Ignore())
         .ForMember(dest => dest.Name, opt => opt.Ignore())
-        .ForMember(dest => dest.Signatures, opt => opt.Ignore());
+        ;
         }
 }

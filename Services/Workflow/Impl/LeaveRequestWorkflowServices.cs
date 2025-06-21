@@ -8,7 +8,6 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using portal.Db;
-using portal.Documents.Props;
 using portal.DTOs;
 using portal.Enums;
 using portal.Helpers;
@@ -73,6 +72,7 @@ public class LeaveRequestWorkflowService
         var senderId = dto.SenderId;
 
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == employeeId);
+
         var managerId = employee?.RoleInfo.SupervisorId;
 
         var employeeIds = new[] {
@@ -97,14 +97,17 @@ public class LeaveRequestWorkflowService
         var director = directorId.HasValue ? employeeDict[directorId.Value] : null;
         var hrHead = hrHeadId.HasValue ? employeeDict[hrHeadId.Value] : null;
         var manager = managerId.HasValue ? employeeDict[managerId.Value] : null;
+        // check managedOrganizationEntityId
+        var managedOrganizationEntityId = employee.RoleInfo.ManagedOrganizationEntities;
+        var isOnProbation = employee.CompanyInfo.IsOnProbation;
 
         if (employee == null)
             throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
 
         // Building Leave information using Employee navigation properties
-        var finalEmployeeAnnualLeaveTotalDays = employee.CompanyInfo.AnnualLeaveTotalDays - (float)totalDays;
+        var finalEmployeeAnnualLeaveTotalDays = employee.CompanyInfo.AnnualLeaveTotalDays - (double)totalDays;
 
-        workflow.TotalDays = (float)totalDays;
+        workflow.TotalDays = (double)totalDays;
         workflow.EmployeeAnnualLeaveTotalDays = employee.CompanyInfo.AnnualLeaveTotalDays;
         workflow.FinalEmployeeAnnualLeaveTotalDays = finalEmployeeAnnualLeaveTotalDays;
 
@@ -118,7 +121,7 @@ public class LeaveRequestWorkflowService
             (employee.MainId, 0, LeaveApprovalStepType.CreateForm, 0, DateTime.UtcNow, DateTime.UtcNow, true, true, false, TimeSpan.Zero),
             (sender.MainId, 0, LeaveApprovalStepType.CreateForm, 0, null, null, false, false, false, null),
             (assignee.MainId, 0, LeaveApprovalStepType.CreateForm, 0, null, null, false, false, false, null),
-            (manager.MainId, 1, LeaveApprovalStepType.ManagerApproval, 0, null, null, false, false, false, null),
+            (manager.MainId, 1, LeaveApprovalStepType.ManagerApproval, 0, null, DateTime.UtcNow.AddDays(3), false, false, false, null),
             (hrHead.MainId, 2, LeaveApprovalStepType.HRHeadApproval, 0, null, null, false, false, false, null),
             (director.MainId, 3, LeaveApprovalStepType.ExecutiveApproval, 0, null, null, false, false, false, null)
         };
@@ -166,9 +169,8 @@ public class LeaveRequestWorkflowService
                 Status = (GeneralWorkflowStatusType)step.Status,
                 WorkflowParticipants = step.nodeParticipants,
                 Description = step.Name,
-                DocumentAssociations = new List<DocumentAssociation>(),
             };
-
+            
             _logger.LogError("Created leave request node: {NodeName} in workflow: {WorkflowId}", node.Name, workflow.Id);
 
             nodes.Add(node);
@@ -181,28 +183,28 @@ public class LeaveRequestWorkflowService
             manager.FirstName, hrHead.FirstName);
 
         // Add documnent associations 
-        var copiedDocument = await GenerateLeaveRequestInitDocument(
-            employee,
-            assignee,
-            sender,
-            hrHead,
-            director,
-            manager,
-            dto,
-            totalDays,
-            finalEmployeeAnnualLeaveTotalDays
-        );
+        // var copiedDocument = await GenerateLeaveRequestInitDocument(
+        //     employee,
+        //     assignee,
+        //     sender,
+        //     hrHead,
+        //     director,
+        //     manager,
+        //     dto,
+        //     totalDays,
+        //     finalEmployeeAnnualLeaveTotalDays
+        // );
 
-        // Step 4: Attach to final approval step nodes
-        var firstNode = nodes.FirstOrDefault();
-        if (firstNode != null)
-        {
-            firstNode.DocumentAssociations.Add(new DocumentAssociation
-            {
-                DocumentId = copiedDocument.Id,
-                EntityType = nameof(LeaveRequestNode)
-            });
-        }
+        // // Step 4: Attach to final approval step nodes
+        // var firstNode = nodes.FirstOrDefault();
+        // if (firstNode != null)
+        // {
+        //     firstNode.DocumentAssociations.Add(new DocumentAssociation
+        //     {
+        //         DocumentId = copiedDocument.Id,
+        //         EntityType = nameof(LeaveRequestNode)
+        //     });
+        // }
 
         _context.LeaveRequestWorkflows.Update(workflow);
         await _context.SaveChangesAsync();
@@ -303,6 +305,7 @@ public class LeaveRequestWorkflowService
             .ToListAsync();
     }
 
+    // Add document only at the end of the workflow. The newly created document will be attached to the workflow itself, not the nodes
     public async Task<Models.Document> GenerateLeaveRequestInitDocument(
     Employee employee,
     Employee assignee,
@@ -342,10 +345,13 @@ public class LeaveRequestWorkflowService
             ["reason"] = dto.Reason ?? "",
             ["leaveRequestStartDate"] = dto.StartDate.ToString("dd/MM/yyyy"),
             ["leaveRequestEndDate"] = dto.EndDate.ToString("dd/MM/yyyy"),
-            ["totalDays"] = totalDays.ToString(),
+            ["totalDaysTop"] = totalDays.ToString(),
+            ["totalDaysBox"] = totalDays.ToString(),
+            ["finalAnnualTotal"] = finalEmployeeAnnualLeaveTotalDays.ToString(),
+
 
             ["employeeName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
-            ["assigneeFullname"] = $"{assignee.LastName} {assignee.MiddleName} {assignee.FirstName}".Trim() + 
+            ["assigneeFullname"] = $"{assignee.LastName} {assignee.MiddleName} {assignee.FirstName}".Trim() +
                 (assignee.Id == employee.Id ? " (Vẫn trực khi nghỉ)" : ""),
             ["assigneePhoneNumber"] = assignee.PersonalInfo.PersonalPhoneNumber ?? "",
             ["assigneeEmail"] = assignee.PersonalInfo.PersonalEmail ?? "",
@@ -354,8 +360,10 @@ public class LeaveRequestWorkflowService
 
             ["empAnnualTotal"] = employee.CompanyInfo.AnnualLeaveTotalDays.ToString(),
             ["employeeFinalTotalDays"] = finalEmployeeAnnualLeaveTotalDays.ToString(),
-           
+
             ["employeeFullName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
+            ["employeeFullNameBottom"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
+
             ["supervisorFullName"] = $"{supervisor.LastName} {supervisor.MiddleName} {supervisor.FirstName}".Trim(),
 
             ["supervisorFullName"] = $"{supervisor.LastName} {supervisor.MiddleName} {supervisor.FirstName}".Trim(),
@@ -377,31 +385,7 @@ public class LeaveRequestWorkflowService
 
         };
 
-        using (var wordDoc = WordprocessingDocument.Open(newDoc, true))
-        {
-            var mainPart = wordDoc.MainDocumentPart;
-            if (mainPart?.Document?.Body == null)
-                throw new InvalidDataException("Invalid Word document");
-
-            // Replace in main body
-            ReplacePlaceholdersInTextElements(mainPart.Document.Body, placeholders);
-
-            // Replace in headers and footers too
-            foreach (var header in mainPart.HeaderParts)
-            {
-                ReplacePlaceholdersInTextElements(header.Header, placeholders);
-                header.Header.Save();
-            }
-
-            foreach (var footer in mainPart.FooterParts)
-            {
-                ReplacePlaceholdersInTextElements(footer.Footer, placeholders);
-                footer.Footer.Save();
-            }
-
-            mainPart.Document.Save();
-        }
-
+        WordBookmarkReplacer.ReplacePlaceholders(newDoc, placeholders);
 
         // If filling in is completed, upload and make a new record of metadata
         var pathAfterUpload = await _storage.UploadAsync(newDoc, newTargetPath);
@@ -427,20 +411,6 @@ public class LeaveRequestWorkflowService
         await _context.SaveChangesAsync();
 
         return newMetadata;
-    }
-
-    void ReplacePlaceholdersInTextElements(OpenXmlElement root, Dictionary<string, string> placeholders)
-    {
-        foreach (var text in root.Descendants<Text>())
-        {
-            if (text.Text.Contains("{{"))
-            {
-                foreach (var kvp in placeholders)
-                {
-                    text.Text = text.Text.Replace($"{{{{{kvp.Key}}}}}", kvp.Value);
-                }
-            }
-        }
     }
 
     public class Attachment

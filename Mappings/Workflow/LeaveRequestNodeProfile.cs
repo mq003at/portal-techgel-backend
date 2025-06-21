@@ -16,17 +16,40 @@ public class LeaveRequestNodeProfile : BaseWorkflowNodeProfile<
     public LeaveRequestNodeProfile()
         : base()
     {
+        /* ------------ base maps that were missing earlier ------------ */
+        CreateMap<BaseWorkflowNode, WorkflowNodeDTO>().ReverseMap();
+        CreateMap<WorkflowNodeCreateDTO, BaseWorkflowNode>();
+        CreateMap<WorkflowNodeUpdateDTO, BaseWorkflowNode>();
+
+        /* ------------ entity ➜ DTO ------------ */
         CreateMap<LeaveRequestNode, LeaveRequestNodeDTO>()
             .IncludeBase<BaseWorkflowNode, WorkflowNodeDTO>()
-            .ForMember(dest => dest.StepType, opt => opt.MapFrom(src => src.StepType))
-            .ForMember(dest => dest.StepTypeName, opt => opt.MapFrom(src => src.StepType.ToString()));
 
+            // Let EF translate this; names match, so no config needed:
+            .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType))
+
+            // 👇 Disable server-side translation …
+            .ForMember(d => d.StepTypeName, o => o.Ignore())
+
+            // 👇 … and fill it after the list is in memory
+            .AfterMap((src, dest) =>
+            {
+                dest.StepTypeName = src.StepType.ToString();
+            });
+
+        /* ------------ DTO ➜ entity (create / update) ------------ */
         CreateMap<LeaveRequestNodeCreateDTO, LeaveRequestNode>()
             .IncludeBase<WorkflowNodeCreateDTO, BaseWorkflowNode>()
-            .ForMember(dest => dest.StepType, opt => opt.MapFrom(src => src.StepType));
+            .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType));
 
         CreateMap<LeaveRequestNodeUpdateDTO, LeaveRequestNode>()
             .IncludeBase<WorkflowNodeUpdateDTO, BaseWorkflowNode>()
-            .ForMember(dest => dest.StepType, opt => opt.MapFrom(src => src.StepType));
+            .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType));
+
+        // Optional: if you ever need DTO → entity straight from LeaveRequestNodeDTO
+        CreateMap<LeaveRequestNodeDTO, LeaveRequestNode>()
+            .IncludeBase<WorkflowNodeDTO, BaseWorkflowNode>()
+            .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType))
+            .ForMember(d => d.Workflow, o => o.Ignore()); // avoid circular refs
     }
 }

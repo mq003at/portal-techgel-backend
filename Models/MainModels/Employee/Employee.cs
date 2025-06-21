@@ -10,14 +10,15 @@ public class Employee : BaseModel
     public string? Password { get; set; }
 
     // Owned types (sẽ map vào cùng bảng Employees)
-    public PersonalInfo PersonalInfo { get; set; } = new();
-    public CompanyInfo CompanyInfo { get; set; } = new();
-    public CareerPathInfo CareerPathInfo { get; set; } = new();
-    public TaxInfo TaxInfo { get; set; } = new();
-    public InsuranceInfo InsuranceInfo { get; set; } = new();
-    public EmergencyContactInfo EmergencyContactInfo { get; set; } = new();
-    public ScheduleInfo ScheduleInfo { get; set; } = new();
-    public Signature? Signature { get; set; }
+    public PersonalInfo PersonalInfo { get; set; } = null!;
+    public CompanyInfo? CompanyInfo { get; set; }
+    public CareerPathInfo? CareerPathInfo { get; set; }
+    public List<EmergencyContactInfo>? EmergencyContactInfos { get; set; }
 
-    public RoleInfo RoleInfo { get; set; } = new();
+    public List<EmployeeQualificationInfo>? EmployeeQualificationInfos { get; set; } 
+    public TaxInfo? TaxInfo { get; set; }
+    public InsuranceInfo? InsuranceInfo { get; set; }
+    public ScheduleInfo? ScheduleInfo { get; set; }
+    public Signature? Signature { get; set; }
+    public RoleInfo? RoleInfo { get; set; } 
 }

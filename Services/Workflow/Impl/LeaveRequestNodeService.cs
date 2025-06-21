@@ -57,16 +57,16 @@ public class LeaveRequestNodeService : BaseService<
         node.Status = GeneralWorkflowStatusType.Approved;
 
         // Attach signature if applicable
-        var documentIds = node.DocumentAssociations.Select(d => d.DocumentId).ToList();
-        foreach (var docId in documentIds)
-        {
-            _context.DocumentSignatures.Add(new DocumentSignature
-            {
-                DocumentId = docId,
-                EmployeeId = approverId,
-                SignedAt = DateTime.UtcNow,
-            });
-        }
+        // var documentIds = node.DocumentAssociations.Select(d => d.DocumentId).ToList();
+        // foreach (var docId in documentIds)
+        // {
+        //     _context.DocumentSignatures.Add(new DocumentSignature
+        //     {
+        //         DocumentId = docId,
+        //         EmployeeId = approverId,
+        //         SignedAt = DateTime.UtcNow,
+        //     });
+        // }
 
         // Check if this is the final node in the workflow
         var isFinalNode = !_context.LeaveRequestNodes

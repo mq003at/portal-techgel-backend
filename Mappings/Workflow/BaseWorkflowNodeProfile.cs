@@ -15,8 +15,8 @@ public abstract class BaseWorkflowNodeProfile<
 > : BaseModelProfile<TModel, TModelDto, TModelCreateDto, TModelUpdateDto>
     where TNode : BaseWorkflowNode
     where TNodeDto : WorkflowNodeDTO
-    where TNodeCreateDto : BaseModelCreateDTO
-    where TNodeUpdateDto : BaseModelUpdateDTO
+    where TNodeCreateDto : WorkflowNodeCreateDTO
+    where TNodeUpdateDto : WorkflowNodeUpdateDTO
     where TModel : BaseModel
     where TModelDto : BaseModelDTO
     where TModelCreateDto : BaseModelCreateDTO
@@ -24,26 +24,24 @@ public abstract class BaseWorkflowNodeProfile<
 {
     public BaseWorkflowNodeProfile()
     {
-        // Explicitly register base mappings to avoid AutoMapper error
-        CreateMap<BaseWorkflowNode, WorkflowNodeDTO>()
-            .IncludeBase<BaseModel, BaseModelDTO>()
-            .ForMember(dest => dest.Participants, opt => opt.MapFrom(src => src.WorkflowParticipants))
-            .ForMember(dest => dest.DocumentAssociations, opt => opt.MapFrom(src => src.DocumentAssociations))
-            .ReverseMap();
-
+        // Only DTO -> Entity, not the reverse for base
         CreateMap<WorkflowNodeCreateDTO, BaseWorkflowNode>()
             .IncludeBase<BaseModelCreateDTO, BaseModel>();
 
         CreateMap<WorkflowNodeUpdateDTO, BaseWorkflowNode>()
             .IncludeBase<BaseModelUpdateDTO, BaseModel>();
 
-        // Entity <-> DTO (allow navigation, reverse when safe)
+        // Entity -> DTO
+        CreateMap<BaseWorkflowNode, WorkflowNodeDTO>()
+            .IncludeBase<BaseModel, BaseModelDTO>()
+            .ForMember(dest => dest.Participants, opt => opt.MapFrom(src => src.WorkflowParticipants));
+
+        // Full node mapping
         CreateMap<TNode, TNodeDto>()
             .IncludeBase<BaseWorkflowNode, WorkflowNodeDTO>()
             .IncludeBase<TModel, TModelDto>()
             .ReverseMap();
 
-        // Create DTO -> Entity
         CreateMap<TNodeCreateDto, TNode>()
             .IncludeBase<WorkflowNodeCreateDTO, BaseWorkflowNode>()
             .IncludeBase<TModelCreateDto, TModel>()
@@ -51,7 +49,6 @@ public abstract class BaseWorkflowNodeProfile<
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-        // Update DTO -> Entity
         CreateMap<TNodeUpdateDto, TNode>()
             .IncludeBase<WorkflowNodeUpdateDTO, BaseWorkflowNode>()
             .IncludeBase<TModelUpdateDto, TModel>()

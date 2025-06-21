@@ -13,14 +13,17 @@ public class DocumentAssociationConfiguration : IEntityTypeConfiguration<Documen
         builder.Property(e => e.DocumentId).IsRequired();
 
         // Navigation to Document
-        builder.HasOne(e => e.Document)
-            .WithMany()
-            .HasForeignKey(e => e.DocumentId)
-            .OnDelete(DeleteBehavior.Cascade); 
+        builder.HasOne(d => d.Document)
+            .WithMany(d => d.DocumentAssociations)
+            .HasForeignKey(d => d.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
 
         builder.Property(e => e.EntityType)
             .IsRequired()
             .HasMaxLength(255);
+
+        builder.HasIndex(d => new { d.EntityId, d.EntityType });
 
         builder.Property(e => e.EntityId).IsRequired();
       }
