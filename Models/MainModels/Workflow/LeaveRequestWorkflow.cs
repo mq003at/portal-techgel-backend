@@ -8,7 +8,7 @@ public class LeaveRequestWorkflow : BaseWorkflow
     [Required]
     public string Reason { get; set; } = string.Empty;
     [Required]
-    public LeaveAprrovalCategory LeaveAprrovalCategory { get; set; }
+    public LeaveApprovalCategory LeaveApprovalCategory { get; set; }
     [Required]
     public DateTime StartDate { get; set; }
     [Required]
@@ -18,10 +18,16 @@ public class LeaveRequestWorkflow : BaseWorkflow
     [Required]
     public DayNightEnum EndDateDayNightType { get; set; } = DayNightEnum.Day;
 
-    // Meta data for the leave request
-    public double TotalDays { get; set; } = 0f;
-    public double EmployeeAnnualLeaveTotalDays { get; set; } = 0f;
-    public double FinalEmployeeAnnualLeaveTotalDays { get; set; } = 0f;
+    // Metadata for the leave request
+    public int EmployeeId { get; set; }
+    public Employee Employee { get; set; } = null!;
+    public double TotalDays { get; set; }
+    public double EmployeeAnnualLeaveTotalDays { get; set; }
+    public double FinalEmployeeAnnualLeaveTotalDays { get; set; }
+    public double EmployeeCompensatoryLeaveTotalDays { get; set; }
+    public double FinalEmployeeCompensatoryLeaveTotalDays { get; set; }
     public virtual List<LeaveRequestNode> LeaveRequestNodes { get; set; } = new List<LeaveRequestNode>();
     public string? RejectReason { get; set; }
+    public string? Notes { get; set; }
+    public string AssigneeDetails { get; set; } = null!;
 }

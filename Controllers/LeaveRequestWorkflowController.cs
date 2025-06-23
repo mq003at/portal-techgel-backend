@@ -22,8 +22,6 @@ public class LeaveRequestWorkflowController : BaseController<
     }
 
     // Tắt bớt các route nếu không cần → giữ nguyên GetAll, GetById, Create, Update, Delete
-
-
     // GET api/leave-requests/{id}/nodes
     [HttpGet("{id}/nodes")]
     public async Task<IActionResult> GetNodes(int id)
@@ -32,11 +30,6 @@ public class LeaveRequestWorkflowController : BaseController<
         return Ok(nodes);
     }
 
-    // PUT api/leave-requests/{id}/finalize
-    [HttpPut("{id}/finalize")]
-    public async Task<IActionResult> FinalizeWorkflow(int id)
-    {
-        var finalized = await _workflowService.FinalizeIfCompleteAsync(id);
-        return finalized ? Ok("Workflow finalized") : BadRequest("Workflow not yet complete.");
-    }
+    // replace get with this one. If else for me. Check OrganizationEntityEmployees to see if this employeeId has access to organizationEntityId = 11
+
 }

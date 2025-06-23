@@ -1,12 +1,10 @@
 public enum LeaveApprovalStepType
 {
     CreateForm = 0,
-    ManagerApproval = 1,
-    HRHeadApproval = 2,
-    ExecutiveApproval = 3,
+    ExecutiveApproval = 1,
 }
 
-public enum LeaveAprrovalCategory
+public enum LeaveApprovalCategory
 {
     // Nghỉ phép
     // 0: Nghỉ phép hàng năm
@@ -14,12 +12,13 @@ public enum LeaveAprrovalCategory
     // 2: Nghỉ thai sản
     // 3: Nghỉ tang / cưới
     // 4: Nghỉ không lương
-    // 5: Nghỉ khác
+    // 5: Nghỉ bù
     AnnualLeave = 0,
     SickLeave = 1,
     MaternityLeave = 2,
     PaternityLeave = 3,
     UnpaidLeave = 4,
+    CompensatoryLeave = 5,
 }
 
 public enum DayNightEnum

@@ -55,76 +55,68 @@ public class LeaveRequestWorkflowService
         if (totalDays < 0.4)
             throw new ArgumentException("End date must be after start date and at least half a day apart.");
 
-        // Fetch organizationally-related details (hr & director)
-        var orgIds = new[] { 3, 11 };
-        var orgManagerIds = await _context.OrganizationEntities
-            .Where(e => orgIds.Contains(e.Id))
-            .Select(e => new { e.Id, e.ManagerId })
-            .ToListAsync();
-
-        var directorId = orgManagerIds.FirstOrDefault(e => e.Id == 3)?.ManagerId;
-        var hrHeadId = orgManagerIds.FirstOrDefault(e => e.Id == 11)?.ManagerId;
-
-        // Fetch other participants (sender, emp, assignee, manager)
-
         var employeeId = dto.EmployeeId;
-        var assigneeId = dto.AssigneeId;
         var senderId = dto.SenderId;
+        Employee employee = await _context.Employees.Include(e => e.CompanyInfo).Include(e => e.ScheduleInfo).Include(e => e.Supervisor).Include(e => e.DeputySupervisor).FirstOrDefaultAsync(e => e.Id == employeeId) ?? throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
 
-        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == employeeId);
+        // Null checks for employee properties
+        CompanyInfo companyInfo = employee.CompanyInfo ?? throw new InvalidOperationException($"CompanyInfo for employee {dto.EmployeeId} not found.");
+        Employee supervisor = employee.Supervisor ?? throw new InvalidOperationException($"Supervisor for employee {dto.EmployeeId} not found.");
+        Employee deputySupervisor = employee.DeputySupervisor ?? throw new InvalidOperationException($"Deputy Supervisor for employee {dto.EmployeeId} not found.");
+        // ScheduleInfo scheduleInfo = employee.ScheduleInfo ?? throw new InvalidOperationException($"ScheduleInfo for employee {dto.EmployeeId} not found.");
 
-        var managerId = employee?.SupervisorId;
 
-        var employeeIds = new[] {
-            employeeId,
-            assigneeId,
-            senderId,
-            directorId,
-            hrHeadId,
-            managerId
-        }.Where(id => id.HasValue)
-        .Select(id => id!.Value)
-        .Distinct()
-        .ToList();
+        // IF isOnProbation, DO NOT reduce AnnualLeave or CompensatoryLeave
+        var isOnProbation = companyInfo.IsOnProbation;
+        if (isOnProbation && (dto.LeaveApprovalCategory == LeaveApprovalCategory.AnnualLeave || dto.LeaveApprovalCategory == LeaveApprovalCategory.CompensatoryLeave))
+        {
+            throw new InvalidOperationException("Cannot request Annual or Compensatory leave while on probation.");
+        }
 
-        var employeeIdInts = employeeIds.Select(id => (int)id).ToList();
-
-        var employeeDict = await _context.Employees
-            .Where(e => employeeIdInts.Contains(e.Id))
-            .ToDictionaryAsync(e => e.Id);
-
-        employee = employeeDict[employeeId];
-        var assignee = employeeDict[assigneeId];
-        var sender = employeeDict[senderId];
-        var director = directorId.HasValue ? employeeDict[directorId.Value] : null;
-        var hrHead = hrHeadId.HasValue ? employeeDict[hrHeadId.Value] : null;
-        var manager = managerId.HasValue ? employeeDict[managerId.Value] : null;
-
-        var isOnProbation = employee.CompanyInfo.IsOnProbation;
-
-        if (employee == null)
-            throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
-
+  
         // Building Leave information using Employee navigation properties
-        var finalEmployeeAnnualLeaveTotalDays = employee.CompanyInfo.AnnualLeaveTotalDays - (double)totalDays;
+        var compensatoryLeaveInit = companyInfo.CompensatoryLeaveTotalDays;
+        var annualLeaveInit = companyInfo.AnnualLeaveTotalDays;
+        var finalEmployeeAnnualLeaveTotalDays = annualLeaveInit;
+        var finalEmployeeCompensatoryLeaveTotalDays = compensatoryLeaveInit;
 
         workflow.TotalDays = (double)totalDays;
-        workflow.EmployeeAnnualLeaveTotalDays = employee.CompanyInfo.AnnualLeaveTotalDays;
-        workflow.FinalEmployeeAnnualLeaveTotalDays = finalEmployeeAnnualLeaveTotalDays;
 
-        if (manager == null || hrHead == null || director == null)
-            throw new InvalidOperationException($"Manager for employee {dto.EmployeeId} not found.");
+        // calculate for the 2 specific leaves
+        if (dto.LeaveApprovalCategory == LeaveApprovalCategory.CompensatoryLeave)
+        {
+            if (compensatoryLeaveInit < totalDays)
+            {
+                throw new InvalidOperationException("Not enough compensatory leave days available. Contact admins to see if anything is wrong.");
+            }
+            finalEmployeeCompensatoryLeaveTotalDays = compensatoryLeaveInit - totalDays;
+        }
+        else if (dto.LeaveApprovalCategory == LeaveApprovalCategory.AnnualLeave)
+        {
+            if (annualLeaveInit < totalDays)
+            {
+                throw new InvalidOperationException("Not enough annual leave days available. Contact admins to see if anything is wrong.");
+            }
+            finalEmployeeAnnualLeaveTotalDays = annualLeaveInit - totalDays;
+        }
+
+        // For other types of leave, we do not modify annual leave or compensatory leave
+        workflow.FinalEmployeeCompensatoryLeaveTotalDays = finalEmployeeCompensatoryLeaveTotalDays;
+        workflow.FinalEmployeeAnnualLeaveTotalDays = finalEmployeeAnnualLeaveTotalDays;
+        workflow.EmployeeCompensatoryLeaveTotalDays = compensatoryLeaveInit;
+        workflow.EmployeeAnnualLeaveTotalDays = annualLeaveInit;
+        workflow.EmployeeId = employeeId;
+        workflow.Reason = dto.Reason;
+        workflow.LeaveApprovalCategory = dto.LeaveApprovalCategory;
+        workflow.Employee = employee;
 
         // Build up receiver IDs for workflow
         // Compose workflow steps
-        var participants = new List<(string EmpId, int WorkflowNodeId, LeaveApprovalStepType StepType, int Order, DateTime? ApprovalDate, DateTime? ApprovalDeadline, bool? IsApproved, bool? HasApproved, bool? HasRejected, TimeSpan? TAT)>
+        var participants = new List<(string EmpId, int WorkflowNodeId, LeaveApprovalStepType StepType, int Order, DateTime? ApprovalDate, DateTime? ApprovalStartDate, DateTime? ApprovalDeadline, bool? IsApproved, bool? HasApproved, bool? HasRejected, TimeSpan? TAT)>
         {
-            (employee.MainId, 0, LeaveApprovalStepType.CreateForm, 0, DateTime.UtcNow, DateTime.UtcNow, true, true, false, TimeSpan.Zero),
-            (sender.MainId, 0, LeaveApprovalStepType.CreateForm, 0, null, null, false, false, false, null),
-            (assignee.MainId, 0, LeaveApprovalStepType.CreateForm, 0, null, null, false, false, false, null),
-            (manager.MainId, 1, LeaveApprovalStepType.ManagerApproval, 0, null, DateTime.UtcNow.AddDays(3), false, false, false, null),
-            (hrHead.MainId, 2, LeaveApprovalStepType.HRHeadApproval, 0, null, null, false, false, false, null),
-            (director.MainId, 3, LeaveApprovalStepType.ExecutiveApproval, 0, null, null, false, false, false, null)
+            (employee.MainId, 0, LeaveApprovalStepType.CreateForm, 0, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, true, true, false, TimeSpan.Zero),
+            (supervisor.MainId, 1, LeaveApprovalStepType.ExecutiveApproval, 0, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(48), false, false, false, null),
+            (deputySupervisor.MainId, 1, LeaveApprovalStepType.ExecutiveApproval, 1, null, DateTime.UtcNow.AddHours(48), DateTime.UtcNow.AddHours(96), false, false, false, null),
         };
 
         // Convert the participants above to WorkflowNodeParticipant objects
@@ -137,6 +129,7 @@ public class LeaveRequestWorkflowService
                 WorkflowNodeStepType = (int)participant.StepType,
                 Order = participant.Order,
                 ApprovalDate = participant.ApprovalDate,
+                ApprovalStartDate = participant.ApprovalStartDate,
                 ApprovalDeadline = participant.ApprovalDeadline,
                 HasApproved = participant.IsApproved,
                 HasRejected = participant.HasRejected,
@@ -145,13 +138,11 @@ public class LeaveRequestWorkflowService
         }
         _context.WorkflowNodeParticipants.AddRange(workflowParticipants);
 
-        // Initiate nodes creation: 
-        var steps = new List<(string Name, LeaveApprovalStepType StepType, int Status, List<WorkflowNodeParticipant> nodeParticipants, List<int> documentAssocation)>
+        // Initiate nodes creation: 2 nodes for now, first one has 2 participants, second one has 2 participants
+        var steps = new List<(string Name, LeaveApprovalStepType StepType, int Status, List<WorkflowNodeParticipant> nodeParticipants)>
         {
-            ("Tạo yêu cầu nghỉ phép", LeaveApprovalStepType.CreateForm, 1, new List<WorkflowNodeParticipant> { workflowParticipants[0], workflowParticipants[1], workflowParticipants[2] }, new List<int>()),
-            ("Quản lý trực thuộc ký", LeaveApprovalStepType.ManagerApproval, 0, new List<WorkflowNodeParticipant> { workflowParticipants[3] }, new List<int>()),
-            ("Trưởng phòng nhân sự ký", LeaveApprovalStepType.HRHeadApproval, 2, new List<WorkflowNodeParticipant> { workflowParticipants[4] }, new List<int>()),
-            ("Ký xác nhận cuối cùng", LeaveApprovalStepType.ExecutiveApproval, 2, new List<WorkflowNodeParticipant> { workflowParticipants[5] }, new List<int>())
+            ("Tạo yêu cầu nghỉ phép", LeaveApprovalStepType.CreateForm, 1, new List<WorkflowNodeParticipant> { workflowParticipants[0] }),
+            ("Quản lý trực thuộc / gián tiếp ký", LeaveApprovalStepType.ExecutiveApproval, 0, new List<WorkflowNodeParticipant> { workflowParticipants[1], workflowParticipants[2] }),
         };
 
         // Build and add nodes
@@ -180,35 +171,6 @@ public class LeaveRequestWorkflowService
         _context.LeaveRequestNodes.AddRange(nodes);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Created leave request workflow for manager: {ManagerName}, HR: {HRName}",
-            manager.FirstName, hrHead.FirstName);
-
-        // Add documnent associations 
-        // var copiedDocument = await GenerateLeaveRequestInitDocument(
-        //     employee,
-        //     assignee,
-        //     sender,
-        //     hrHead,
-        //     director,
-        //     manager,
-        //     dto,
-        //     totalDays,
-        //     finalEmployeeAnnualLeaveTotalDays
-        // );
-
-        // // Step 4: Attach to final approval step nodes
-        // var firstNode = nodes.FirstOrDefault();
-        // if (firstNode != null)
-        // {
-        //     firstNode.DocumentAssociations.Add(new DocumentAssociation
-        //     {
-        //         DocumentId = copiedDocument.Id,
-        //         EntityType = nameof(LeaveRequestNode)
-        //     });
-        // }
-
-        _context.LeaveRequestWorkflows.Update(workflow);
-        await _context.SaveChangesAsync();
         return _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
     }
 
@@ -218,29 +180,26 @@ public class LeaveRequestWorkflowService
     {
         var nodes = await _context.LeaveRequestNodes
             .Where(n => n.WorkflowId == workflowId)
+            .Include(n => n.WorkflowParticipants)
             .ToListAsync();
 
         return _mapper.Map<IEnumerable<LeaveRequestNodeDTO>>(nodes);
     }
 
-    public async Task<bool> FinalizeIfCompleteAsync(int workflowId)
+    public async Task<bool> FinalizeIfCompleteAsync(LeaveRequestWorkflow workflow, int approverId)
     {
-        var workflow = await _context.LeaveRequestWorkflows
-            .Include(w => w.LeaveRequestNodes)
-            .FirstOrDefaultAsync(w => w.Id == workflowId);
 
-        if (workflow == null) return false;
 
-        var allApproved = workflow.LeaveRequestNodes.All(n =>
-            n.Status == GeneralWorkflowStatusType.Approved);
+        Employee employee = await _context.Employees
+            .Include(e => e.CompanyInfo)
+            .FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId) ?? throw new InvalidOperationException($"Employee {workflow.EmployeeId} not found.");
 
-        if (allApproved)
-        {
-            workflow.Status = GeneralWorkflowStatusType.Approved;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        return false;
+        Employee approver = await _context.Employees
+            .Include(e => e.CompanyInfo)
+            .FirstOrDefaultAsync(e => e.Id == approverId) ?? throw new InvalidOperationException($"Employee {approverId} not found.");
+
+
+        return await GenerateLeaveRequestFinalDocument(employee, approver, workflow);
     }
 
 
@@ -287,10 +246,23 @@ public class LeaveRequestWorkflowService
     public override async Task<LeaveRequestWorkflowDTO?> GetByIdAsync(int id)
     {
         var workflow = await base.GetByIdAsync(id);
-
         return workflow;
     }
 
+    public async Task<LeaveRequestNodeDTO?> GetAllWorkflowByEmployeeId (int employeeId)
+    {
+        var workflow = await _context.LeaveRequestWorkflows
+            .Include(w => w.LeaveRequestNodes)
+            .FirstOrDefaultAsync(w => w.EmployeeId == employeeId);
+
+        if (workflow == null)
+            return null;
+
+        var workflowDto = _mapper.Map<LeaveRequestNodeDTO>(workflow);
+        return workflowDto;
+    }
+
+    
     public override async Task<IEnumerable<LeaveRequestWorkflowDTO>> GetAllAsync()
     {
         var workflows = await base.GetAllAsync();
@@ -298,6 +270,20 @@ public class LeaveRequestWorkflowService
 
         return workflowList;
     }
+
+    private async Task<string> GenerateDocumentsAsync(int workflowId, int approverId)
+    {
+        LeaveRequestWorkflow workflow = await _context.LeaveRequestWorkflows
+            .Include(w => w.LeaveRequestNodes)
+            .FirstOrDefaultAsync(w => w.Id == workflowId) ?? throw new InvalidOperationException($"Workflow {workflowId} not found.");
+
+        // Get the approver's information
+        Employee approver = await _context.Employees.FindAsync(approverId) ?? throw new InvalidOperationException($"Approver {approverId} not found.");
+        // Get the employee's information
+        Employee employee = await _context.Employees.FindAsync(workflow.EmployeeId) ?? throw new InvalidOperationException($"Employee {workflow.EmployeeId} not found.");
+        return "";
+    }
+
     private async Task<List<string>> GetNamesByIdsAsync(List<int> ids)
     {
         return await _context.Employees
@@ -307,15 +293,10 @@ public class LeaveRequestWorkflowService
     }
 
     // Add document only at the end of the workflow. The newly created document will be attached to the workflow itself, not the nodes
-    public async Task<Models.Document> GenerateLeaveRequestInitDocument(
+    public async Task<bool> GenerateLeaveRequestFinalDocument(
     Employee employee,
-    Employee assignee,
-    Employee sender,
-    Employee hr,
-    Employee ceo,
-    Employee supervisor,
-    LeaveRequestWorkflowCreateDTO dto,
-    double totalDays, double finalEmployeeAnnualLeaveTotalDays)
+    Employee approver,
+    LeaveRequestWorkflow workflow)
     {
         var templateDocMetadata = await _context.Documents
             .FirstOrDefaultAsync(d => d.TemplateKey == "LeaveRequest");
@@ -332,56 +313,55 @@ public class LeaveRequestWorkflowService
         var newFileName = $"{today:yyyy-MM-dd}-{Division}-DN-{employee.MainId}-v01{".docx"}";
         var newTargetPath = Path.Combine("erp", "documents", Division, "Ho_So", "Nghi_Phep", newFileName).Replace("\\", "/");
 
-        _logger.LogError(hr.FirstName, supervisor.FirstName, ceo.FirstName);
-
         // Filling in steps
         var placeholders = new Dictionary<string, string>
         {
             // English
             ["fullName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
-            ["department"] = employee.CompanyInfo.Department ?? "",
-            ["position"] = employee.CompanyInfo.Position ?? "",
-            ["startDate"] = dto.StartDate.ToString("dd/MM/yyyy"),
-            ["endDate"] = dto.EndDate.ToString("dd/MM/yyyy"),
-            ["reason"] = dto.Reason ?? "",
-            ["leaveRequestStartDate"] = dto.StartDate.ToString("dd/MM/yyyy"),
-            ["leaveRequestEndDate"] = dto.EndDate.ToString("dd/MM/yyyy"),
-            ["totalDaysTop"] = totalDays.ToString(),
-            ["totalDaysBox"] = totalDays.ToString(),
-            ["finalAnnualTotal"] = finalEmployeeAnnualLeaveTotalDays.ToString(),
-
+            ["department"] = employee.CompanyInfo?.Department ?? "",
+            ["position"] = employee.CompanyInfo?.Position ?? "",
+            ["startDate"] = workflow.StartDate.ToString("dd/MM/yyyy"),
+            ["endDate"] = workflow.EndDate.ToString("dd/MM/yyyy"),
+            ["reason"] = workflow.Reason ?? "",
+            ["leaveRequestStartDate"] = workflow.StartDateDayNightType == 0 ? "Sáng " : "Chiều " + workflow.StartDate.ToString("dd/MM/yyyy"),
+            ["leaveRequestEndDate"] = workflow.EndDateDayNightType == 0 ? "Sáng " : "Chiều " + workflow.EndDate.ToString("dd/MM/yyyy"),
+            ["totalDaysTop"] = workflow.TotalDays.ToString(),
+            ["totalDaysBox"] = workflow.TotalDays.ToString(),
+            ["finalAnnualTotal"] = workflow.FinalEmployeeAnnualLeaveTotalDays.ToString(),
 
             ["employeeName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
-            ["assigneeFullname"] = $"{assignee.LastName} {assignee.MiddleName} {assignee.FirstName}".Trim() +
-                (assignee.Id == employee.Id ? " (Vẫn trực khi nghỉ)" : ""),
-            ["assigneePhoneNumber"] = assignee.PersonalInfo.PersonalPhoneNumber ?? "",
-            ["assigneeEmail"] = assignee.PersonalInfo.PersonalEmail ?? "",
-            ["assigneeAddress"] = assignee.PersonalInfo.Address ?? "",
+            ["employeeId"] = employee.Id.ToString(),
             ["employeeSignDate"] = today.ToString("dd/MM/yyyy"),
+            ["assigneeDetails"] = workflow.AssigneeDetails,
+            ["notes"] = workflow.Notes ?? "",
 
             ["empAnnualTotal"] = employee.CompanyInfo.AnnualLeaveTotalDays.ToString(),
-            ["employeeFinalTotalDays"] = finalEmployeeAnnualLeaveTotalDays.ToString(),
+            ["empCompensatoryTotal"] = employee.CompanyInfo.CompensatoryLeaveTotalDays.ToString(),
+            ["totalAnnualDays"] = workflow.TotalDays.ToString(),
+            ["finalAnnualTotal"] = workflow.FinalEmployeeAnnualLeaveTotalDays.ToString(),
+            ["finalCompensatoryTotal"] = workflow.FinalEmployeeCompensatoryLeaveTotalDays.ToString(),
 
             ["employeeFullName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
             ["employeeFullNameBottom"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
+            ["employeeSignDate"] = workflow.CreatedAt.ToString("dd/MM/yyyy"),
 
-            ["supervisorFullName"] = $"{supervisor.LastName} {supervisor.MiddleName} {supervisor.FirstName}".Trim(),
-
-            ["supervisorFullName"] = $"{supervisor.LastName} {supervisor.MiddleName} {supervisor.FirstName}".Trim(),
-            ["hrFullName"] = $"{hr.LastName} {hr.MiddleName} {hr.FirstName}".Trim(),
-            ["ceoFullName"] = $"{ceo.LastName} {ceo.MiddleName} {ceo.FirstName}".Trim(),
+            ["approverPosition"] = approver.CompanyInfo?.Position ?? "",
+            ["approverFullName"] = $"{approver.LastName} {approver.MiddleName} {approver.FirstName}".Trim(),
+            ["approverSignDate"] = today.ToString("dd/MM/yyyy"),
+            
 
             // Custom: If assigneeId == employeeId, add a special note
 
-            // Vietnamese for LeaveAprrovalCategory
-            ["type"] = dto.LeaveAprrovalCategory switch
+            // Vietnamese for LeaveApprovalCategory
+            ["type"] = workflow.LeaveApprovalCategory switch
             {
-                LeaveAprrovalCategory.AnnualLeave => "Nghỉ phép có lương",
-                LeaveAprrovalCategory.UnpaidLeave => "Nghỉ phép không lương",
-                LeaveAprrovalCategory.SickLeave => "Nghỉ ốm",
-                LeaveAprrovalCategory.MaternityLeave => "Nghỉ thai sản",
-                LeaveAprrovalCategory.PaternityLeave => "Nghỉ tang",
-                _ => dto.LeaveAprrovalCategory.ToString()
+                LeaveApprovalCategory.AnnualLeave => "Nghỉ phép có lương",
+                LeaveApprovalCategory.UnpaidLeave => "Nghỉ phép không lương",
+                LeaveApprovalCategory.SickLeave => "Nghỉ ốm",
+                LeaveApprovalCategory.MaternityLeave => "Nghỉ thai sản",
+                LeaveApprovalCategory.PaternityLeave => "Nghỉ tang",
+                LeaveApprovalCategory.CompensatoryLeave => "Nghỉ bù",
+                _ => workflow.LeaveApprovalCategory.ToString()
             },
 
         };
@@ -411,7 +391,7 @@ public class LeaveRequestWorkflowService
         _context.Documents.Add(newMetadata);
         await _context.SaveChangesAsync();
 
-        return newMetadata;
+        return true;
     }
 
     public class Attachment

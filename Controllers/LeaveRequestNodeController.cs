@@ -31,9 +31,9 @@ public class LeaveRequestNodeController : BaseController<
 
     // PUT api/leave-request-nodes/{id}/reject?approverId=123
     [HttpPut("{id}/reject")]
-    public async Task<IActionResult> Reject(int id, [FromQuery] int approverId)
+    public async Task<IActionResult> Reject(int id, [FromQuery] int approverId, [FromBody] string rejectReason)
     {
-        var success = await _nodeService.RejectAsync(id, approverId);
+        var success = await _nodeService.RejectAsync(id, approverId, rejectReason);
         return Ok(success);
     }
 }

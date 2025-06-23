@@ -13,8 +13,8 @@ using portal.Db;
 namespace portal_techgel_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250617234033_SwitchToWorkflowId")]
-    partial class SwitchToWorkflowId
+    [Migration("20250623092419_renew")]
+    partial class renew
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,17 +45,11 @@ namespace portal_techgel_api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-
-
-                    b.Property<int?>("WorkflowNodeId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
 
-
-                    b.HasIndex("WorkflowNodeId");
+                    b.HasIndex("EntityId", "EntityType");
 
                     b.ToTable("DocumentAssociations");
                 });
@@ -264,11 +258,151 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int?>("EmployeeId1")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsPrimary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MainId")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("OrganizationRelationType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
                     b.HasKey("OrganizationEntityId", "EmployeeId");
 
                     b.HasIndex("EmployeeId");
 
+                    b.HasIndex("EmployeeId1");
+
                     b.ToTable("OrganizationEntityEmployees");
+                });
+
+            modelBuilder.Entity("portal.Models.CareerPathInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CurrentPosition")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DemotionReason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ExpectedPromotionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastDemotionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastPromotionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NextPosition")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PromotionReason")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("CareerPathInfos");
+                });
+
+            modelBuilder.Entity("portal.Models.CompanyInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("AnnualLeaveTotalDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(0.0);
+
+                    b.Property<string>("CompanyEmail")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CompanyPhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<double>("CompensatoryLeaveTotalDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(0.0);
+
+                    b.Property<string>("Department")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EmploymentStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsOnProbation")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Position")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("ProbationEndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ProbationStartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("CompanyInfo", (string)null);
                 });
 
             modelBuilder.Entity("portal.Models.Document", b =>
@@ -380,6 +514,40 @@ namespace portal_techgel_api.Migrations
                     b.ToTable("DocumentSignatures");
                 });
 
+            modelBuilder.Entity("portal.Models.EmergencyContactInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CurrentAddress")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Relationship")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmergencyContactInfo", (string)null);
+                });
+
             modelBuilder.Entity("portal.Models.Employee", b =>
                 {
                     b.Property<int>("Id")
@@ -396,6 +564,9 @@ namespace portal_techgel_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int?>("DeputySupervisorId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -421,6 +592,9 @@ namespace portal_techgel_api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<int?>("SupervisorId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp with time zone")
@@ -428,7 +602,105 @@ namespace portal_techgel_api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeputySupervisorId");
+
+                    b.HasIndex("SupervisorId");
+
                     b.ToTable("Employees", (string)null);
+                });
+
+            modelBuilder.Entity("portal.Models.EmployeeQualificationInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CertificateNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime?>("GraduationOrIssueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Institution")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmployeeQualificationInfo", (string)null);
+                });
+
+            modelBuilder.Entity("portal.Models.InsuranceInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("EffectiveDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("InsuranceCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("InsuranceStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RegistrationLocation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("TerminationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("InsuranceInfo", (string)null);
                 });
 
             modelBuilder.Entity("portal.Models.LeaveRequestNode", b =>
@@ -474,14 +746,9 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("WorkflowId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("WorkflowId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("WorkflowId");
-
-                    b.HasIndex("WorkflowId1");
 
                     b.ToTable("LeaveRequestNodes");
                 });
@@ -494,6 +761,10 @@ namespace portal_techgel_api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AssigneeDetails")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -505,7 +776,13 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("character varying(1000)");
 
                     b.Property<double>("EmployeeAnnualLeaveTotalDays")
-                        .HasColumnType("real");
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("EmployeeCompensatoryLeaveTotalDays")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
@@ -514,9 +791,12 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<double>("FinalEmployeeAnnualLeaveTotalDays")
-                        .HasColumnType("real");
+                        .HasColumnType("double precision");
 
-                    b.Property<int>("LeaveAprrovalCategory")
+                    b.Property<double>("FinalEmployeeCompensatoryLeaveTotalDays")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("LeaveApprovalCategory")
                         .HasColumnType("integer");
 
                     b.Property<string>("MainId")
@@ -530,8 +810,16 @@ namespace portal_techgel_api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<string>("Reason")
                         .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("RejectReason")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
@@ -545,7 +833,7 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<double>("TotalDays")
-                        .HasColumnType("real");
+                        .HasColumnType("double precision");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
@@ -553,6 +841,8 @@ namespace portal_techgel_api.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
 
                     b.ToTable("LeaveRequestWorkflows");
                 });
@@ -608,6 +898,115 @@ namespace portal_techgel_api.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("OrganizationEntities");
+                });
+
+            modelBuilder.Entity("portal.Models.PersonalInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("Birthplace")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EthnicGroup")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("IdCardExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("IdCardIssueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdCardIssuePlace")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("IdCardNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MaritalStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nationality")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PersonalEmail")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PersonalPhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("PersonalInfo", (string)null);
+                });
+
+            modelBuilder.Entity("portal.Models.ScheduleInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsRemoteEligible")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeSpan?>("SaturdayEndTime")
+                        .HasColumnType("interval");
+
+                    b.Property<TimeSpan?>("SaturdayStartTime")
+                        .HasColumnType("interval");
+
+                    b.Property<TimeSpan>("WeekdayEndTime")
+                        .HasColumnType("interval");
+
+                    b.Property<TimeSpan>("WeekdayStartTime")
+                        .HasColumnType("interval");
+
+                    b.Property<bool>("WorksOnSaturday")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("ScheduleInfo", (string)null);
                 });
 
             modelBuilder.Entity("portal.Models.Signature", b =>
@@ -668,6 +1067,47 @@ namespace portal_techgel_api.Migrations
                     b.ToTable("Signatures");
                 });
 
+            modelBuilder.Entity("portal.Models.TaxInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsFamilyStatusRegistered")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("NumberOfDependents")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("RegistrationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TaxCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("TaxInfo", (string)null);
+                });
+
             modelBuilder.Entity("portal.Models.WorkflowNodeParticipant", b =>
                 {
                     b.Property<int>("Id")
@@ -682,6 +1122,9 @@ namespace portal_techgel_api.Migrations
                     b.Property<DateTime?>("ApprovalDeadline")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("ApprovalStartDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
@@ -691,6 +1134,9 @@ namespace portal_techgel_api.Migrations
                     b.Property<bool?>("HasRejected")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("LeaveRequestWorkflowId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
@@ -698,9 +1144,6 @@ namespace portal_techgel_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("interval")
                         .HasDefaultValue(new TimeSpan(0, 0, 0, 0, 0));
-
-                    b.Property<int?>("WorkflowId")
-                        .HasColumnType("integer");
 
                     b.Property<int>("WorkflowNodeId")
                         .HasColumnType("integer");
@@ -712,7 +1155,7 @@ namespace portal_techgel_api.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.HasIndex("WorkflowId");
+                    b.HasIndex("LeaveRequestWorkflowId");
 
                     b.HasIndex("WorkflowNodeId");
 
@@ -722,15 +1165,16 @@ namespace portal_techgel_api.Migrations
             modelBuilder.Entity("DocumentAssociation", b =>
                 {
                     b.HasOne("portal.Models.Document", "Document")
-                        .WithMany()
+                        .WithMany("DocumentAssociations")
                         .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("portal.Models.LeaveRequestNode", null)
+                    b.HasOne("portal.Models.LeaveRequestWorkflow", null)
                         .WithMany("DocumentAssociations")
-                        .HasForeignKey("WorkflowNodeId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Document");
                 });
@@ -794,6 +1238,10 @@ namespace portal_techgel_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("portal.Models.Employee", null)
+                        .WithMany("OrganizationEntityEmployees")
+                        .HasForeignKey("EmployeeId1");
+
                     b.HasOne("portal.Models.OrganizationEntity", "OrganizationEntity")
                         .WithMany("OrganizationEntityEmployees")
                         .HasForeignKey("OrganizationEntityId")
@@ -805,10 +1253,32 @@ namespace portal_techgel_api.Migrations
                     b.Navigation("OrganizationEntity");
                 });
 
+            modelBuilder.Entity("portal.Models.CareerPathInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithOne("CareerPathInfo")
+                        .HasForeignKey("portal.Models.CareerPathInfo", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("portal.Models.CompanyInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithOne("CompanyInfo")
+                        .HasForeignKey("portal.Models.CompanyInfo", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("portal.Models.DocumentSignature", b =>
                 {
                     b.HasOne("portal.Models.Document", "Document")
-                        .WithMany("Signatures")
+                        .WithMany()
                         .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -824,306 +1294,76 @@ namespace portal_techgel_api.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("portal.Models.EmergencyContactInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithMany("EmergencyContactInfos")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("portal.Models.Employee", b =>
                 {
-                    b.OwnsOne("RoleInfo", "RoleInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<int?>("GroupId")
-                                .HasColumnType("integer")
-                                .HasColumnName("GroupId");
-
-                            b1.PrimitiveCollection<List<int>>("ManagedOrganizationEntityIds")
-                                .IsRequired()
-                                .HasColumnType("integer[]")
-                                .HasColumnName("ManagedOrganizationEntityIds");
-
-                            b1.PrimitiveCollection<List<int>>("SubordinateIds")
-                                .IsRequired()
-                                .HasColumnType("integer[]")
-                                .HasColumnName("SubordinateIds");
-
-                            b1.Property<int?>("SupervisorId")
-                                .HasColumnType("integer")
-                                .HasColumnName("SupervisorId");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.HasIndex("SupervisorId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-
-                            b1.HasOne("portal.Models.Employee", "Supervisor")
-                                .WithMany()
-                                .HasForeignKey("SupervisorId")
-                                .OnDelete(DeleteBehavior.Restrict);
-
-                            b1.Navigation("Supervisor");
-                        });
-
-                    b.OwnsOne("portal.Models.CareerPathInfo", "CareerPathInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.PrimitiveCollection<List<string>>("Certifications")
-                                .HasColumnType("text[]");
-
-                            b1.PrimitiveCollection<List<string>>("Degrees")
-                                .HasColumnType("text[]");
-
-                            b1.PrimitiveCollection<List<string>>("Specializations")
-                                .HasColumnType("text[]");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.OwnsOne("portal.Models.CompanyInfo", "CompanyInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<double>("AnnualLeaveTotalDays")
-                                .HasColumnType("real");
-
-                            b1.Property<string>("CompanyEmail")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("CompanyPhoneNumber")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Department")
-                                .HasColumnType("text");
-
-                            b1.Property<int>("EmploymentStatus")
-                                .HasColumnType("integer");
-
-                            b1.Property<DateTime?>("EndDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<string>("Position")
-                                .HasColumnType("text");
-
-                            b1.Property<DateTime?>("ProbationEndDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<DateTime?>("ProbationStartDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<DateTime?>("StartDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.OwnsOne("portal.Models.EmergencyContactInfo", "EmergencyContactInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("CurrentAddress")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Name")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("PermanentAddress")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Phone")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Relationship")
-                                .HasColumnType("text");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.OwnsOne("portal.Models.InsuranceInfo", "InsuranceInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<DateTime?>("EffectiveDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<DateTime?>("ExpiryDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<string>("InsuranceNumber")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Provider")
-                                .HasColumnType("text");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.OwnsOne("portal.Models.PersonalInfo", "PersonalInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Birthplace")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<DateTime>("DateOfBirth")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<string>("EthnicGroup")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<int>("Gender")
-                                .HasColumnType("integer");
-
-                            b1.Property<DateTime?>("IdCardExpiryDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<DateTime?>("IdCardIssueDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<string>("IdCardIssuePlace")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("IdCardNumber")
-                                .HasColumnType("text");
-
-                            b1.Property<int>("MaritalStatus")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Nationality")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("PersonalEmail")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("PersonalPhoneNumber")
-                                .HasColumnType("text");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.OwnsOne("portal.Models.ScheduleInfo", "ScheduleInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<bool?>("IsRemoteStatus")
-                                .HasColumnType("boolean");
-
-                            b1.Property<string>("ShiftType")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("WorkSchedule")
-                                .HasColumnType("text");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.OwnsOne("portal.Models.TaxInfo", "TaxInfo", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Region")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("TaxId")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("TaxStatus")
-                                .HasColumnType("text");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.Navigation("CareerPathInfo")
+                    b.HasOne("portal.Models.Employee", "DeputySupervisor")
+                        .WithMany("DeputySubordinates")
+                        .HasForeignKey("DeputySupervisorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("portal.Models.Employee", "Supervisor")
+                        .WithMany("Subordinates")
+                        .HasForeignKey("SupervisorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DeputySupervisor");
+
+                    b.Navigation("Supervisor");
+                });
+
+            modelBuilder.Entity("portal.Models.EmployeeQualificationInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithMany("EmployeeQualificationInfos")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CompanyInfo")
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("portal.Models.InsuranceInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithOne("InsuranceInfo")
+                        .HasForeignKey("portal.Models.InsuranceInfo", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("EmergencyContactInfo")
-                        .IsRequired();
-
-                    b.Navigation("InsuranceInfo")
-                        .IsRequired();
-
-                    b.Navigation("PersonalInfo")
-                        .IsRequired();
-
-                    b.Navigation("RoleInfo")
-                        .IsRequired();
-
-                    b.Navigation("ScheduleInfo")
-                        .IsRequired();
-
-                    b.Navigation("TaxInfo")
-                        .IsRequired();
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("portal.Models.LeaveRequestNode", b =>
                 {
-                    b.HasOne("portal.Models.LeaveRequestWorkflow", null)
+                    b.HasOne("portal.Models.LeaveRequestWorkflow", "Workflow")
                         .WithMany("LeaveRequestNodes")
                         .HasForeignKey("WorkflowId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("portal.Models.LeaveRequestWorkflow", "Workflow")
+                    b.Navigation("Workflow");
+                });
+
+            modelBuilder.Entity("portal.Models.LeaveRequestWorkflow", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
                         .WithMany()
-                        .HasForeignKey("WorkflowId1")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Workflow");
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("portal.Models.OrganizationEntity", b =>
@@ -1141,12 +1381,45 @@ namespace portal_techgel_api.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("portal.Models.PersonalInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithOne("PersonalInfo")
+                        .HasForeignKey("portal.Models.PersonalInfo", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("portal.Models.ScheduleInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithOne("ScheduleInfo")
+                        .HasForeignKey("portal.Models.ScheduleInfo", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("portal.Models.Signature", b =>
                 {
                     b.HasOne("portal.Models.Employee", "Employee")
                         .WithOne("Signature")
                         .HasForeignKey("portal.Models.Signature", "EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("portal.Models.TaxInfo", b =>
+                {
+                    b.HasOne("portal.Models.Employee", "Employee")
+                        .WithOne("TaxInfo")
+                        .HasForeignKey("portal.Models.TaxInfo", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");
@@ -1162,8 +1435,7 @@ namespace portal_techgel_api.Migrations
 
                     b.HasOne("portal.Models.LeaveRequestWorkflow", null)
                         .WithMany("WorkflowParticipants")
-                        .HasForeignKey("WorkflowId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("LeaveRequestWorkflowId");
 
                     b.HasOne("portal.Models.LeaveRequestNode", null)
                         .WithMany("WorkflowParticipants")
@@ -1176,18 +1448,39 @@ namespace portal_techgel_api.Migrations
 
             modelBuilder.Entity("portal.Models.Document", b =>
                 {
-                    b.Navigation("Signatures");
+                    b.Navigation("DocumentAssociations");
                 });
 
             modelBuilder.Entity("portal.Models.Employee", b =>
                 {
+                    b.Navigation("CareerPathInfo");
+
+                    b.Navigation("CompanyInfo");
+
+                    b.Navigation("DeputySubordinates");
+
+                    b.Navigation("EmergencyContactInfos");
+
+                    b.Navigation("EmployeeQualificationInfos");
+
+                    b.Navigation("InsuranceInfo");
+
+                    b.Navigation("OrganizationEntityEmployees");
+
+                    b.Navigation("PersonalInfo")
+                        .IsRequired();
+
+                    b.Navigation("ScheduleInfo");
+
                     b.Navigation("Signature");
+
+                    b.Navigation("Subordinates");
+
+                    b.Navigation("TaxInfo");
                 });
 
             modelBuilder.Entity("portal.Models.LeaveRequestNode", b =>
                 {
-                    b.Navigation("DocumentAssociations");
-
                     b.Navigation("WorkflowParticipants");
                 });
 

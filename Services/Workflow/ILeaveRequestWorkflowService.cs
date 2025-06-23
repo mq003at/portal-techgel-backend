@@ -17,17 +17,13 @@ public interface ILeaveRequestWorkflowService : IBaseWorkflowService<
 
     Task<IEnumerable<LeaveRequestNodeDTO>> GetNodesByWorkflowIdAsync(int workflowId);
 
-    Task<bool> FinalizeIfCompleteAsync(int workflowId);
+    Task<bool> FinalizeIfCompleteAsync(LeaveRequestWorkflow workflow, int approvalId);
 
-    Task<Document> GenerateLeaveRequestInitDocument(
-        Employee employee,
-        Employee assignee,
-        Employee sender,
-        Employee hr,
-        Employee ceo,
-        Employee supervisor,
-        LeaveRequestWorkflowCreateDTO dto,
-        double totalDays,
-        double finalEmployeeAnnualLeaveTotalDays
+    Task<bool> GenerateLeaveRequestFinalDocument(
+    Employee employee,
+    Employee approver,
+    LeaveRequestWorkflow workflow
     );
+
+
 }

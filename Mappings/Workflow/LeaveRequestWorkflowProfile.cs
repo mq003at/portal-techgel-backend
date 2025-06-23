@@ -21,7 +21,6 @@ public class LeaveRequestWorkflowProfile : BaseWorkflowProfile<
         CreateMap<LeaveRequestWorkflow, LeaveRequestWorkflowDTO>()
             .IncludeBase<BaseWorkflow, BaseWorkflowDTO>()
             .ForMember(dest => dest.LeaveRequestNodes, opt => opt.MapFrom(src => src.LeaveRequestNodes))
-
             .ReverseMap();
 
         CreateMap<LeaveRequestWorkflowCreateDTO, LeaveRequestWorkflow>()

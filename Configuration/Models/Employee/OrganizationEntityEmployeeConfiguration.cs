@@ -13,15 +13,16 @@ public class OrganizationEnittyEmployeeConfiguration
         base.Configure(builder);
 
         builder.HasOne(x => x.OrganizationEntity)
-        .WithMany()
-        .HasForeignKey(x => x.OrganizationEntityId)
-        .OnDelete(DeleteBehavior.Restrict);
+               .WithMany(o => o.OrganizationEntityEmployees)
+               .HasForeignKey(x => x.OrganizationEntityId)
+               .OnDelete(DeleteBehavior.Cascade);
 
-         builder.Property(x => x.OrganizationRelationType)
+        builder.Property(x => x.OrganizationRelationType)
+         .HasConversion<string>()
             .IsRequired();
 
         builder.HasOne(x => x.Employee)
-            .WithMany()
+            .WithMany(e => e.OrganizationEntityEmployees)
             .HasForeignKey(x => x.EmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
 

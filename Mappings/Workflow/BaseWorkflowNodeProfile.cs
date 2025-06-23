@@ -34,7 +34,7 @@ public abstract class BaseWorkflowNodeProfile<
         // Entity -> DTO
         CreateMap<BaseWorkflowNode, WorkflowNodeDTO>()
             .IncludeBase<BaseModel, BaseModelDTO>()
-            .ForMember(dest => dest.Participants, opt => opt.MapFrom(src => src.WorkflowParticipants));
+            .ForMember(dest => dest.WorkflowNodeParticipants, opt => opt.MapFrom(src => src.WorkflowParticipants));
 
         // Full node mapping
         CreateMap<TNode, TNodeDto>()
