@@ -12,9 +12,8 @@ public class EmployeeQualificationInfoConfiguration
     {
         builder.ToTable("EmployeeQualificationInfo");
 
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).IsRequired()
-            .ValueGeneratedNever();
+       base.Configure(builder);
+
 
         builder.HasOne(q => q.Employee)
                .WithMany(e => e.EmployeeQualificationInfos)

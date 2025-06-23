@@ -10,14 +10,11 @@ public class EmployeeConfiguration
 {
     public override void Configure(EntityTypeBuilder<Employee> builder)
     {
-        // 1) Apply the BaseModelConfiguration<Employee> so CreatedAt/UpdatedAt defaults are set
         base.Configure(builder);
 
-        // 2) Table & key (optional—BaseModelConfiguration didn’t set ToTable)
         builder.ToTable("Employees");
         builder.HasKey(e => e.Id);
 
-        // 3) Scalar props
         builder.Property(e => e.MainId).IsRequired(true);
 
         builder.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
@@ -27,9 +24,8 @@ public class EmployeeConfiguration
         builder.Property(e => e.Avatar).HasMaxLength(255);
         builder.Property(e => e.Password).HasMaxLength(255);
 
-        // 4) Relationships (replace owned types with entity relationships)
 
-        // 4.1) One-to-one relationships
+        // One-to-one relationships
         builder
             .HasOne(e => e.PersonalInfo)
             .WithOne(p => p.Employee)
@@ -79,19 +75,28 @@ public class EmployeeConfiguration
             .HasForeignKey<ScheduleInfo>(s => s.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 5) Signature relationship
         builder
             .HasOne(e => e.Signature)
             .WithOne(s => s.Employee)
             .HasForeignKey<Signature>(s => s.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 6) RoleInfo (owned one-to-one)
+        // Roleinfo
         builder
-            .HasOne(e => e.RoleInfo)
-            .WithOne(r => r.Employee)
-            .HasForeignKey<RoleInfo>(r => r.EmployeeId)
-            .OnDelete(DeleteBehavior.Cascade
-    );
+            .HasMany(e => e.OrganizationEntityEmployees)
+            .WithOne(oe => oe.Employee)
+            .HasForeignKey(oe => oe.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(e => e.Supervisor)
+            .WithMany(e => e.Subordinates)
+            .HasForeignKey(e => e.SupervisorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.DeputySupervisor)
+            .WithMany(e => e.DeputySubordinates)
+            .HasForeignKey(e => e.DeputySupervisorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
     }
 }

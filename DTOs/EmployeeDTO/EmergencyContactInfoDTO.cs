@@ -2,27 +2,26 @@ namespace portal.DTOs;
 
 public class EmergencyContactInfoDTO : BaseModelWithOnlyIdDTO
 {
-    public string? EmergencyContactName { get; set; }
-    public string? EmergencyContactPhone { get; set; }
+    public int EmployeeId { get; set; }
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
     public string? Relationship { get; set; }
-    public string? EmergencyContactCurrentAddress { get; set; }
-    public string? EmergencyContactPermanentAddress { get; set; }
+    public string? CurrentAddress { get; set; }
 }
 
-public class CreateEmergencyContactInfoDTO
+public class CreateEmergencyContactInfoDTO : BaseModelWithOnlyIdCreateDTO
 {
-    public string? EmergencyContactName { get; set; }
-    public string? EmergencyContactPhone { get; set; }
+    public int EmployeeId { get; set; }
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
     public string? Relationship { get; set; }
-    public string? EmergencyContactCurrentAddress { get; set; }
-    public string? EmergencyContactPermanentAddress { get; set; }
+    public string? CurrentAddress { get; set; }
 }
 
-public class UpdateEmergencyContactInfoDTO
+public class UpdateEmergencyContactInfoDTO : BaseModelWithOnlyIdUpdateDTO
 {
-    public string? EmergencyContactName { get; set; }
-    public string? EmergencyContactPhone { get; set; }
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
     public string? Relationship { get; set; }
-    public string? EmergencyContactCurrentAddress { get; set; }
-    public string? EmergencyContactPermanentAddress { get; set; }
+    public string? CurrentAddress { get; set; }
 }

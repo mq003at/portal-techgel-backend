@@ -38,4 +38,25 @@ public class EmployeeController
         _logger.LogInformation("Login successful for MainId={MainId}", dto.MainId);
         return Ok(user);
     }
-}
+
+    [HttpPut("{employeeId}/details")]
+    public async Task<IActionResult> UpdateDetails(int employeeId, [FromBody] UpdateEmployeeDetailsDTO dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var result = await _employeeService.UpdateEmployeeDetailsAsync(employeeId, dto);
+            if (result == null)
+                return NotFound($"Employee with ID {employeeId} not found.");
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating employee details for ID={EmployeeId}", employeeId);
+            return StatusCode(500, "An error occurred while updating employee details.");
+        }
+    }
+    }

@@ -10,11 +10,8 @@ public class PersonalInfoConfiguration
 {
     public override void Configure(EntityTypeBuilder<PersonalInfo> builder)
     {
+       base.Configure(builder);
         builder.ToTable("PersonalInfo");
-
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).IsRequired()
-            .ValueGeneratedNever();
 
         builder.HasOne(p => p.Employee)
                .WithOne(e => e.PersonalInfo)

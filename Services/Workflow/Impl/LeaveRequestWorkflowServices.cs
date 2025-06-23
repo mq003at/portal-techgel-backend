@@ -73,7 +73,7 @@ public class LeaveRequestWorkflowService
 
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == employeeId);
 
-        var managerId = employee?.RoleInfo.SupervisorId;
+        var managerId = employee?.SupervisorId;
 
         var employeeIds = new[] {
             employeeId,
@@ -87,8 +87,10 @@ public class LeaveRequestWorkflowService
         .Distinct()
         .ToList();
 
+        var employeeIdInts = employeeIds.Select(id => (int)id).ToList();
+
         var employeeDict = await _context.Employees
-            .Where(e => employeeIds.Contains(e.Id))
+            .Where(e => employeeIdInts.Contains(e.Id))
             .ToDictionaryAsync(e => e.Id);
 
         employee = employeeDict[employeeId];
@@ -97,8 +99,7 @@ public class LeaveRequestWorkflowService
         var director = directorId.HasValue ? employeeDict[directorId.Value] : null;
         var hrHead = hrHeadId.HasValue ? employeeDict[hrHeadId.Value] : null;
         var manager = managerId.HasValue ? employeeDict[managerId.Value] : null;
-        // check managedOrganizationEntityId
-        var managedOrganizationEntityId = employee.RoleInfo.ManagedOrganizationEntities;
+
         var isOnProbation = employee.CompanyInfo.IsOnProbation;
 
         if (employee == null)

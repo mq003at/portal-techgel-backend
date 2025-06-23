@@ -14,12 +14,10 @@ public abstract class BaseModelDTO
 
 public abstract class BaseModelCreateDTO
 {
-    public string? MainId { get; set; } = "";
 }
 
 public abstract class BaseModelUpdateDTO
 {
-    public string? MainId { get; set; } = "";
 }
 
 public abstract class BaseModelWithOnlyIdDTO

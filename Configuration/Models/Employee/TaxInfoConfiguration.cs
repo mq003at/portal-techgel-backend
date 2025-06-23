@@ -10,11 +10,9 @@ public class TaxInfoConfiguration
 {
     public override void Configure(EntityTypeBuilder<TaxInfo> builder)
     {
-        builder.ToTable("TaxInfo");
+       base.Configure(builder);
 
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).IsRequired()
-            .ValueGeneratedNever();
+        builder.ToTable("TaxInfo");
 
         builder.HasOne(x => x.Employee)
                .WithOne(e => e.TaxInfo)
@@ -24,7 +22,7 @@ public class TaxInfoConfiguration
         // One-to-one: TaxInfo ↔ Supervisor (another employee)
         builder.Property(t => t.TaxCode)
                .IsRequired()
-               .HasMaxLength(20); // assuming MST won't exceed 20 chars
+               .HasMaxLength(20); 
 
         // Optional fields
         builder.Property(t => t.RegistrationDate);

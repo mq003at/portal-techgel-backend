@@ -9,12 +9,10 @@ public class CompanyInfoConfiguration
         IEntityTypeConfiguration<CompanyInfo>
 {
     public override void Configure(EntityTypeBuilder<CompanyInfo> builder)
-    {
+    {       base.Configure(builder);
+
         builder.ToTable("CompanyInfo");
 
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).IsRequired()
-            .ValueGeneratedNever();
 
          builder.HasOne(c => c.Employee)
                .WithOne(e => e.CompanyInfo)

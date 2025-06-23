@@ -10,11 +10,9 @@ public class ScheduleInfoConfiguration
 {
     public override void Configure(EntityTypeBuilder<ScheduleInfo> builder)
     {
-        builder.ToTable("ScheduleInfo");
+              base.Configure(builder);
 
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).IsRequired()
-            .ValueGeneratedNever();
+        builder.ToTable("ScheduleInfo");
 
         builder.HasOne(s => s.Employee)
                .WithOne(e => e.ScheduleInfo)

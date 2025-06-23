@@ -28,40 +28,12 @@ public class EmployeeService
         _oee = context.Set<OrganizationEntityEmployee>();
     }
 
-    private async Task PopulateRoleInfoAsync(EmployeeDTO dto)
-    {
-        var id = dto.Id;
-
-        // 1) Load M–M links and entity names
-        var links = await _oee.Where(o => o.EmployeeId == id)
-            .Include(o => o.OrganizationEntity)
-            .ToListAsync();
-
-        dto.RoleInfo.OrganizationEntityIds = links.Select(o => o.OrganizationEntityId).ToList();
-
-        dto.RoleInfo.OrganizationEntityNames = links
-            .Select(o => o.OrganizationEntity.Name)
-            .ToList();
-
-        // 2) Load subordinates by SupervisorId
-        var subs = await _employees.Where(e => e.RoleInfo.SupervisorId == id).ToListAsync();
-
-        dto.RoleInfo.SubordinateIds = subs.Select(e => e.Id).ToList();
-
-        dto.RoleInfo.SubordinateNames = subs.Select(e => e.LastName + " " + e.MiddleName + " " + e.LastName).ToList();
-    }
 
     public override async Task<IEnumerable<EmployeeDTO>> GetAllAsync()
     {
         // 1) Get the base list of DTOs (no RoleInfo lists yet)
         var dtos = (await base.GetAllAsync()).ToList();
-
-        // 2) For each DTO, populate the RoleInfo join-table and subordinate data
-        foreach (var dto in dtos)
-        {
-            await PopulateRoleInfoAsync(dto);
-        }
-
+        
         return dtos;
     }
 
@@ -69,12 +41,7 @@ public class EmployeeService
     {
         var dto = await base.GetByIdAsync(id);
 
-        if (dto == null)
-        {
-            throw new KeyNotFoundException($"Employee {id} not found");
-        }
 
-        await PopulateRoleInfoAsync(dto);
         return dto;
     }
 
@@ -82,71 +49,234 @@ public class EmployeeService
     {
         _logger.LogInformation("CreateAsync called with DTO: {@dto}", dto);
 
-        // 1) Map
-        var entity = _mapper.Map<Employee>(dto);
-        _logger.LogDebug("Mapped entity (pre‐save): {@entity}", entity);
-        _logger.LogDebug(
-            "Timestamps before save: CreatedAt={CreatedAt}, UpdatedAt={UpdatedAt}",
-            entity.CreatedAt,
-            entity.UpdatedAt
-        );
+        // employee generation
+        var employee = _mapper.Map<Employee>(dto);
+        _logger.LogError("PersonalInfo iD: {id}", employee.PersonalInfo.Id);
+        _context.Employees.Add(employee);
 
-        // 2) Validation checks
-        if (
-            entity.RoleInfo.SupervisorId != 0
-            && !await _employees.AnyAsync(e => e.Id == entity.RoleInfo.SupervisorId)
-        )
-        {
-            _logger.LogWarning(
-                "Invalid SupervisorId: {SupervisorId}",
-                entity.RoleInfo.SupervisorId
-            );
-            throw new ArgumentException("Invalid SupervisorId");
-        }
-
-        // ... other subordinate/org checks, with similar _logger.LogWarning if invalid ...
-
-        // 3) Add & Save
-        _employees.Add(entity);
-
+        // manifest an id
+        var mainId = "TG" + PadWithZeros(employee.Id);
+        employee.MainId = mainId;
         await _context.SaveChangesAsync();
 
-        entity.MainId = GenerateMainIdForEmployee(
-            "TG",
-            entity.Id
-        );
+        _logger.LogInformation("Employee inserted with Id={Id} and personalInfoId = {pId}", employee.Id, employee.PersonalInfo.Id);
 
-        _context.Employees.Update(entity);
-        await _context.SaveChangesAsync();
+        return _mapper.Map<EmployeeDTO>(employee);
+    }
 
-        _logger.LogInformation("Employee inserted with Id={Id}", entity.Id);
+    public async Task<EmployeeDTO> UpdateEmployeeDetailsAsync(int employeeId, UpdateEmployeeDetailsDTO dto)
+    {
+        var employee = await _context.Employees
+            .Include(e => e.CompanyInfo)
+            .Include(e => e.ScheduleInfo)
+            .Include(e => e.EmergencyContactInfos)
+            .Include(e => e.EmployeeQualificationInfos)
+            .Include(e => e.TaxInfo)
+            .Include(e => e.CareerPathInfo)
+            .Include(e => e.InsuranceInfo)
+            .Include(e => e.PersonalInfo)
+            .Include(e => e.OrganizationEntityEmployees)
+            .FirstOrDefaultAsync(e => e.Id == employeeId);
 
-        // 4) Link OrganizationEntityEmployees if any
-        if (dto.RoleInfo?.OrganizationEntityIds != null)
+        if (employee == null)
+            throw new KeyNotFoundException($"Employee with ID {employeeId} not found.");
+
+        if (dto.PersonalInfo != null)
         {
-            foreach (var oeId in dto.RoleInfo.OrganizationEntityIds)
+            // Update PersonalInfo
+            if (employee.PersonalInfo == null)
             {
-                _oee.Add(
-                    new OrganizationEntityEmployee
-                    {
-                        EmployeeId = entity.Id,
-                        OrganizationEntityId = oeId
-                    }
-                );
+                var newPersonalInfo = _mapper.Map<PersonalInfo>(dto.PersonalInfo);
+                newPersonalInfo.EmployeeId = employeeId;
+                employee.PersonalInfo = newPersonalInfo;
+                _context.PersonalInfos.Add(newPersonalInfo);
             }
-            await _context.SaveChangesAsync();
+            else
+            {
+
+                _mapper.Map(dto.PersonalInfo, employee.PersonalInfo);
+                _context.Entry(employee.PersonalInfo).State = EntityState.Modified;
+            }
         }
 
-        // 5) Return fresh DTO
-        var result = await GetByIdAsync(entity.Id);
-        if (result == null)
+        // CompanyInfo
+        if (dto.CompanyInfo != null)
         {
-            _logger.LogError("Failed to retrieve EmployeeDTO after save for Id={Id}", entity.Id);
-            throw new InvalidOperationException("Failed to retrieve the updated Employee.");
+
+            if (employee.CompanyInfo == null)
+            {
+                var newCompanyInfo = _mapper.Map<CompanyInfo>(dto.CompanyInfo);
+                newCompanyInfo.EmployeeId = employeeId;
+                employee.CompanyInfo = newCompanyInfo;
+                _context.CompanyInfos.Add(newCompanyInfo);
+            }
+            else
+            {
+                _mapper.Map(dto.CompanyInfo, employee.CompanyInfo);
+                _context.Entry(employee.CompanyInfo).State = EntityState.Modified;
+            }
         }
 
-        _logger.LogInformation("CreateAsync completed successfully for Id={Id}", entity.Id);
-        return result;
+        // ScheduleInfo
+        if (dto.ScheduleInfo != null)
+        {
+            if (employee.ScheduleInfo == null)
+            {
+                var newSchedule = _mapper.Map<ScheduleInfo>(dto.ScheduleInfo);
+                newSchedule.EmployeeId = employeeId;
+                employee.ScheduleInfo = newSchedule;
+                _context.ScheduleInfos.Add(newSchedule);
+            }
+            else
+            {
+                _mapper.Map(dto.ScheduleInfo, employee.ScheduleInfo);
+                _context.Entry(employee.ScheduleInfo).State = EntityState.Modified;
+            }
+        }
+
+        // CareerPath
+        if (dto.CareerPathInfo != null)
+        {
+            if (employee.CareerPathInfo == null)
+            {
+                var newCareer = _mapper.Map<CareerPathInfo>(dto.CareerPathInfo);
+                newCareer.EmployeeId = employeeId;
+                employee.CareerPathInfo = newCareer;
+                _context.CareerPathInfos.Add(newCareer);
+            }
+            else
+            {
+                _mapper.Map(dto.CareerPathInfo, employee.CareerPathInfo);
+                _context.Entry(employee.CareerPathInfo).State = EntityState.Modified;
+            }
+        }
+
+        // TaxInfo
+        if (dto.TaxInfo != null)
+        {
+            if (employee.TaxInfo == null)
+            {
+                var newTax = _mapper.Map<TaxInfo>(dto.TaxInfo);
+                newTax.EmployeeId = employeeId;
+                employee.TaxInfo = newTax;
+                _context.TaxInfos.Add(newTax);
+            }
+            else
+            {
+                _mapper.Map(dto.TaxInfo, employee.TaxInfo);
+                _context.Entry(employee.TaxInfo).State = EntityState.Modified;
+            }
+        }
+
+        // InsuranceInfo
+        if (dto.InsuranceInfo != null)
+        {
+            if (employee.InsuranceInfo == null)
+            {
+                var newInsurance = _mapper.Map<InsuranceInfo>(dto.InsuranceInfo);
+                newInsurance.EmployeeId = employeeId;
+                employee.InsuranceInfo = newInsurance;
+                _context.InsuranceInfos.Add(newInsurance);
+            }
+            else
+            {
+                _context.Attach(employee.InsuranceInfo);
+                _mapper.Map(dto.InsuranceInfo, employee.InsuranceInfo);
+                _context.Entry(employee.InsuranceInfo).State = EntityState.Modified;
+            }
+        }
+
+        if (dto.EmergencyContactInfos is { Count: > 0 })
+        {
+            // Step 1: Remove all existing contacts for this employee
+            var existingContacts = await _context.EmergencyContactInfos
+                .Where(c => c.EmployeeId == employeeId)
+                .ToListAsync();
+
+            _context.EmergencyContactInfos.RemoveRange(existingContacts);
+
+            // Step 2: Add new contacts
+            var newContacts = dto.EmergencyContactInfos.Select(c =>
+            {
+                var entity = _mapper.Map<EmergencyContactInfo>(c);
+                entity.EmployeeId = employeeId;
+                return entity;
+            }).ToList();
+
+            _context.EmergencyContactInfos.AddRange(newContacts);
+        }
+
+        // Qualifications (replace all)
+        if (dto.EmployeeQualificationInfos is { Count: > 0 })
+        {
+            // Step 1: Remove existing qualifications
+            var existingQualifications = await _context.EmployeeQualificationInfos
+                .Where(q => q.EmployeeId == employeeId)
+                .ToListAsync();
+
+            _context.EmployeeQualificationInfos.RemoveRange(existingQualifications);
+
+            // Step 2: Add new qualifications
+            var newQualifications = dto.EmployeeQualificationInfos.Select(q =>
+            {
+                var entity = _mapper.Map<EmployeeQualificationInfo>(q);
+                entity.EmployeeId = employeeId;
+                return entity;
+            }).ToList();
+
+            _context.EmployeeQualificationInfos.AddRange(newQualifications);
+        }
+
+        // ---------- ROLE FUNCTIONALITIES ---------- //
+
+        // Supervisor & DeputySupervisor
+        if (dto.SupervisorId.HasValue)
+            employee.SupervisorId = dto.SupervisorId;
+        if (dto.DeputySupervisorId.HasValue)
+            employee.DeputySupervisorId = dto.DeputySupervisorId;
+        if (dto.DeputySubordinateIds != null)
+            employee.DeputySubordinates = await _context.Employees.Where(e => dto.DeputySubordinateIds.Contains(e.Id)).ToListAsync();
+        if (dto.SubordinateIds != null)
+            employee.Subordinates = await _context.Employees.Where(e => dto.SubordinateIds.Contains(e.Id)).ToListAsync();
+
+        // OrganizationEntityEmployees — clear and re-add
+        if (dto.OrganizationEntityEmployees is { Count: > 0 })
+        {
+            var validUpdates = dto.OrganizationEntityEmployees
+                .Where(x => x.OrganizationEntityId != 0 && x.OrganizationRelationType != 0)
+                .Select(x => new OrganizationEntityEmployee
+                {
+                    EmployeeId = employeeId,
+                    OrganizationEntityId = x.OrganizationEntityId,
+                    OrganizationRelationType = x.OrganizationRelationType,
+                    IsPrimary = x.IsPrimary
+                }).ToList();
+
+            // Remove old ones
+            _context.OrganizationEntityEmployees.RemoveRange(employee.OrganizationEntityEmployees);
+            employee.OrganizationEntityEmployees = validUpdates;
+        }
+
+        await _context.SaveChangesAsync();
+
+        // Reload fully
+        var updated = await _context.Employees
+            .Include(e => e.CompanyInfo)
+            .Include(e => e.ScheduleInfo)
+            .Include(e => e.EmergencyContactInfos)
+            .Include(e => e.EmployeeQualificationInfos)
+            .Include(e => e.TaxInfo)
+            .Include(e => e.CareerPathInfo)
+            .Include(e => e.InsuranceInfo)
+            .Include(e => e.PersonalInfo)
+            .Include(e => e.Supervisor)
+            .Include(e => e.DeputySupervisor)
+            .Include(e => e.Subordinates)
+            .Include(e => e.DeputySubordinates)
+            .Include(e => e.OrganizationEntityEmployees).ThenInclude(o => o.OrganizationEntity)
+            .FirstOrDefaultAsync(e => e.Id == employeeId);
+
+        return _mapper.Map<EmployeeDTO>(updated!);
     }
 
     public override async Task<EmployeeDTO?> UpdateAsync(int id, UpdateEmployeeDTO dto)
@@ -165,20 +295,7 @@ public class EmployeeService
         _mapper.Map(dto, entity);
 
         // 4) replace the links
-        if (dto.RoleInfo?.OrganizationEntityIds != null)
-        {
-            _oee.RemoveRange(existingLinks);
-            foreach (var oeId in dto.RoleInfo.OrganizationEntityIds)
-            {
-                _oee.Add(
-                    new OrganizationEntityEmployee
-                    {
-                        EmployeeId = entity.Id,
-                        OrganizationEntityId = oeId
-                    }
-                );
-            }
-        }
+        
 
         // 5) save
         _employees.Update(entity);
@@ -220,4 +337,9 @@ public class EmployeeService
 
         return $"{prefix}{number.ToString().PadLeft(totalDigits, '0')}";
     }
+    
+    private string PadWithZeros(int number, int totalLength = 5)
+{
+    return number.ToString().PadLeft(totalLength, '0');
+}
 }

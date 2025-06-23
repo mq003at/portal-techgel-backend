@@ -6,3 +6,10 @@ public enum OrganizationStatus
     INACTIVE,
     ARCHIVED
 }
+
+public enum OrganizationRelationType
+{
+    MEMBER,
+    MANAGER,
+    DEPUTYMANAGER
+}

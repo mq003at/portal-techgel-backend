@@ -12,9 +12,8 @@ public class InsuranceInfoConfiguration
     {
         builder.ToTable("InsuranceInfo");
 
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).IsRequired()
-            .ValueGeneratedNever();
+       base.Configure(builder);
+
 
         builder.HasOne(x => x.Employee)
                .WithOne(e => e.InsuranceInfo)

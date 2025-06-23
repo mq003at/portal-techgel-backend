@@ -10,7 +10,7 @@ using portal.Models;
 
 public class EmployeeDTO : BaseModelDTO
 {
-    // Thông tin cơ bản
+    // BasicInfo
     public string FirstName { get; set; } = null!;
     public string? MiddleName { get; set; }
     public string LastName { get; set; } = null!;
@@ -18,18 +18,30 @@ public class EmployeeDTO : BaseModelDTO
 
     public string? Password { get; set; }
 
-    // Các sub-DTO
+    // sub-DTO
     public PersonalInfoDTO PersonalInfo { get; set; } = null!;
-    public CompanyInfoDTO CompanyInfo { get; set; } = null!;
-    public CareerPathInfoDTO CareerPathInfo { get; set; } = null!;
-    public TaxInfoDTO TaxInfo { get; set; } = null!;
-    public InsuranceInfoDTO InsuranceInfo { get; set; } = null!;
-    public EmergencyContactInfoDTO EmergencyContactInfos { get; set; } = null!;
-    public ScheduleInfoDTO ScheduleInfo { get; set; } = null!;
+    public CompanyInfoDTO? CompanyInfo { get; set; }
+    public CareerPathInfoDTO? CareerPathInfo { get; set; }
+    public TaxInfoDTO? TaxInfo { get; set; }
+    public InsuranceInfoDTO? InsuranceInfo { get; set; }
+    public List<EmergencyContactInfoDTO>? EmergencyContactInfos { get; set; }
+    public List<EmployeeQualificationInfoDTO>? EmployeeQualificationInfos { get; set; }
+    public ScheduleInfoDTO? ScheduleInfo { get; set; }
     public Signature? Signature { get; set; }
 
     // Role Info
-    public RoleInfoDTO RoleInfo { get; set; } = null!;
+    public int? SupervisorId { get; set; }
+    public string? SupervisorName { get; set; }
+    public int? DeputySupervisorId { get; set; }
+    public string? DeputySupervisorName { get; set; }
+    public List<int> SubordinateIds { get; set; } = new();
+    public List<string> SubordinateNames { get; set; } = new();
+    public List<int> DeputySubordinateIds { get; set; } = new();
+    public List<string> DeputySubordinateNames { get; set; } = new();
+    public List<int> OrganizationEntityIds { get; set; } = new();
+    public List<string> OrganizationEntityNames { get; set; } = new();
+    public List<OrganizationEntityEmployeeDTO> OrganizationEntityEmployees { get; set; } = new();
+
 }
 
 public class CreateEmployeeDTO : BaseModelCreateDTO
@@ -46,25 +58,8 @@ public class CreateEmployeeDTO : BaseModelCreateDTO
     [Required]
     public PersonalInfoDTO PersonalInfo { get; set; } = null!;
 
-    [Required]
-    public CompanyInfoDTO CompanyInfo { get; set; } = null!;
-
-    [Required]
-    public CareerPathInfoDTO CareerPathInfo { get; set; } = null!;
-
-    [Required]
-    public TaxInfoDTO TaxInfo { get; set; } = null!;
-
-    [Required]
-    public InsuranceInfoDTO InsuranceInfo { get; set; } = null!;
-
-    [Required]
-    public EmergencyContactInfoDTO EmergencyContactInfo { get; set; } = null!;
-    public ScheduleInfoDTO ScheduleInfo { get; set; } = null!;
-    public Signature? Signature { get; set; }
-
-    [Required]
-    public RoleInfoDTO RoleInfo { get; set; } = null!;
+    public int? SupervisorId { get; set; }
+    public int? DeputySupervisorId { get; set; }
 }
 
 public class UpdateEmployeeDTO : BaseModelUpdateDTO
@@ -79,11 +74,30 @@ public class UpdateEmployeeDTO : BaseModelUpdateDTO
     public CareerPathInfoDTO? CareerPathInfo { get; set; }
     public TaxInfoDTO? TaxInfo { get; set; }
     public InsuranceInfoDTO? InsuranceInfo { get; set; }
-    public EmergencyContactInfoDTO? EmergencyContactInfo { get; set; }
+    public List<EmergencyContactInfoDTO>? EmergencyContactInfo { get; set; }
     public ScheduleInfoDTO? ScheduleInfo { get; set; }
 
-    public RoleInfoDTO? RoleInfo { get; set; }
     public Signature? Signature { get; set; }
+}
+
+public class UpdateEmployeeDetailsDTO
+{
+    public UpdatePersonalInfoDTO? PersonalInfo { get; set; }
+    public CompanyInfoUpdateDTO? CompanyInfo { get; set; }
+    public UpdateScheduleInfoDTO? ScheduleInfo { get; set; }
+    public UpdateCareerPathInfoDTO? CareerPathInfo { get; set; }
+    public UpdateTaxInfoDTO? TaxInfo { get; set; }
+    public InsuranceInfoUpdateDTO? InsuranceInfo { get; set; }
+
+    public List<CreateEmergencyContactInfoDTO>? EmergencyContactInfos { get; set; }
+    public List<CreateEmployeeQualificationInfoDTO>? EmployeeQualificationInfos { get; set; }
+
+    // RoleInfo Update
+    public int? SupervisorId { get; set; }
+    public int? DeputySupervisorId { get; set; }
+    public List<int>? SubordinateIds { get; set; }
+    public List<int>? DeputySubordinateIds { get; set; }
+    public List<UpdateOrganizationEntityEmployeeDTO>? OrganizationEntityEmployees { get; set; }
 }
 
 public class LoginRequestDTO
@@ -91,19 +105,4 @@ public class LoginRequestDTO
     public string MainId { get; set; } = null!;
     public string Password { get; set; } = null!;
 }
-
-// public class EmployeeShortDTO
-// {
-//     public int Id { get; set; }
-//     public string MainId { get; set; } = null!;
-//     public string FirstName { get; set; } = null!;
-//     public string MiddleName { get; set; } = null!;
-//     public string LastName { get; set; } = null!;
-//     public string FullName => $"{FirstName} {MiddleName} {LastName}";
-//     public string? Avatar { get; set; }
-//     public string Department { get; set; } = null!;
-//     public string Position { get; set; } = null!;
-// }
-
-
 

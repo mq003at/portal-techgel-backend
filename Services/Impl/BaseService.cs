@@ -64,8 +64,7 @@ public class BaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
 
         _logger.LogInformation($"Updating before: {JsonSerializer.Serialize(entity)}");
 
-        if (!string.IsNullOrEmpty(entity.MainId) && string.IsNullOrEmpty(dto.MainId))
-            dto.MainId = entity.MainId;
+        entity.MainId = "";
 
         // Áp DTO lên entity
         _mapper.Map(dto, entity);

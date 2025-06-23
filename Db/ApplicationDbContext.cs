@@ -45,9 +45,21 @@ public class ApplicationDbContext : IdentityDbContext
     }
 
     public DbSet<OrganizationEntity> OrganizationEntities { get; set; }
+
+    // Employee Setup
     public DbSet<Employee> Employees { get; set; }
-    public DbSet<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; }
+    public DbSet<PersonalInfo> PersonalInfos { get; set; }
+    public DbSet<EmployeeQualificationInfo> EmployeeQualificationInfos { get; set; }
+    public DbSet<CompanyInfo> CompanyInfos { get; set; }
+    public DbSet<CareerPathInfo> CareerPathInfos { get; set; }
+    public DbSet<TaxInfo> TaxInfos { get; set; }
+    public DbSet<InsuranceInfo> InsuranceInfos { get; set; }
+    public DbSet<EmergencyContactInfo> EmergencyContactInfos { get; set; }
+    public DbSet<ScheduleInfo> ScheduleInfos { get; set; }
     public DbSet<Signature> Signatures { get; set; }
+    // Ending Employee Setup
+    // Join table Emp - OrganizationEntity
+    public DbSet<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<DocumentSignature> DocumentSignatures { get; set; }
 

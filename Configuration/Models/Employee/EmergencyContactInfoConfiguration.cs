@@ -9,12 +9,11 @@ public class EmergencyContactInfoConfiguration
         IEntityTypeConfiguration<EmergencyContactInfo>
 {
     public override void Configure(EntityTypeBuilder<EmergencyContactInfo> builder)
-    {
+    {       base.Configure(builder);
+
         builder.ToTable("EmergencyContactInfo");
 
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).IsRequired()
-            .ValueGeneratedNever();
+
 
         builder.HasOne(e => e.Employee)
                .WithMany(e => e.EmergencyContactInfos)

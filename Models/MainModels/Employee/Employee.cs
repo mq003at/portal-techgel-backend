@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace portal.Models;
 
 public class Employee : BaseModel
@@ -15,10 +17,21 @@ public class Employee : BaseModel
     public CareerPathInfo? CareerPathInfo { get; set; }
     public List<EmergencyContactInfo>? EmergencyContactInfos { get; set; }
 
-    public List<EmployeeQualificationInfo>? EmployeeQualificationInfos { get; set; } 
+    public List<EmployeeQualificationInfo>? EmployeeQualificationInfos { get; set; }
     public TaxInfo? TaxInfo { get; set; }
     public InsuranceInfo? InsuranceInfo { get; set; }
     public ScheduleInfo? ScheduleInfo { get; set; }
     public Signature? Signature { get; set; }
-    public RoleInfo? RoleInfo { get; set; } 
+
+    // Role Info
+    public int? SupervisorId { get; set; }
+    public Employee? Supervisor { get; set; }
+    public int? DeputySupervisorId { get; set; }
+    public Employee? DeputySupervisor { get; set; }
+    public List<Employee> Subordinates { get; set; } = new List<Employee>();
+    public List<Employee> DeputySubordinates { get; set; } = new List<Employee>();
+    public List<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } = new List<OrganizationEntityEmployee>();
+    [NotMapped]
+    public IEnumerable<Employee> AllSubordinates =>
+        Subordinates.Concat(DeputySubordinates).Distinct();
 }

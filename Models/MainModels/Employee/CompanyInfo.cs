@@ -19,3 +19,4 @@ public class CompanyInfo : BaseModelWithOnlyId
     public double CompensatoryLeaveTotalDays { get; set; } 
     public double AnnualLeaveTotalDays { get; set; }
 }
+
