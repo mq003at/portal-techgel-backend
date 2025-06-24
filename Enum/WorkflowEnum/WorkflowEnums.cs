@@ -2,29 +2,29 @@ namespace portal.Enums;
 
 public enum GeneralWorkflowStatusType
 {
-    Pending,
-    Approved,
-    Onwaiting,
-    Rejected,
-    Cancelled,
-    Expired,
-    Draft
+    PENDING,
+    APPROVED,
+    ONWAITING,
+    REJECTED,
+    CANCELLED,
+    EXPIRED,
+    DRAFT
 }
 
 public enum GeneralWorkflowLogicType
 {
-    Sequential,
-    Parallel,
-    Majority,
-    Quorum,
-    AbsoluteMajority
+    SEQUENTIAL,
+    PARALLEL,
+    MAJORITY,
+    QUORUM,
+    ABSOLUTE_MAJORITY
 }
 
 public enum WorkflowParticipantRoleType
 {
-    Responsible,
-    Accountable,
-    Consulted,
-    Informed,
-    QualityAssurance
+    RESPONSIBLE,
+    ACCOUNTABLE,
+    CONSULTED,
+    INFORMED,
+    QUALITY_ASSURANCE
 }

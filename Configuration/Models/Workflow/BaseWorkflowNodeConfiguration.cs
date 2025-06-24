@@ -19,7 +19,6 @@ public abstract class BaseWorkflowNodeConfiguration<TNode> : BaseModelConfigurat
 
         builder.Property(n => n.Status)
             .IsRequired()
-            .HasConversion<int>(); 
-
+            .HasConversion<string>(); 
     }
 }

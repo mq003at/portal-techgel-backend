@@ -9,10 +9,8 @@ public class WorkflowNodeParticipantConfiguration : IEntityTypeConfiguration<Wor
     public void Configure(EntityTypeBuilder<WorkflowNodeParticipant> builder)
     {
         builder.HasKey(e => e.Id); // If using Id as PK
-
         builder.Property(p => p.EmployeeId);
         builder.Property(p => p.TAT).HasDefaultValue(TimeSpan.Zero);
-
-        
+        builder.Property(p => p.ApprovalStatus).HasConversion<string>();
     }
 }

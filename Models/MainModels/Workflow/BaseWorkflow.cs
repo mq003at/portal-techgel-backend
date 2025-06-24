@@ -12,7 +12,7 @@ public abstract class BaseWorkflow : BaseModel
     public string Description { get; set; } = string.Empty;
 
     // Status of the workflow, e.g., Draft, Active, Archived
-    public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.Draft;
+    public GeneralWorkflowStatusType Status { get; set; } 
 
     // Participants reference (retrieved from nodes with LINQ) 
     public List<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; } = new List<WorkflowNodeParticipant>();

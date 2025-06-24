@@ -28,7 +28,6 @@ public class WorkflowNodeParticipant : BaseModelWithOnlyId
     public DateTime? ApprovalStartDate { get; set; }
     public DateTime? ApprovalDate { get; set; }
     public DateTime? ApprovalDeadline { get; set; }
-    public bool? HasApproved { get; set; }
-    public bool? HasRejected { get; set; }
+    public ApprovalStatusType ApprovalStatus { get; set; } 
     public TimeSpan? TAT { get; set; } = TimeSpan.Zero;
 }

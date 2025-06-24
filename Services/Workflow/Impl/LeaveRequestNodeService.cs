@@ -51,8 +51,8 @@ public class LeaveRequestNodeService : BaseService<
         if (approverId != participant.EmployeeId)
             return "You are not allowed to approve this node."; 
 
-        if (participant.HasApproved == true || participant.HasRejected == true)
-            return "You have already approved or rejected this node.";
+        if (participant.ApprovalStatus != ApprovalStatusType.PENDING)
+            return "You can only approve the PENDING node.";
 
         if (participant.ApprovalStartDate > DateTime.UtcNow)
             return "You cannot approve this node before the approval start date.";
@@ -63,30 +63,30 @@ public class LeaveRequestNodeService : BaseService<
         // return "You cannot approve this node after the approval deadline.";
         // }
 
-        participant.HasApproved = true;
+        participant.ApprovalStatus = ApprovalStatusType.APPROVED;
         participant.ApprovalDate = DateTime.UtcNow;
         participant.TAT = participant.ApprovalDate - participant.ApprovalStartDate;
 
         // If all participants approved
         var allApproved = participants
             .Where(p => p.WorkflowNodeStepType == 1)
-            .Any(p => p.HasApproved == true);
+            .Any(p => p.ApprovalStatus == ApprovalStatusType.APPROVED);
         if (allApproved)
         {
-            node.Status = GeneralWorkflowStatusType.Approved;
+            node.Status = GeneralWorkflowStatusType.APPROVED;
 
             // Check if this is the final node in the workflow
             var isFinalNode = !_context.LeaveRequestNodes
-                .Any(n => n.WorkflowId == node.WorkflowId && n.Id != node.Id && n.Status != GeneralWorkflowStatusType.Approved);
+                .Any(n => n.WorkflowId == node.WorkflowId && n.Id != node.Id && n.Status != GeneralWorkflowStatusType.APPROVED);
 
             if (isFinalNode)
             {
-                var workflow = _context.LeaveRequestWorkflows
-                    .FirstOrDefault(w => w.Id == node.WorkflowId);
+                LeaveRequestWorkflow workflow = _context.LeaveRequestWorkflows
+                    .FirstOrDefault(w => w.Id == node.WorkflowId) ?? throw new InvalidOperationException("Workflow not found.");
                 _logger.LogInformation("Final node reached for workflow ID: {WorkflowId} with {Name}", workflow.Id, workflow.Name);
                 if (workflow != null)
                 {
-                    workflow.Status = GeneralWorkflowStatusType.Approved;
+                    workflow.Status = GeneralWorkflowStatusType.APPROVED;
                     await _workflowService.FinalizeIfCompleteAsync(workflow, approverId);
                 }
             }
@@ -112,25 +112,25 @@ public class LeaveRequestNodeService : BaseService<
         if (participant == null)
             return "You are not allowed to reject this node.";
 
-        if (participant.HasApproved == true || participant.HasRejected == true)
-            return "You have already approved or rejected this node.";
+        if (participant.ApprovalStatus != ApprovalStatusType.PENDING)
+            return "You can only reject the PENDING node.";
 
         if (participant.ApprovalStartDate > DateTime.UtcNow)
             return "You cannot reject this node before the approval start date.";
 
         // Update participant status
-        participant.HasRejected = true;
+        participant.ApprovalStatus = ApprovalStatusType.REJECTED;
         participant.ApprovalDate = DateTime.UtcNow;
 
         // Mark node as Rejected immediately
-        node.Status = GeneralWorkflowStatusType.Rejected;
+        node.Status = GeneralWorkflowStatusType.REJECTED;
 
         // Also mark the entire workflow as Rejected
         var workflow = _context.LeaveRequestWorkflows
             .FirstOrDefault(w => w.Id == node.WorkflowId);
             if (workflow != null)
             {
-                workflow.Status = GeneralWorkflowStatusType.Rejected;
+                workflow.Status = GeneralWorkflowStatusType.REJECTED;
                 workflow.RejectReason = RejectReason;
             }
 

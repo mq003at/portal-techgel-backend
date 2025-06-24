@@ -22,7 +22,8 @@ public abstract class BaseWorkflowConfiguration<TWorkflow> : BaseModelConfigurat
             .HasMaxLength(1000);
 
         builder.Property(w => w.Status)
-            .IsRequired();
+            .IsRequired()
+            .HasConversion<string>();
 
         // Add any other shared workflow configs here.
     }

@@ -42,7 +42,6 @@ public abstract class BaseWorkflowProfile<
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(_ => GeneralWorkflowStatusType.Pending))
             .ForMember(dest => dest.WorkflowNodeParticipants , opt => opt.MapFrom(_ => new List<WorkflowNodeParticipant>()));
 
         // Update DTO -> Entity (client -> server)

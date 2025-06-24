@@ -145,11 +145,11 @@ public class LeaveRequestWorkflowService
         await _context.SaveChangesAsync();
         _logger.LogError("Node [0] ID: {id}", nodes[0].Id);
 
-        var participants = new List<(string EmpId, int WorkflowNodeId, LeaveApprovalStepType StepType, int Order, DateTime? ApprovalDate, DateTime? ApprovalStartDate, DateTime? ApprovalDeadline, bool? IsApproved, bool? HasApproved, bool? HasRejected, TimeSpan? TAT)>
+        var participants = new List<(string EmpId, int WorkflowNodeId, LeaveApprovalStepType StepType, int Order, DateTime? ApprovalDate, DateTime? ApprovalStartDate, DateTime? ApprovalDeadline, bool? IsApproved, ApprovalStatusType ApprovalStatus, TimeSpan? TAT)>
         {
-            (employee.MainId, nodes[0].Id, LeaveApprovalStepType.CreateForm, 0, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, true, true, false, TimeSpan.Zero),
-            (supervisor.MainId, nodes[1].Id , LeaveApprovalStepType.ExecutiveApproval, 0, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(48), false, false, false, null),
-            (deputySupervisor.MainId, nodes[1].Id, LeaveApprovalStepType.ExecutiveApproval, 1, null, DateTime.UtcNow.AddHours(48), DateTime.UtcNow.AddHours(96), false, false, false, null),
+            (employee.MainId, nodes[0].Id, LeaveApprovalStepType.CreateForm, 0, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, true, ApprovalStatusType.APPROVED, TimeSpan.Zero),
+            (supervisor.MainId, nodes[1].Id , LeaveApprovalStepType.ExecutiveApproval, 0, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(48), false, ApprovalStatusType.PENDING, null),
+            (deputySupervisor.MainId, nodes[1].Id, LeaveApprovalStepType.ExecutiveApproval, 1, null, DateTime.UtcNow.AddHours(48), DateTime.UtcNow.AddHours(96), false, ApprovalStatusType.PENDING, null),
         };
 
         // Convert the participants above to WorkflowNodeParticipant objects
@@ -164,8 +164,7 @@ public class LeaveRequestWorkflowService
                 ApprovalDate = participant.ApprovalDate,
                 ApprovalStartDate = participant.ApprovalStartDate,
                 ApprovalDeadline = participant.ApprovalDeadline,
-                HasApproved = participant.IsApproved,
-                HasRejected = participant.HasRejected,
+                ApprovalStatus = participant.ApprovalStatus,
                 TAT = participant.TAT,
                 WorkflowNodeType = "LeaveRequest",
                 WorkflowNodeId = participant.WorkflowNodeId
@@ -362,8 +361,8 @@ public class LeaveRequestWorkflowService
             ["assigneeDetails"] = workflow.AssigneeDetails,
             ["notes"] = workflow.Notes ?? "",
 
-            ["empAnnualTotal"] = employee.CompanyInfo.AnnualLeaveTotalDays.ToString(),
-            ["empCompensatoryTotal"] = employee.CompanyInfo.CompensatoryLeaveTotalDays.ToString(),
+            ["empAnnualTotal"] = employee.CompanyInfo?.AnnualLeaveTotalDays.ToString() ?? "",
+            ["empCompensatoryTotal"] = employee.CompanyInfo?.CompensatoryLeaveTotalDays.ToString() ?? "",
             ["totalAnnualDays"] = workflow.TotalDays.ToString(),
             ["finalAnnualTotal"] = workflow.FinalEmployeeAnnualLeaveTotalDays.ToString(),
             ["finalCompensatoryTotal"] = workflow.FinalEmployeeCompensatoryLeaveTotalDays.ToString(),
