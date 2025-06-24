@@ -32,16 +32,41 @@ public class EmployeeService
     public override async Task<IEnumerable<EmployeeDTO>> GetAllAsync()
     {
         // 1) Get the base list of DTOs (no RoleInfo lists yet)
-        var dtos = (await base.GetAllAsync()).ToList();
-        
+        var employees = await _context.Employees
+            .Include(e => e.CompanyInfo)
+            .Include(e => e.ScheduleInfo)
+            .Include(e => e.EmergencyContactInfos)
+            .Include(e => e.PersonalInfo)
+            .Include(e => e.CareerPathInfo)
+            .Include(e => e.TaxInfo)
+            .Include(e => e.InsuranceInfo)
+            .Include(e => e.EmployeeQualificationInfos)
+            .Include(e => e.Supervisor)
+            .Include(e => e.DeputySupervisor)
+            .Include(e => e.Subordinates)
+            .ToListAsync();
+
+        var dtos = _mapper.Map<IEnumerable<EmployeeDTO>>(employees);
         return dtos;
     }
 
     public override async Task<EmployeeDTO?> GetByIdAsync(int id)
     {
-        var dto = await base.GetByIdAsync(id);
+        var employee = await _context.Employees
+            .Include(e => e.CompanyInfo)
+            .Include(e => e.ScheduleInfo)
+            .Include(e => e.EmergencyContactInfos)
+            .Include(e => e.PersonalInfo)
+            .Include(e => e.CareerPathInfo)
+            .Include(e => e.TaxInfo)
+            .Include(e => e.InsuranceInfo)
+            .Include(e => e.EmployeeQualificationInfos)
+            .Include(e => e.Supervisor)
+            .Include(e => e.DeputySupervisor)
+            .Include(e => e.Subordinates)
+            .FirstOrDefaultAsync(e => e.Id == id);
 
-
+        var dto = _mapper.Map<EmployeeDTO>(employee);
         return dto;
     }
 
@@ -307,7 +332,12 @@ public class EmployeeService
     public async Task<EmployeeDTO> LoginAsync(string MainId, string password)
     {
         var employee =
-            await _employees.FirstOrDefaultAsync(e => e.MainId == MainId && e.Password == password)
+            await _employees
+                .Include(e => e.PersonalInfo)
+                .Include(e => e.CompanyInfo)
+                .Include(e => e.ScheduleInfo)
+                .Include(e => e.EmergencyContactInfos)
+                .FirstOrDefaultAsync(e => e.MainId == MainId && e.Password == password)
             ?? throw new UnauthorizedAccessException("Invalid credentials");
 
         return _mapper.Map<EmployeeDTO>(employee);
