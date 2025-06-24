@@ -12,5 +12,7 @@ public class WorkflowNodeParticipantConfiguration : IEntityTypeConfiguration<Wor
 
         builder.Property(p => p.EmployeeId);
         builder.Property(p => p.TAT).HasDefaultValue(TimeSpan.Zero);
+
+        
     }
 }

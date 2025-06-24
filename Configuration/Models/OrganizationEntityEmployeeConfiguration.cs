@@ -21,7 +21,7 @@ public class OrganizationEntityEmployeeConfiguration
         // FK → Employee
         builder
             .HasOne(oee => oee.Employee)
-            .WithMany()
+            .WithMany(e => e.OrganizationEntityEmployees)
             .HasForeignKey(oee => oee.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
     }

@@ -15,7 +15,7 @@ public abstract class BaseWorkflow : BaseModel
     public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.Draft;
 
     // Participants reference (retrieved from nodes with LINQ) 
-    public List<WorkflowNodeParticipant> WorkflowParticipants { get; set; } = new List<WorkflowNodeParticipant>();
+    public List<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; } = new List<WorkflowNodeParticipant>();
     // Reference to document system  (retrieved from nodes with LINQ)
     
     [NotMapped]

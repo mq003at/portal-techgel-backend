@@ -13,11 +13,6 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         builder.Property(w => w.Reason).IsRequired().HasMaxLength(1000);
         builder.Property(w => w.RejectReason).IsRequired(false).HasMaxLength(1000);
 
-        builder.HasMany(w => w.DocumentAssociations)
-            .WithOne()
-            .HasForeignKey(da => da.EntityId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasOne(l => l.Employee)
             .WithMany()
             .HasForeignKey(l => l.EmployeeId)
@@ -34,7 +29,7 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         builder.Property(l => l.RejectReason).HasMaxLength(1000);
 
         builder.Property(l => l.StartDate)
-    .IsRequired();
+            .IsRequired();
 
         builder.Property(l => l.EndDate)
             .IsRequired();

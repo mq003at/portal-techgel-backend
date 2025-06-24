@@ -10,4 +10,5 @@ public class LeaveRequestNode : BaseWorkflowNode
     public int WorkflowId { get; set; }
     [ForeignKey("WorkflowId")]
     public virtual LeaveRequestWorkflow Workflow { get; set; } = null!;
+
 }

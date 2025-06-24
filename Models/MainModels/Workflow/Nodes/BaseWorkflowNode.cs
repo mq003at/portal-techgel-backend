@@ -14,7 +14,6 @@ public abstract class BaseWorkflowNode : BaseModel
     public GeneralWorkflowStatusType Status { get; set; }
 
     // Reference to the employee who has a RACI role in the workflow. By standard, every node must need at least 1 employee
-    public virtual List<WorkflowNodeParticipant> WorkflowParticipants { get; set; } = new List<WorkflowNodeParticipant>();
-
-
+    public List<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; } = new List<WorkflowNodeParticipant>();
+    public List<DocumentAssociation> DocumentAssociations { get; set; } = new List<DocumentAssociation>();
 }

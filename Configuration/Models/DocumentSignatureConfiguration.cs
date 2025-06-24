@@ -20,7 +20,7 @@ public class DocumentSignatureConfiguration : IEntityTypeConfiguration<DocumentS
             .IsRequired();
 
         builder.HasOne(ds => ds.Employee)
-            .WithMany() // Optional: .WithMany(e => e.DocumentSignatures) if backref exists
+            .WithMany() 
             .HasForeignKey(ds => ds.EmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
     }

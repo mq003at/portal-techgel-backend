@@ -2,7 +2,7 @@ using portal.Enums;
 
 namespace portal.DTOs;
 
-public class WorkflowParticipantDTO : BaseModelWithOnlyIdDTO
+public class WorkflowNodeParticipantDTO : BaseModelWithOnlyIdDTO
 {
     public int EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty;
@@ -11,8 +11,6 @@ public class WorkflowParticipantDTO : BaseModelWithOnlyIdDTO
     public string WorkflowNodeName { get; set; } = string.Empty;
 
     public WorkflowParticipantRoleType RaciRole { get; set; }
-    public string WorkflowRole { get; set; } = string.Empty;
-
     public int NodeStep { get; set; }
 
     public DateTime? ApprovalDate { get; set; }
@@ -23,22 +21,20 @@ public class WorkflowParticipantDTO : BaseModelWithOnlyIdDTO
     public TimeSpan TAT { get; set; } = TimeSpan.Zero;
 }
 
-public class WorkflowParticipantCreateDTO : BaseModelWithOnlyIdCreateDTO
+public class WorkflowNodeParticipantCreateDTO : BaseModelWithOnlyIdCreateDTO
 {
     public int EmployeeId { get; set; }
     public int WorkflowNodeId { get; set; }
     public WorkflowParticipantRoleType RaciRole { get; set; }
-    public string WorkflowRole { get; set; } = string.Empty;
     public int NodeStep { get; set; }
     public DateTime? ApprovalDeadline { get; set; }
 }
 
-public class WorkflowParticipantUpdateDTO : BaseModelWithOnlyIdUpdateDTO
+public class WorkflowNodeParticipantUpdateDTO : BaseModelWithOnlyIdUpdateDTO
 {
     public int EmployeeId { get; set; }
     public int WorkflowNodeId { get; set; }
     public WorkflowParticipantRoleType RaciRole { get; set; }
-    public string WorkflowRole { get; set; } = string.Empty;
     public int NodeStep { get; set; }
     public DateTime? ApprovalDeadline { get; set; }
     public bool? IsApproved { get; set; }

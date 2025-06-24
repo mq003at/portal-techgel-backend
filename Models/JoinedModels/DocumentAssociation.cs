@@ -11,6 +11,6 @@ public class DocumentAssociation : BaseModelWithOnlyId
     // Which functionalities need this document, aka name of the model
     [Required]
     public string EntityType { get; set; } = null!;
-    public int EntityId { get; set; }
+    public int NodeId { get; set; }
 }
 

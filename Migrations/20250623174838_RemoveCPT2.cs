@@ -8,12 +8,12 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace portal_techgel_api.Migrations
 {
     /// <inheritdoc />
-    public partial class renew : Migration
+    public partial class RemoveCPT2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            
+           
         }
 
         /// <inheritdoc />

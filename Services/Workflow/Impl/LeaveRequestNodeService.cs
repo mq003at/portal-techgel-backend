@@ -35,10 +35,15 @@ public class LeaveRequestNodeService : BaseService<
     public async Task<string> ApproveAsync(int nodeId, int approverId)
     {
         LeaveRequestNode node = await _context.LeaveRequestNodes
-            .Include(n => n.WorkflowParticipants)
             .FirstOrDefaultAsync(n => n.Id == nodeId) ?? throw new InvalidOperationException("Node not found.");
 
-        List<WorkflowNodeParticipant> participants = node.WorkflowParticipants ?? throw new InvalidOperationException("Node has no participants.");
+        // Manually fetch participants and attach to node
+        var participants = await _context.WorkflowNodeParticipants
+            .Where(p => p.WorkflowNodeId == nodeId && p.WorkflowNodeType == "LeaveRequest")
+            .ToListAsync();
+        
+
+        _logger.LogInformation("P0: {p0}", participants.Count);
         WorkflowNodeParticipant participant = participants
             .FirstOrDefault(p => p.EmployeeId == approverId) ?? throw new InvalidOperationException("You are not authorized to approve this node.");
 
@@ -63,7 +68,9 @@ public class LeaveRequestNodeService : BaseService<
         participant.TAT = participant.ApprovalDate - participant.ApprovalStartDate;
 
         // If all participants approved
-        var allApproved = participants.All(p => p.HasApproved == true);
+        var allApproved = participants
+            .Where(p => p.WorkflowNodeStepType == 1)
+            .Any(p => p.HasApproved == true);
         if (allApproved)
         {
             node.Status = GeneralWorkflowStatusType.Approved;
@@ -76,6 +83,7 @@ public class LeaveRequestNodeService : BaseService<
             {
                 var workflow = _context.LeaveRequestWorkflows
                     .FirstOrDefault(w => w.Id == node.WorkflowId);
+                _logger.LogInformation("Final node reached for workflow ID: {WorkflowId} with {Name}", workflow.Id, workflow.Name);
                 if (workflow != null)
                 {
                     workflow.Status = GeneralWorkflowStatusType.Approved;
@@ -91,10 +99,10 @@ public class LeaveRequestNodeService : BaseService<
     public async Task<string> RejectAsync(int nodeId, int approverId, string RejectReason)
     {
         LeaveRequestNode node = await _context.LeaveRequestNodes
-            .Include(n => n.WorkflowParticipants)
+            .Include(n => n.WorkflowNodeParticipants )
             .FirstOrDefaultAsync(n => n.Id == nodeId) ?? throw new InvalidOperationException("Node not found.");
 
-        List<WorkflowNodeParticipant> participants = node.WorkflowParticipants ?? throw new InvalidOperationException("Node has no participants.");
+        List<WorkflowNodeParticipant> participants = node.WorkflowNodeParticipants ?? throw new InvalidOperationException("Node has no participants.");
         WorkflowNodeParticipant participant = participants
             .FirstOrDefault(p => p.EmployeeId == approverId) ?? throw new InvalidOperationException("You are not authorized to approve this node.");
 

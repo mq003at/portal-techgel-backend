@@ -14,6 +14,7 @@ public class WorkflowNodeParticipant : BaseModelWithOnlyId
 
     // Shallow map cuz it connects to parent node, not derived.
     public int WorkflowNodeId { get; set; }
+    public string WorkflowNodeType { get; set; } = null!;
 
     // Order in the nodes
     public int Order { get; set; }

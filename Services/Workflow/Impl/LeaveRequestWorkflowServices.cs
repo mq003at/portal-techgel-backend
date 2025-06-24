@@ -112,18 +112,51 @@ public class LeaveRequestWorkflowService
 
         // Build up receiver IDs for workflow
         // Compose workflow steps
+        
+
+        // Initiate nodes creation: 2 nodes for now, first one has 2 participants, second one has 2 participants
+        var steps = new List<(string Name, LeaveApprovalStepType StepType, int Status, List<WorkflowNodeParticipant> nodeParticipants)>
+        {
+            ("Tạo yêu cầu nghỉ phép", LeaveApprovalStepType.CreateForm, 1, new List<WorkflowNodeParticipant> {}),
+            ("Quản lý trực thuộc / gián tiếp ký", LeaveApprovalStepType.ExecutiveApproval, 0, new List<WorkflowNodeParticipant> {}),
+        };
+
+        // Build and add nodes
+        var nodes = new List<LeaveRequestNode>();
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+
+            var node = new LeaveRequestNode
+            {
+                WorkflowId = workflow.Id,
+                StepType = step.StepType,
+                MainId = $"AS-S{i}-{DateTime.Now:dd.MM.yyyy}",
+                Name = step.Name,
+                Status = (GeneralWorkflowStatusType)step.Status,
+                WorkflowNodeParticipants = step.nodeParticipants,
+                Description = step.Name,
+            };
+            
+            nodes.Add(node);
+
+        }
+        _context.LeaveRequestNodes.AddRange(nodes);
+        await _context.SaveChangesAsync();
+        _logger.LogError("Node [0] ID: {id}", nodes[0].Id);
+
         var participants = new List<(string EmpId, int WorkflowNodeId, LeaveApprovalStepType StepType, int Order, DateTime? ApprovalDate, DateTime? ApprovalStartDate, DateTime? ApprovalDeadline, bool? IsApproved, bool? HasApproved, bool? HasRejected, TimeSpan? TAT)>
         {
-            (employee.MainId, 0, LeaveApprovalStepType.CreateForm, 0, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, true, true, false, TimeSpan.Zero),
-            (supervisor.MainId, 1, LeaveApprovalStepType.ExecutiveApproval, 0, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(48), false, false, false, null),
-            (deputySupervisor.MainId, 1, LeaveApprovalStepType.ExecutiveApproval, 1, null, DateTime.UtcNow.AddHours(48), DateTime.UtcNow.AddHours(96), false, false, false, null),
+            (employee.MainId, nodes[0].Id, LeaveApprovalStepType.CreateForm, 0, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, true, true, false, TimeSpan.Zero),
+            (supervisor.MainId, nodes[1].Id , LeaveApprovalStepType.ExecutiveApproval, 0, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(48), false, false, false, null),
+            (deputySupervisor.MainId, nodes[1].Id, LeaveApprovalStepType.ExecutiveApproval, 1, null, DateTime.UtcNow.AddHours(48), DateTime.UtcNow.AddHours(96), false, false, false, null),
         };
 
         // Convert the participants above to WorkflowNodeParticipant objects
-        var workflowParticipants = new List<WorkflowNodeParticipant>();
+        var WorkflowNodeParticipants = new List<WorkflowNodeParticipant>();
         foreach (var participant in participants)
         {
-            workflowParticipants.Add(new WorkflowNodeParticipant
+            WorkflowNodeParticipants.Add(new WorkflowNodeParticipant
             {
                 EmployeeId = _context.Employees.FirstOrDefault(e => e.MainId == participant.EmpId)?.Id ?? 0,
                 WorkflowNodeStepType = (int)participant.StepType,
@@ -133,42 +166,25 @@ public class LeaveRequestWorkflowService
                 ApprovalDeadline = participant.ApprovalDeadline,
                 HasApproved = participant.IsApproved,
                 HasRejected = participant.HasRejected,
-                TAT = participant.TAT
+                TAT = participant.TAT,
+                WorkflowNodeType = "LeaveRequest",
+                WorkflowNodeId = participant.WorkflowNodeId
             });
-        }
-        _context.WorkflowNodeParticipants.AddRange(workflowParticipants);
 
-        // Initiate nodes creation: 2 nodes for now, first one has 2 participants, second one has 2 participants
-        var steps = new List<(string Name, LeaveApprovalStepType StepType, int Status, List<WorkflowNodeParticipant> nodeParticipants)>
+            _logger.LogError("NodeID: {NodeId}, StepType: {StepType}, Order: {Order}, EmployeeId: {EmployeeId}",
+                participant.WorkflowNodeId, participant.StepType, participant.Order, participant.EmpId);
+        }
+        _context.WorkflowNodeParticipants.AddRange(WorkflowNodeParticipants);
+
+        nodes[0].WorkflowNodeParticipants = new List<WorkflowNodeParticipant>
         {
-            ("Tạo yêu cầu nghỉ phép", LeaveApprovalStepType.CreateForm, 1, new List<WorkflowNodeParticipant> { workflowParticipants[0] }),
-            ("Quản lý trực thuộc / gián tiếp ký", LeaveApprovalStepType.ExecutiveApproval, 0, new List<WorkflowNodeParticipant> { workflowParticipants[1], workflowParticipants[2] }),
+            WorkflowNodeParticipants[0] // Employee who created the request
         };
-
-        // Build and add nodes
-        var nodes = new List<LeaveRequestNode>();
-        for (int i = 0; i < steps.Count; i++)
+        nodes[1].WorkflowNodeParticipants = new List<WorkflowNodeParticipant>
         {
-            var step = steps[i];
-            var newId = lastId + i + 1;
-
-            var node = new LeaveRequestNode
-            {
-                WorkflowId = workflow.Id,
-                StepType = step.StepType,
-                MainId = $"AS-S{i}-{DateTime.Now:dd.MM.yyyy}/{newId}",
-                Name = step.Name,
-                Status = (GeneralWorkflowStatusType)step.Status,
-                WorkflowParticipants = step.nodeParticipants,
-                Description = step.Name,
-            };
-            
-            _logger.LogError("Created leave request node: {NodeName} in workflow: {WorkflowId}", node.Name, workflow.Id);
-
-            nodes.Add(node);
-
-        }
-        _context.LeaveRequestNodes.AddRange(nodes);
+            WorkflowNodeParticipants[1],
+            WorkflowNodeParticipants[2]
+        };
         await _context.SaveChangesAsync();
 
         return _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
@@ -180,16 +196,27 @@ public class LeaveRequestWorkflowService
     {
         var nodes = await _context.LeaveRequestNodes
             .Where(n => n.WorkflowId == workflowId)
-            .Include(n => n.WorkflowParticipants)
             .ToListAsync();
 
-        return _mapper.Map<IEnumerable<LeaveRequestNodeDTO>>(nodes);
+        var nodeIds = nodes.Select(n => n.Id).ToList();
+
+        var participants = await _context.WorkflowNodeParticipants
+            .Where(p => p.WorkflowNodeType == "LeaveRequest")
+            .ToListAsync();
+
+
+        foreach (var node in nodes)
+        {
+            node.WorkflowNodeParticipants = participants.Where(p => p.WorkflowNodeId == node.Id).ToList();
+        }
+
+        var dtos = _mapper.Map<IEnumerable<LeaveRequestNodeDTO>>(nodes);
+        _logger.LogInformation("first node has {ParticipantCount} participants.", dtos.First().WorkflowNodeParticipants.Count());
+        return dtos;
     }
 
     public async Task<bool> FinalizeIfCompleteAsync(LeaveRequestWorkflow workflow, int approverId)
     {
-
-
         Employee employee = await _context.Employees
             .Include(e => e.CompanyInfo)
             .FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId) ?? throw new InvalidOperationException($"Employee {workflow.EmployeeId} not found.");

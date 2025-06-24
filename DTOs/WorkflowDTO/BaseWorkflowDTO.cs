@@ -7,7 +7,7 @@ public class BaseWorkflowDTO : BaseModelDTO
     public string Description { get; set; } = null!;
     public GeneralWorkflowStatusType Status { get; set; }
 
-    public List<WorkflowParticipantDTO> WorkflowParticipants { get; set; } = new();
+    public List<WorkflowNodeParticipantDTO> WorkflowNodeParticipants { get; set; } = new();
     public List<DocumentAssociationDTO> DocumentAssociations { get; set; } = new();
 }
 

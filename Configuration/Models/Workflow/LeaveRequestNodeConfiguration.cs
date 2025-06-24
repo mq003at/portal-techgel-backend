@@ -8,13 +8,14 @@ public class LeaveRequestNodeConfiguration : BaseWorkflowNodeConfiguration<Leave
     public override void Configure(EntityTypeBuilder<LeaveRequestNode> builder)
     {
         base.Configure(builder);
-        builder.Property(n => n.StepType).IsRequired();
+        builder.Property(n => n.StepType)
+            .IsRequired()
+            .HasConversion<string>();
 
         // Common navigation: workflow
         builder.HasOne(n => n.Workflow)
             .WithMany(w => w.LeaveRequestNodes)
             .HasForeignKey(n => n.WorkflowId)
             .OnDelete(DeleteBehavior.Cascade);
-
     }
 }

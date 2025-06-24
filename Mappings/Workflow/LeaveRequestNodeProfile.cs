@@ -24,14 +24,8 @@ public class LeaveRequestNodeProfile : BaseWorkflowNodeProfile<
         /* ------------ entity ➜ DTO ------------ */
         CreateMap<LeaveRequestNode, LeaveRequestNodeDTO>()
             .IncludeBase<BaseWorkflowNode, WorkflowNodeDTO>()
-
-            // Let EF translate this; names match, so no config needed:
             .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType))
-
-            // 👇 Disable server-side translation …
             .ForMember(d => d.StepTypeName, o => o.Ignore())
-
-            // 👇 … and fill it after the list is in memory
             .AfterMap((src, dest) =>
             {
                 dest.StepTypeName = src.StepType.ToString();
@@ -50,6 +44,6 @@ public class LeaveRequestNodeProfile : BaseWorkflowNodeProfile<
         CreateMap<LeaveRequestNodeDTO, LeaveRequestNode>()
             .IncludeBase<WorkflowNodeDTO, BaseWorkflowNode>()
             .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType))
-            .ForMember(d => d.Workflow, o => o.Ignore()); // avoid circular refs
+            .ForMember(d => d.Workflow, o => o.Ignore()); 
     }
 }

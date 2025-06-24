@@ -13,12 +13,13 @@ using portal.Db;
 namespace portal_techgel_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250623092419_renew")]
-    partial class renew
+    [Migration("20250623181109_revertshadowstate")]
+    partial class revertshadowstate
     {
         /// <inheritdoc />
-        protected  void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
+#pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
@@ -36,19 +37,24 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("DocumentId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("EntityId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("EntityType")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<int?>("LeaveRequestNodeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NodeId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
 
-                    b.HasIndex("EntityId", "EntityType");
+                    b.HasIndex("LeaveRequestNodeId");
+
+                    b.HasIndex("NodeId", "EntityType");
 
                     b.ToTable("DocumentAssociations");
                 });
@@ -262,9 +268,6 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int?>("EmployeeId1")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
@@ -294,8 +297,6 @@ namespace portal_techgel_api.Migrations
                     b.HasKey("OrganizationEntityId", "EmployeeId");
 
                     b.HasIndex("EmployeeId");
-
-                    b.HasIndex("EmployeeId1");
 
                     b.ToTable("OrganizationEntityEmployees");
                 });
@@ -1133,6 +1134,9 @@ namespace portal_techgel_api.Migrations
                     b.Property<bool?>("HasRejected")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("LeaveRequestNodeId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("LeaveRequestWorkflowId")
                         .HasColumnType("integer");
 
@@ -1150,13 +1154,17 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("WorkflowNodeStepType")
                         .HasColumnType("integer");
 
+                    b.Property<string>("WorkflowNodeType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
 
-                    b.HasIndex("LeaveRequestWorkflowId");
+                    b.HasIndex("LeaveRequestNodeId");
 
-                    b.HasIndex("WorkflowNodeId");
+                    b.HasIndex("LeaveRequestWorkflowId");
 
                     b.ToTable("WorkflowNodeParticipants");
                 });
@@ -1169,11 +1177,9 @@ namespace portal_techgel_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("portal.Models.LeaveRequestWorkflow", null)
+                    b.HasOne("portal.Models.LeaveRequestNode", null)
                         .WithMany("DocumentAssociations")
-                        .HasForeignKey("EntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("LeaveRequestNodeId");
 
                     b.Navigation("Document");
                 });
@@ -1232,14 +1238,10 @@ namespace portal_techgel_api.Migrations
             modelBuilder.Entity("OrganizationEntityEmployee", b =>
                 {
                     b.HasOne("portal.Models.Employee", "Employee")
-                        .WithMany()
+                        .WithMany("OrganizationEntityEmployees")
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("portal.Models.Employee", null)
-                        .WithMany("OrganizationEntityEmployees")
-                        .HasForeignKey("EmployeeId1");
 
                     b.HasOne("portal.Models.OrganizationEntity", "OrganizationEntity")
                         .WithMany("OrganizationEntityEmployees")
@@ -1432,15 +1434,13 @@ namespace portal_techgel_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("portal.Models.LeaveRequestNode", null)
+                        .WithMany("WorkflowNodeParticipants ")
+                        .HasForeignKey("LeaveRequestNodeId");
+
                     b.HasOne("portal.Models.LeaveRequestWorkflow", null)
                         .WithMany("WorkflowNodeParticipants ")
                         .HasForeignKey("LeaveRequestWorkflowId");
-
-                    b.HasOne("portal.Models.LeaveRequestNode", null)
-                        .WithMany("WorkflowNodeParticipants ")
-                        .HasForeignKey("WorkflowNodeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("Employee");
                 });
@@ -1480,13 +1480,13 @@ namespace portal_techgel_api.Migrations
 
             modelBuilder.Entity("portal.Models.LeaveRequestNode", b =>
                 {
+                    b.Navigation("DocumentAssociations");
+
                     b.Navigation("WorkflowNodeParticipants ");
                 });
 
             modelBuilder.Entity("portal.Models.LeaveRequestWorkflow", b =>
                 {
-                    b.Navigation("DocumentAssociations");
-
                     b.Navigation("LeaveRequestNodes");
 
                     b.Navigation("WorkflowNodeParticipants ");
