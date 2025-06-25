@@ -120,14 +120,13 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        policy.WithOrigins("http://localhost:5173") // <-- chính xác origin
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // <-- nếu dùng cookie
     });
-    options.AddPolicy(
-        "AllowFrontend",
-        policy => policy.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader()
-    );
 });
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
