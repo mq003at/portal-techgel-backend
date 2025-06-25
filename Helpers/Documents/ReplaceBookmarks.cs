@@ -51,10 +51,10 @@ public static class WordBookmarkReplacer
 
         foreach (var bookmarkStart in bookmarks)
         {
-            if (bookmarkStart.Name == null || !placeholders.ContainsKey(bookmarkStart.Name))
+            if (bookmarkStart.Name == null || !placeholders.ContainsKey(bookmarkStart.Name!))
                 continue;
 
-            var replacementText = placeholders[bookmarkStart.Name];
+            var replacementText = placeholders[bookmarkStart.Name!];
 
             // Remove all elements between BookmarkStart and BookmarkEnd
             var current = bookmarkStart.NextSibling();
@@ -76,7 +76,7 @@ public static class WordBookmarkReplacer
             );
 
             // Insert replacement text
-            bookmarkStart.Parent.InsertAfter(run, bookmarkStart);
+            bookmarkStart.Parent?.InsertAfter(run, bookmarkStart);
 
         }
     }

@@ -13,7 +13,7 @@ public class SignatureDTO : BaseModelDTO
     public string FileName { get; set; } = null!;
 
     [Required, Url]
-    public string FileUrl { get; set; } = null!;
+    public string StoragePath { get; set; } = null!;
 }
 
 public class UploadSignatureDTO : BaseModelCreateDTO

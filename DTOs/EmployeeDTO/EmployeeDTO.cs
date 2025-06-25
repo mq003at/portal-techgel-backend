@@ -27,7 +27,7 @@ public class EmployeeDTO : BaseModelDTO
     public List<EmergencyContactInfoDTO>? EmergencyContactInfos { get; set; }
     public List<EmployeeQualificationInfoDTO>? EmployeeQualificationInfos { get; set; }
     public ScheduleInfoDTO? ScheduleInfo { get; set; }
-    public Signature? Signature { get; set; }
+    public SignatureDTO? Signature { get; set; }
 
     // Role Info
     public int? SupervisorId { get; set; }
@@ -106,3 +106,8 @@ public class LoginRequestDTO
     public string Password { get; set; } = null!;
 }
 
+public class LoginResponseDTO
+{
+    public string Token { get; set; } = null!;
+    public EmployeeDTO Employee { get; set; } = null!;
+}

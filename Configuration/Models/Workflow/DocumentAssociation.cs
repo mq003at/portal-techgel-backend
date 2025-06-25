@@ -23,8 +23,8 @@ public class DocumentAssociationConfiguration : IEntityTypeConfiguration<Documen
             .IsRequired()
             .HasMaxLength(255);
 
-        builder.HasIndex(d => new { d.NodeId, d.EntityType });
+        builder.HasIndex(d => new { d.EntityId, d.EntityType });
 
-        builder.Property(e => e.NodeId).IsRequired();
+        builder.Property(e => e.EntityId).IsRequired();
       }
 }

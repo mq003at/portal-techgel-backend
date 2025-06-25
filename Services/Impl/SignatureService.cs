@@ -62,7 +62,7 @@ public class SignatureService : ISignatureService
         await _ctx.SaveChangesAsync();
 
         var dtoResult = _mapper.Map<SignatureDTO>(sig);
-        dtoResult.FileUrl = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
+        dtoResult.StoragePath = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
         return dtoResult;
     }
 
@@ -90,7 +90,7 @@ public class SignatureService : ISignatureService
         await _ctx.SaveChangesAsync();
 
         var dtoResult = _mapper.Map<SignatureDTO>(sig);
-        dtoResult.FileUrl = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
+        dtoResult.StoragePath = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
         return dtoResult;
     }
 
@@ -103,7 +103,7 @@ public class SignatureService : ISignatureService
             return null;
 
         var dtoResult = _mapper.Map<SignatureDTO>(sig);
-        dtoResult.FileUrl = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
+        dtoResult.StoragePath = $"{_publicBase}/{Path.GetFileName(sig.StoragePath)}";
         return dtoResult;
     }
 

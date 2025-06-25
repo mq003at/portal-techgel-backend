@@ -36,11 +36,11 @@ public class LocalFileStorageService : IFileStorageService
         return Task.FromResult(s);
     }
 
-    public async Task<bool> ExistsAsync(string fileName)
+    public Task<bool> ExistsAsync(string fileName)
     {
         var safe = Path.GetFileName(fileName);
         var full = Path.Combine(_basePath, safe);
-        return File.Exists(full);
+        return Task.FromResult(File.Exists(full));
     }
 
     public Task<List<string>> ListFilesAsync(string prefix = "")
@@ -80,8 +80,8 @@ public class LocalFileStorageService : IFileStorageService
         var oldFullPath = Path.Combine(_basePath, oldLocation);
         var newFullPath = Path.Combine(_basePath, newLocation);
 
-        var newDir = Path.GetDirectoryName(newFullPath);
-        if (!Directory.Exists(newDir))
+        string newDir = Path.GetDirectoryName(newFullPath) ?? string.Empty;
+        if (!string.IsNullOrEmpty(newDir) && !Directory.Exists(newDir))
         {
             Directory.CreateDirectory(newDir);
         }

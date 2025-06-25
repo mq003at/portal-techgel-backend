@@ -75,12 +75,13 @@ public class EmployeeService
         _logger.LogInformation("CreateAsync called with DTO: {@dto}", dto);
 
         // employee generation
-        var employee = _mapper.Map<Employee>(dto);
+        Employee employee = _mapper.Map<Employee>(dto);
         _logger.LogError("PersonalInfo iD: {id}", employee.PersonalInfo.Id);
         _context.Employees.Add(employee);
+        await _context.SaveChangesAsync();
 
         // manifest an id
-        var mainId = "TG" + PadWithZeros(employee.Id);
+        string mainId = "TG" + PadWithZeros(employee.Id);
         employee.MainId = mainId;
         await _context.SaveChangesAsync();
 

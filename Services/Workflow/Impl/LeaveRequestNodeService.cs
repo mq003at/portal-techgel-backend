@@ -84,11 +84,17 @@ public class LeaveRequestNodeService : BaseService<
                 LeaveRequestWorkflow workflow = _context.LeaveRequestWorkflows
                     .FirstOrDefault(w => w.Id == node.WorkflowId) ?? throw new InvalidOperationException("Workflow not found.");
                 _logger.LogInformation("Final node reached for workflow ID: {WorkflowId} with {Name}", workflow.Id, workflow.Name);
-                if (workflow != null)
-                {
-                    workflow.Status = GeneralWorkflowStatusType.APPROVED;
-                    await _workflowService.FinalizeIfCompleteAsync(workflow, approverId);
-                }
+
+                workflow.Status = GeneralWorkflowStatusType.APPROVED;
+                await _workflowService.FinalizeIfCompleteAsync(workflow, approverId, nodeId);
+
+                // Get that employee's CompanyInfo and change the respective leave
+                CompanyInfo companyInfo = await _context.CompanyInfos
+                    .FirstOrDefaultAsync(ci => ci.EmployeeId == workflow.EmployeeId)
+                    ?? throw new InvalidOperationException("CompanyInfo not found for the employee. Someone is trying to change the db manually!");
+
+                companyInfo.AnnualLeaveTotalDays = workflow.FinalEmployeeAnnualLeaveTotalDays;
+                companyInfo.CompensatoryLeaveTotalDays = workflow.FinalEmployeeCompensatoryLeaveTotalDays;
             }
         }
 

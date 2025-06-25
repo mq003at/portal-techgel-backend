@@ -17,12 +17,13 @@ public interface ILeaveRequestWorkflowService : IBaseWorkflowService<
 
     Task<IEnumerable<LeaveRequestNodeDTO>> GetNodesByWorkflowIdAsync(int workflowId);
 
-    Task<bool> FinalizeIfCompleteAsync(LeaveRequestWorkflow workflow, int approvalId);
+    Task<bool> FinalizeIfCompleteAsync(LeaveRequestWorkflow workflow, int approvalId, int nodeId);
 
     Task<bool> GenerateLeaveRequestFinalDocument(
     Employee employee,
     Employee approver,
-    LeaveRequestWorkflow workflow
+    LeaveRequestWorkflow workflow,
+    int nodeId
     );
 
 

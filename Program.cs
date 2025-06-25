@@ -71,21 +71,32 @@ builder
     .AddDefaultTokenProviders();
 
 // Configure JWT Authentication
-var key = Encoding.UTF8.GetBytes("YourSuperSecretKeyHere"); // Replace with a strong key
-builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false;
+        options.RequireHttpsMetadata = true; 
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateAudience = false
+
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings["Issuer"],
+
+            ValidateAudience = true,
+            ValidAudience = jwtSettings["Audience"],
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero 
         };
     });
+
+builder.Services.AddScoped<JwtService>();
+
 
 // Add controllers and Swagger
 builder.Services.AddControllers();

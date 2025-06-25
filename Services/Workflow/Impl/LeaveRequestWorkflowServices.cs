@@ -90,6 +90,7 @@ public class LeaveRequestWorkflowService
                 throw new InvalidOperationException("Not enough compensatory leave days available. Contact admins to see if anything is wrong.");
             }
             finalEmployeeCompensatoryLeaveTotalDays = compensatoryLeaveInit - totalDays;
+            _logger.LogError("finalDays: {fdays}", finalEmployeeCompensatoryLeaveTotalDays);
         }
         else if (dto.LeaveApprovalCategory == LeaveApprovalCategory.AnnualLeave)
         {
@@ -98,6 +99,8 @@ public class LeaveRequestWorkflowService
                 throw new InvalidOperationException("Not enough annual leave days available. Contact admins to see if anything is wrong.");
             }
             finalEmployeeAnnualLeaveTotalDays = annualLeaveInit - totalDays;
+             _logger.LogError("finalDays: {fdays}", finalEmployeeAnnualLeaveTotalDays);
+
         }
 
         // For other types of leave, we do not modify annual leave or compensatory leave
@@ -214,18 +217,20 @@ public class LeaveRequestWorkflowService
         return dtos;
     }
 
-    public async Task<bool> FinalizeIfCompleteAsync(LeaveRequestWorkflow workflow, int approverId)
+    public async Task<bool> FinalizeIfCompleteAsync(LeaveRequestWorkflow workflow, int approverId, int nodeId)
     {
         Employee employee = await _context.Employees
             .Include(e => e.CompanyInfo)
+            .Include(e => e.Signature)
             .FirstOrDefaultAsync(e => e.Id == workflow.EmployeeId) ?? throw new InvalidOperationException($"Employee {workflow.EmployeeId} not found.");
 
         Employee approver = await _context.Employees
             .Include(e => e.CompanyInfo)
+            .Include(e => e.Signature)
             .FirstOrDefaultAsync(e => e.Id == approverId) ?? throw new InvalidOperationException($"Employee {approverId} not found.");
 
 
-        return await GenerateLeaveRequestFinalDocument(employee, approver, workflow);
+        return await GenerateLeaveRequestFinalDocument(employee, approver, workflow, nodeId);
     }
 
 
@@ -234,6 +239,16 @@ public class LeaveRequestWorkflowService
         LeaveRequestWorkflowCreateDTO dto
     )
     {
+        // check if the employee already has a workflow in pending state
+        var existingWorkflow = await _context.LeaveRequestWorkflows
+            .Where(w => w.EmployeeId == dto.EmployeeId && w.Status == GeneralWorkflowStatusType.PENDING)
+            .FirstOrDefaultAsync();
+
+        if (existingWorkflow != null)
+        {
+            throw new InvalidOperationException("You already have a pending leave request. Please wait for it to be processed before creating a new one.");
+        }
+
         // CDTO -> Model
         var entity = _mapper.Map<LeaveRequestWorkflow>(dto);
 
@@ -322,7 +337,9 @@ public class LeaveRequestWorkflowService
     public async Task<bool> GenerateLeaveRequestFinalDocument(
     Employee employee,
     Employee approver,
-    LeaveRequestWorkflow workflow)
+    LeaveRequestWorkflow workflow,
+    int nodeId
+    )
     {
         var templateDocMetadata = await _context.Documents
             .FirstOrDefaultAsync(d => d.TemplateKey == "LeaveRequest");
@@ -332,8 +349,20 @@ public class LeaveRequestWorkflowService
         if (templateDocMetadata == null)
             throw new InvalidOperationException("Template document for 'LeaveRequest' not found.");
 
-        // Get that file from the VPS
+        // Get that file from the VPS, and all the related signatures
         var newDoc = await _storage.DownloadAsync(templateDocMetadata.Url);
+
+        string employeeSignaturePath = employee.Signature?.StoragePath ?? throw new InvalidOperationException($"Employee {employee.Id} does not have a signature.");
+        string approverSignaturePath = approver.Signature?.StoragePath ?? throw new InvalidOperationException($"Approver {approver.Id} does not have a signature.");
+
+        MemoryStream employeeSignature = await FileHandling.ToMemoryStreamAsync(
+            await _storage.DownloadAsync(employee.Signature.StoragePath));
+
+        MemoryStream approverSignature = await FileHandling.ToMemoryStreamAsync(
+            await _storage.DownloadAsync(approver.Signature.StoragePath));
+
+        bool isImgValid = FileHandling.IsPngHeader(employeeSignature);
+        _logger.LogInformation("Employee signature is valid: {IsValid}", isImgValid);
 
         var Division = "6_Noi_Chinh";
         var newFileName = $"{today:yyyy-MM-dd}-{Division}-DN-{employee.MainId}-v01{".docx"}";
@@ -371,11 +400,10 @@ public class LeaveRequestWorkflowService
             ["employeeFullNameBottom"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
             ["employeeSignDate"] = workflow.CreatedAt.ToString("dd/MM/yyyy"),
 
-            ["approverPosition"] = approver.CompanyInfo?.Position ?? "",
+            ["approverPosition"] = approver.CompanyInfo?.Position?.ToUpper() ?? "",
             ["approverFullName"] = $"{approver.LastName} {approver.MiddleName} {approver.FirstName}".Trim(),
             ["approverSignDate"] = today.ToString("dd/MM/yyyy"),
             
-
             // Custom: If assigneeId == employeeId, add a special note
 
             // Vietnamese for LeaveApprovalCategory
@@ -392,10 +420,19 @@ public class LeaveRequestWorkflowService
 
         };
 
-        WordBookmarkReplacer.ReplacePlaceholders(newDoc, placeholders);
+        MemoryStream newMemoryDoc = await FileHandling.ToMemoryStreamAsync(
+            newDoc);
+
+        WordBookmarkReplacer.ReplacePlaceholders(newMemoryDoc, placeholders);
+
+        newMemoryDoc = await WordImageInserter.InsertImageAtBookmarkAsync(
+            newMemoryDoc, "employeeSignature", employeeSignature);
+
+        newMemoryDoc = await WordImageInserter.InsertImageAtBookmarkAsync(
+            newMemoryDoc, "approverSignature", approverSignature);
 
         // If filling in is completed, upload and make a new record of metadata
-        var pathAfterUpload = await _storage.UploadAsync(newDoc, newTargetPath);
+        var pathAfterUpload = await _storage.UploadAsync(newMemoryDoc, newTargetPath);
         if (string.IsNullOrEmpty(pathAfterUpload))
             throw new InvalidOperationException("Failed to upload the document to storage.");
 
@@ -412,6 +449,13 @@ public class LeaveRequestWorkflowService
             Tag = templateDocMetadata.Tag,
             Category = DocumentCategoryEnum.FORM,
             Division = Division
+        };
+
+        var newDocumentAssociation = new DocumentAssociation
+        {
+            Document = newMetadata,
+            EntityType = "LeaveRequest",
+            EntityId = nodeId // Associate with the workflow ID
         };
 
         _context.Documents.Add(newMetadata);
