@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -76,10 +77,10 @@ var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOp
 // 🔐 Configure authentication services with named schemes
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = "Cookies"; // Default for browser sessions
-    options.DefaultChallengeScheme = "Cookies"; // Use Cookies unless explicitly requesting JWT
+    options.DefaultAuthenticateScheme = "Cookies";
+    options.DefaultChallengeScheme = "Cookies";
+    options.DefaultScheme = "Cookies"; // Optional — fallback
 })
-// ✅ Cookie-based authentication (for browser logins)
 .AddCookie("Cookies", options =>
 {
     options.LoginPath = "/api/login";
@@ -87,25 +88,21 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.Name = ".Techgel.Auth";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Strict;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.ExpireTimeSpan = TimeSpan.FromHours(2);
     options.SlidingExpiration = true;
-})
-// ✅ JWT bearer authentication (for APIs or mobile clients)
-.AddJwtBearer("Jwt", options =>
-{
-    options.RequireHttpsMetadata = true;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
+
+    options.Events = new CookieAuthenticationEvents
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidateAudience = true,
-        ValidAudience = jwtSettings["Audience"],
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        OnRedirectToLogin = ctx =>
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        },
+        OnRedirectToAccessDenied = ctx =>
+        {
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
     };
 });
 

@@ -23,12 +23,12 @@ public class EmployeeController
         _logger = logger;
     }
 
+    [HttpGet]
     [Authorize]
-    [HttpGet()]
     public override async Task<ActionResult<IEnumerable<EmployeeDTO>>> GetAll()
     {
         // If user is HR
-        string claimValue = User.FindFirst("OrganizationEntityId")?.Value ?? throw new UnauthorizedAccessException("OrganizationEntityId claim not found.");
+        string claimValue = User.FindFirst("OrganizationEntityIds")?.Value ?? throw new UnauthorizedAccessException("OrganizationEntityIds claim not found.");
         string idClaim = User.FindFirst("Id")?.Value ?? throw new UnauthorizedAccessException("Id claim not found.");
         int id = int.Parse(idClaim);
         var organizationIds = claimValue
@@ -37,12 +37,27 @@ public class EmployeeController
             .ToList();
 
         if (organizationIds.Contains(11)) return await base.GetAll();
-        else {
+        else
+        {
             var employee = await _employeeService.GetByIdAsync(id);
             var employees = employee != null ? [employee] : new List<EmployeeDTO>();
             return employees;
         }
     }
+
+    [HttpGet("me")]
+    [Authorize]
+
+    public IActionResult Me()
+    {
+        return Ok(new
+        {
+            IsAuthenticated = User.Identity?.IsAuthenticated,
+            Name = User.Identity?.Name,
+            Claims = User.Claims.Select(c => new { c.Type, c.Value })
+        });
+    }
+
 
     [HttpPost("login")]
     public async Task<ActionResult<EmployeeDTO>> Login([FromBody] LoginRequestDTO dto)
