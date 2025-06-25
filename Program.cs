@@ -109,7 +109,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 🧠 Enable session support (only if you use Session elsewhere)
+//  Enable session support 
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
 
 
