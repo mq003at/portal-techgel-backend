@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using portal.Db;
 using portal.DTOs;
+using portal.Enums;
 using portal.Models;
 
 namespace portal.Services;
@@ -10,7 +11,7 @@ namespace portal.Services;
 public class OrganizationEntityService
     : BaseService<
         OrganizationEntity,
-        OrganizationEntitySummaryDTO,
+        OrganizationEntityDTO,
         CreateOrganizationEntityDTO,
         UpdateOrganizationEntityDTO
     >,
@@ -23,185 +24,204 @@ public class OrganizationEntityService
     )
         : base(context, mapper, logger) { }
 
-    public override async Task<OrganizationEntitySummaryDTO> CreateAsync(
-        CreateOrganizationEntityDTO dto
-    )
+    public override async Task<IEnumerable<OrganizationEntityDTO>> GetAllAsync()
     {
-        //  Map các field cơ bản
+        var entities = await _dbSet
+            .Include(o => o.Parent)
+            .Include(o => o.Children)
+            .Include(o => o.OrganizationEntityEmployees)
+                .ThenInclude(link => link.Employee)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<OrganizationEntityDTO>>(entities);
+    }
+
+    public override async Task<OrganizationEntityDTO> CreateAsync(CreateOrganizationEntityDTO dto)
+    {
+        _logger.LogInformation("Creating OrganizationEntity with employees: {@DTO}", dto);
+
+        // 1. Map the core entity
         var entity = _mapper.Map<OrganizationEntity>(dto);
+        _dbSet.Add(entity);
+        await _context.SaveChangesAsync(); // To get the generated Id
 
-        //  Nếu có ParentId, kiểm tra tồn tại
-        if (dto.ParentId.HasValue)
+        // 2. Add employee links if provided
+        if (dto.EmployeeIds != null && dto.EmployeeIds.Count > 0)
         {
-            var parent = await _context.OrganizationEntities.FindAsync(dto.ParentId.Value);
-            if (parent == null)
-                throw new InvalidOperationException("Entity này không tồn tại.");
-            entity.Parent = parent;
-        }
-
-        //  Nếu có childrenIds, lấy ra tất cả và kiểm tra
-        if (dto.ChildrenIds != null && dto.ChildrenIds.Any())
-        {
-            var children = await _context
-                .OrganizationEntities.Where(o => dto.ChildrenIds.Contains(o.Id))
-                .ToListAsync();
-            if (children.Count != dto.ChildrenIds.Count)
-                throw new InvalidOperationException("Entity này không tồn tại.");
-            entity.Children = children;
-        }
-
-        // Xử lý EmployeeIds
-        if (dto.EmployeeIds != null && dto.EmployeeIds.Any())
-        {
-            // Lấy tất cả nhân viên hợp lệ
-            var employees = await _context
-                .Employees.Where(e => dto.EmployeeIds.Contains(e.Id))
-                .ToListAsync();
-
-            if (employees.Count != dto.EmployeeIds.Count)
-                throw new KeyNotFoundException("Một hoặc nhiều employeeId không tồn tại.");
-
-            // Tạo liên kết many-to-many
-            entity.OrganizationEntityEmployees = employees
-                .Select(e => new OrganizationEntityEmployee
-                {
-                    EmployeeId = e.Id,
-                    OrganizationEntity = entity
-                })
-                .ToList();
-        }
-
-        //  Add và commit
-        _context.OrganizationEntities.Add(entity);
-        await _context.SaveChangesAsync();
-
-        return _mapper.Map<OrganizationEntitySummaryDTO>(entity);
-    }
-
-    public override async Task<OrganizationEntitySummaryDTO?> GetByIdAsync(int id)
-    {
-        // 1) Lấy entity gốc (không include navigation)
-        var entity = await _context
-            .OrganizationEntities.AsNoTracking()
-            .OfType<OrganizationEntity>()
-            .FirstOrDefaultAsync(x => x.Id == id);
-
-        if (entity == null)
-            throw new KeyNotFoundException($"OrganizationEntity with Id={id} not found.");
-
-        // 2) Map các property cơ bản
-        var dto = _mapper.Map<OrganizationEntitySummaryDTO>(entity);
-
-        // 3) Lấy parentId & parentName nếu có
-        if (entity.ParentId.HasValue)
-        {
-            var parent = await _context
-                .OrganizationEntities.AsNoTracking()
-                .Where(x => x.Id == entity.ParentId.Value)
-                .Select(x => new { x.Id, x.Name })
-                .FirstOrDefaultAsync();
-
-            dto.ParentId = parent?.Id.ToString();
-            dto.ParentName = parent?.Name;
-        }
-
-        // 4) Lấy danh sách immediate children (chỉ Id & Name)
-        var children = await _context
-            .OrganizationEntities.AsNoTracking()
-            .Where(x => x.ParentId == id)
-            .Select(x => new { x.Id, x.Name })
-            .ToListAsync();
-
-        dto.ChildrenIds = children.Select(c => c.Id.ToString()).ToList();
-        dto.ChildrenNames = children.Select(c => c.Name).ToList();
-
-        // 5) Lấy danh sách employees gắn với entity này
-        //    Giả sử bạn có table liên kết OrganizationEntityEmployees
-        var employees = await _context
-            .OrganizationEntityEmployees.AsNoTracking()
-            .Where(oe => oe.OrganizationEntityId == id)
-            .Select(oe => new
+            foreach (var empId in dto.EmployeeIds)
             {
-                oe.Employee.Id,
-                oe.Employee.FirstName,
-                oe.Employee.MiddleName,
-                oe.Employee.LastName
-            })
-            .ToListAsync();
+                var relationType = OrganizationRelationType.MEMBER;
 
-        dto.EmployeeIds = employees.Select(e => e.Id.ToString()).ToList();
-        dto.EmployeeNames = employees
-            .Select(e => $"{e.LastName} {e.MiddleName} {e.FirstName}")
-            .ToList();
+                if (dto.ManagerId.HasValue && empId == dto.ManagerId.Value)
+                    relationType = OrganizationRelationType.MANAGER;
+                else if (dto.DeputyManagerId.HasValue && empId == dto.DeputyManagerId.Value)
+                    relationType = OrganizationRelationType.DEPUTY_MANAGER;
 
-        return dto;
-    }
+                _context.OrganizationEntityEmployees.Add(new OrganizationEntityEmployee
+                {
+                    OrganizationEntityId = entity.Id,
+                    EmployeeId = empId,
+                    OrganizationRelationType = relationType,
+                    IsPrimary = true
+                });
+            }
 
-    public override async Task<OrganizationEntitySummaryDTO?> UpdateAsync(
-        int id,
-        UpdateOrganizationEntityDTO dto
-    )
-    {
-        var entity = await _context
-            .OrganizationEntities.Include(o => o.Children)
-            .FirstOrDefaultAsync(o => o.Id == id);
-        if (entity == null)
-            return null;
-
-        // Map các field cơ bản (ngoại trừ Id)
-        _mapper.Map(dto, entity);
-
-        // Kiểm tra và gán lại Parent nếu client có gửi
-        if (dto.ParentId != null)
-        {
-            if (dto.ParentId == entity.Id)
-                throw new InvalidOperationException("Không thể tự làm cha của mình.");
-            var parent = await _context.OrganizationEntities.FindAsync(dto.ParentId.Value);
-            if (parent == null)
-                throw new InvalidOperationException("Entity này không tồn tại.");
-            entity.Parent = parent;
+            await _context.SaveChangesAsync();
         }
         else
         {
-            // nếu client gửi parentId = null, clear quan hệ
-            entity.Parent = null;
+            // If ManagerId or DeputyManagerId are set but not included in EmployeeIds, add them explicitly
+            if (dto.ManagerId.HasValue)
+            {
+                _context.OrganizationEntityEmployees.Add(new OrganizationEntityEmployee
+                {
+                    OrganizationEntityId = entity.Id,
+                    EmployeeId = dto.ManagerId.Value,
+                    OrganizationRelationType = OrganizationRelationType.MANAGER,
+                    IsPrimary = true
+                });
+            }
+
+            if (dto.DeputyManagerId.HasValue)
+            {
+                _context.OrganizationEntityEmployees.Add(new OrganizationEntityEmployee
+                {
+                    OrganizationEntityId = entity.Id,
+                    EmployeeId = dto.DeputyManagerId.Value,
+                    OrganizationRelationType = OrganizationRelationType.DEPUTY_MANAGER,
+                    IsPrimary = true
+                });
+            }
+
+            await _context.SaveChangesAsync();
         }
 
-        //  Kiểm tra và gán lại Children nếu client có gửi
-        if (dto.ChildrenIds != null)
-        {
-            var children = await _context
-                .OrganizationEntities.Where(o => dto.ChildrenIds.Contains(o.Id))
-                .ToListAsync();
-            if (children.Count != dto.ChildrenIds.Count)
-                throw new InvalidOperationException("Entity này không tồn tại.");
-            entity.Children = children;
-        }
+        // 3. Reload full entity with navigation for DTO mapping
+        var result = await _dbSet
+            .Include(o => o.Parent)
+            .Include(o => o.Children)
+            .Include(o => o.OrganizationEntityEmployees)
+                .ThenInclude(link => link.Employee)
+            .FirstOrDefaultAsync(o => o.Id == entity.Id);
 
-        // Xử lý EmployeeIds
+        return _mapper.Map<OrganizationEntityDTO>(result!);
+    }
+    public override async Task<OrganizationEntityDTO?> GetByIdAsync(int id)
+    {
+        var entity = await _dbSet
+            .Include(o => o.Parent)
+            .Include(o => o.Children)
+            .Include(o => o.OrganizationEntityEmployees)
+                .ThenInclude(link => link.Employee)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        return entity == null ? null : _mapper.Map<OrganizationEntityDTO>(entity);
+    }
+
+    public override async Task<OrganizationEntityDTO?> UpdateAsync(int id, UpdateOrganizationEntityDTO dto)
+    {
+        var entity = await _dbSet
+            .Include(e => e.OrganizationEntityEmployees)
+                .ThenInclude(link => link.Employee)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (entity == null)
+            return null;
+
+        _logger.LogInformation("Updating OrganizationEntity: {Id}", id);
+
+        // 1. Update scalar properties
+        _mapper.Map(dto, entity);
+
+        // 2. Sync EmployeeIds (many-to-many links)
         if (dto.EmployeeIds != null)
         {
-            var employees = await _context
-                .Employees.Where(e => dto.EmployeeIds.Contains(e.Id))
-                .ToListAsync();
+            var existingEmployeeIds = entity.OrganizationEntityEmployees.Select(e => e.EmployeeId).ToList();
+            var newEmployeeIds = dto.EmployeeIds;
 
-            if (employees.Count != dto.EmployeeIds.Count)
-                throw new KeyNotFoundException("Một hoặc nhiều employeeId không tồn tại.");
+            var toAdd = newEmployeeIds.Except(existingEmployeeIds).ToList();
+            var toRemove = existingEmployeeIds.Except(newEmployeeIds).ToList();
 
-            // Xóa hết liên kết cũ
-            _context.OrganizationEntityEmployees.RemoveRange(entity.OrganizationEntityEmployees);
+            entity.OrganizationEntityEmployees.RemoveAll(e => toRemove.Contains(e.EmployeeId));
 
-            // Tạo lại liên kết mới
-            entity.OrganizationEntityEmployees = employees
-                .Select(e => new OrganizationEntityEmployee
+            foreach (var empId in toAdd)
+            {
+                entity.OrganizationEntityEmployees.Add(new OrganizationEntityEmployee
                 {
-                    EmployeeId = e.Id,
-                    OrganizationEntityId = entity.Id
-                })
-                .ToList();
+                    OrganizationEntityId = entity.Id,
+                    EmployeeId = empId,
+                    OrganizationRelationType = OrganizationRelationType.MEMBER,
+                    IsPrimary = dto.IsPrimary ?? false
+                });
+            }
+        }
+
+        // 3. Update manager relation
+        if (dto.MangerId.HasValue)
+        {
+            // Demote existing manager
+            foreach (var e in entity.OrganizationEntityEmployees
+                         .Where(e => e.OrganizationRelationType == OrganizationRelationType.MANAGER))
+            {
+                e.OrganizationRelationType = OrganizationRelationType.MEMBER;
+            }
+
+            // Promote new manager
+            var existing = entity.OrganizationEntityEmployees
+                .FirstOrDefault(e => e.EmployeeId == dto.MangerId.Value);
+            if (existing != null)
+            {
+                existing.OrganizationRelationType = OrganizationRelationType.MANAGER;
+            }
+            else
+            {
+                entity.OrganizationEntityEmployees.Add(new OrganizationEntityEmployee
+                {
+                    OrganizationEntityId = entity.Id,
+                    EmployeeId = dto.MangerId.Value,
+                    OrganizationRelationType = OrganizationRelationType.MANAGER,
+                    IsPrimary = true
+                });
+            }
+        }
+
+        // 4. Update deputy manager relation
+        if (dto.DeputyManagerId.HasValue)
+        {
+            foreach (var e in entity.OrganizationEntityEmployees
+                         .Where(e => e.OrganizationRelationType == OrganizationRelationType.DEPUTY_MANAGER))
+            {
+                e.OrganizationRelationType = OrganizationRelationType.MEMBER;
+            }
+
+            var existing = entity.OrganizationEntityEmployees
+                .FirstOrDefault(e => e.EmployeeId == dto.DeputyManagerId.Value);
+            if (existing != null)
+            {
+                existing.OrganizationRelationType = OrganizationRelationType.DEPUTY_MANAGER;
+            }
+            else
+            {
+                entity.OrganizationEntityEmployees.Add(new OrganizationEntityEmployee
+                {
+                    OrganizationEntityId = entity.Id,
+                    EmployeeId = dto.DeputyManagerId.Value,
+                    OrganizationRelationType = OrganizationRelationType.DEPUTY_MANAGER,
+                    IsPrimary = true
+                });
+            }
         }
 
         await _context.SaveChangesAsync();
-        return _mapper.Map<OrganizationEntitySummaryDTO>(entity);
+
+        // Reload full entity for DTO mapping
+        var updated = await _dbSet
+            .Include(o => o.Parent)
+            .Include(o => o.Children)
+            .Include(o => o.OrganizationEntityEmployees)
+                .ThenInclude(oe => oe.Employee)
+            .FirstOrDefaultAsync(o => o.Id == entity.Id);
+
+        return _mapper.Map<OrganizationEntityDTO>(updated!);
     }
 }

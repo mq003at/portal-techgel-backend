@@ -6,7 +6,9 @@ namespace portal.DTOs;
 public class OrganizationEntityEmployeeDTO : BaseModelDTO
 {
     public int OrganizationEntityId { get; set; }
+    public string OrganizationEntityName { get; set; } = null!;
     public int EmployeeId { get; set; }
+    public string EmployeeName { get; set; } = null!;
     public OrganizationRelationType OrganizationRelationType { get; set; }
     public bool IsPrimary { get; set; }
 }

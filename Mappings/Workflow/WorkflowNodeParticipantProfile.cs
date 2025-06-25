@@ -12,7 +12,7 @@ public class WorkflowNodeParticipantProfile : Profile
         CreateMap<WorkflowNodeParticipant, WorkflowNodeParticipantDTO>()
             .ForMember(dest => dest.EmployeeName,
                 opt => opt.MapFrom(src =>
-                    src.Employee.FirstName + " " + src.Employee.LastName))
+                    src.Employee.LastName + " " + src.Employee.MiddleName + " " + src.Employee.FirstName))
             .ForMember(dest => dest.WorkflowNodeName,
                 opt => opt.Ignore()) // No navigation, must be added manually
             .ForMember(dest => dest.NodeStep,

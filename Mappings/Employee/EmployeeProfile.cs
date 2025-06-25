@@ -22,9 +22,8 @@ public class EmployeeProfile : Profile
                 src.DeputySubordinates.Select(e => e.Id)))
             .ForMember(dest => dest.DeputySubordinateNames, opt => opt.MapFrom(src =>
                 src.DeputySubordinates.Select(e => $"{e.LastName} {e.MiddleName} {e.FirstName}")))
-            .ForMember(dest => dest.OrganizationEntityIds, opt => opt.MapFrom(src =>
-                src.OrganizationEntityEmployees.Select(o => o.OrganizationEntityId)))
-            .ForMember(dest => dest.OrganizationEntityNames, opt => opt.Ignore()) // Set manually if needed
+            .ForMember(dest => dest.OrganizationEntityEmployees,
+                       opt => opt.MapFrom(src => src.OrganizationEntityEmployees))
             .ReverseMap();
         CreateMap<PersonalInfo, PersonalInfoDTO>();
         CreateMap<CompanyInfo, CompanyInfoDTO>();

@@ -8,7 +8,7 @@ namespace portal.Controllers;
 public class OrganizationEntitiesController
     : BaseController<
         OrganizationEntity,
-        OrganizationEntitySummaryDTO,
+        OrganizationEntityDTO,
         CreateOrganizationEntityDTO,
         UpdateOrganizationEntityDTO
     >
@@ -22,7 +22,7 @@ public class OrganizationEntitiesController
     }
 
     [HttpPost]
-    public override async Task<ActionResult<OrganizationEntitySummaryDTO>> Create(
+    public override async Task<ActionResult<OrganizationEntityDTO>> Create(
         [FromBody] CreateOrganizationEntityDTO dto
     )
     {
@@ -49,7 +49,7 @@ public class OrganizationEntitiesController
     }
 
     [HttpPut("{id}")]
-    public override async Task<ActionResult<OrganizationEntitySummaryDTO>> Update(
+    public override async Task<ActionResult<OrganizationEntityDTO>> Update(
         int id,
         [FromBody] UpdateOrganizationEntityDTO dto
     )

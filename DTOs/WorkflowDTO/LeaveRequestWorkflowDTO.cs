@@ -14,7 +14,7 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO
     public DayNightEnum EndDateDayNightType { get; set; }
 
     public int EmployeeId { get; set; }
-    public string EmployeeName { get; set; } = string.Empty;
+    public string EmployeeName { get; set; } = null!;
 
     public double TotalDays { get; set; }
     public double EmployeeAnnualLeaveTotalDays { get; set; }

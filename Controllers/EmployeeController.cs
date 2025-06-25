@@ -63,6 +63,7 @@ public class EmployeeController
     public async Task<ActionResult<EmployeeDTO>> Login([FromBody] LoginRequestDTO dto)
     {
         _logger.LogInformation("Login attempt for MainId={MainId}", dto.MainId);
+        
 
         EmployeeDTO user;
         try
@@ -74,13 +75,19 @@ public class EmployeeController
             _logger.LogWarning("Invalid login for MainId={MainId}", dto.MainId);
             return Unauthorized("Invalid credentials");
         }
+        
+        // Get organizationEntityIds from OrganizationEntityEmployees table with employeeId=user.Id
+        List<int> organizationEntityIds = user.OrganizationEntityEmployees
+            .Select(oe => oe.OrganizationEntityId)
+            .ToList();
+        string organizationEntityIdsString = string.Join(",", organizationEntityIds);
 
         await AuthHelper.SignInEmployeeAsync(
             HttpContext,
-            id:  user.Id.ToString(),
+            id: user.Id.ToString(),
             mainId: user.MainId ?? "",
             role: "Employee",
-            organizationEntityIds: user.OrganizationEntityIds);
+            organizationEntityIds: organizationEntityIds);
 
         return Ok(user);
     }

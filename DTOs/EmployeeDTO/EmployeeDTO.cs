@@ -28,6 +28,7 @@ public class EmployeeDTO : BaseModelDTO
     public List<EmployeeQualificationInfoDTO>? EmployeeQualificationInfos { get; set; }
     public ScheduleInfoDTO? ScheduleInfo { get; set; }
     public SignatureDTO? Signature { get; set; }
+    public List<OrganizationEntityDTO>? OrganizationEntities { get; set; }
 
     // Role Info
     public int? SupervisorId { get; set; }
@@ -38,10 +39,7 @@ public class EmployeeDTO : BaseModelDTO
     public List<string> SubordinateNames { get; set; } = new();
     public List<int> DeputySubordinateIds { get; set; } = new();
     public List<string> DeputySubordinateNames { get; set; } = new();
-    public List<int> OrganizationEntityIds { get; set; } = new();
-    public List<string> OrganizationEntityNames { get; set; } = new();
     public List<OrganizationEntityEmployeeDTO> OrganizationEntityEmployees { get; set; } = new();
-
 }
 
 public class CreateEmployeeDTO : BaseModelCreateDTO

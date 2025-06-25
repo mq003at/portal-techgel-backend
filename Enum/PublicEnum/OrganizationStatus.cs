@@ -11,5 +11,5 @@ public enum OrganizationRelationType
 {
     MEMBER,
     MANAGER,
-    DEPUTYMANAGER
+    DEPUTY_MANAGER
 }

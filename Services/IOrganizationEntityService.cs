@@ -6,7 +6,7 @@ namespace portal.Services;
 public interface IOrganizationEntityService
     : IBaseService<
         OrganizationEntity,
-        OrganizationEntitySummaryDTO,
+        OrganizationEntityDTO,
         CreateOrganizationEntityDTO,
         UpdateOrganizationEntityDTO
     > { }

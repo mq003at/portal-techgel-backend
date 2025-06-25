@@ -4,24 +4,42 @@ using portal.Models;
 
 namespace portal.Configuration.Models;
 
-public class OrganizationEntityConfiguration
-    : BaseModelConfiguration<OrganizationEntity>,
-        IEntityTypeConfiguration<OrganizationEntity>
+public class OrganizationEntityConfiguration : BaseModelConfiguration<OrganizationEntity>
 {
     public override void Configure(EntityTypeBuilder<OrganizationEntity> builder)
     {
-        builder.HasKey(o => o.Id);
+        base.Configure(builder);
 
-        // Parent ↔ Children
-        builder.HasOne(o => o.Parent).WithMany(o => o.Children).HasForeignKey(o => o.ParentId);
+        builder.ToTable("OrganizationEntities");
 
-        // Manager ↔ OrganizationEntity
+        builder.Property(e => e.Level)
+            .IsRequired();
+
+        builder.Property(e => e.Name)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(e => e.Description)
+            .IsRequired()
+            .HasMaxLength(1000);
+
+        builder.Property(e => e.Status)
+            .IsRequired();
+
+        builder.Property(e => e.SortOrder)
+            .HasDefaultValue(0);
+
+        // Self-referencing relationship for hierarchy
+        builder.HasOne(e => e.Parent)
+            .WithMany(e => e.Children)
+            .HasForeignKey(e => e.ParentId)
+            .OnDelete(DeleteBehavior.Restrict); // Avoid cascade delete in hierarchy
+
+        // Many-to-many via linking table
         builder
-            .HasOne(o => o.Manager)
-            .WithMany() // nếu không cần navigation ngược
-            .HasForeignKey(o => o.ManagerId);
-
-        // Owned types nếu không tách riêng class
-        // builder.OwnsOne(o => o.SomeOwnedType);
+            .HasMany(e => e.OrganizationEntityEmployees)
+            .WithOne(oe => oe.OrganizationEntity)
+            .HasForeignKey(oe => oe.OrganizationEntityId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

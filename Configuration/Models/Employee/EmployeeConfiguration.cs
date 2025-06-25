@@ -82,11 +82,11 @@ public class EmployeeConfiguration
             .OnDelete(DeleteBehavior.Cascade);
 
         // Roleinfo
-        // builder
-        //     .HasMany(e => e.OrganizationEntityEmployees)
-        //     .WithOne(oe => oe.Employee)
-        //     .HasForeignKey(oe => oe.EmployeeId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder
+            .HasMany(e => e.OrganizationEntityEmployees)
+            .WithOne(oe => oe.Employee)
+            .HasForeignKey(oe => oe.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.Supervisor)
             .WithMany(e => e.Subordinates)
