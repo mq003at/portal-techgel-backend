@@ -23,7 +23,9 @@ public static class AuthHelper
 
             // ERP-specific extras
             new Claim("MainId",  mainId ?? string.Empty),
-            new Claim("OrgIds", string.Join(",", organizationEntityIds ?? Enumerable.Empty<int>()))
+            new Claim("Id",      id ?? string.Empty),
+            new Claim("Role",    role ?? string.Empty),
+            new Claim("OrganizationEntityIds", string.Join(",", organizationEntityIds ?? Enumerable.Empty<int>()))
         };
 
         var identity  = new ClaimsIdentity(claims, "Cookies");
