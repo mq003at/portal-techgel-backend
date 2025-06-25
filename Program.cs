@@ -70,32 +70,47 @@ builder
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!);
+var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOperationException("Missing JWT SecretKey"));
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// 🔐 Configure authentication services with named schemes
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Cookies"; // Default for browser sessions
+    options.DefaultChallengeScheme = "Cookies"; // Use Cookies unless explicitly requesting JWT
+})
+// ✅ Cookie-based authentication (for browser logins)
+.AddCookie("Cookies", options =>
+{
+    options.LoginPath = "/api/login";
+    options.AccessDeniedPath = "/denied";
+    options.Cookie.Name = ".Techgel.Auth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.ExpireTimeSpan = TimeSpan.FromHours(2);
+    options.SlidingExpiration = true;
+})
+// ✅ JWT bearer authentication (for APIs or mobile clients)
+.AddJwtBearer("Jwt", options =>
+{
+    options.RequireHttpsMetadata = true;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.RequireHttpsMetadata = true; 
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
-            ValidateIssuer = true,
-            ValidIssuer = jwtSettings["Issuer"],
-
-            ValidateAudience = true,
-            ValidAudience = jwtSettings["Audience"],
-
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero 
-        };
-    });
-
-builder.Services.AddScoped<JwtService>();
+// 🧠 Enable session support (only if you use Session elsewhere)
+builder.Services.AddSession();
 
 
 // Add controllers and Swagger
@@ -161,35 +176,8 @@ builder.Services.AddScoped<ILeaveRequestNodeService, LeaveRequestNodeService>();
 builder.Services.AddScoped<ILeaveRequestWorkflowService, LeaveRequestWorkflowService>();
 
 
-// builder.Services.AddScoped<IGeneralWorkflowService, GeneralWorkflowService>();
-// builder.Services.AddScoped<IApprovalWorkflowNodeService, ApprovalWorkflowNodeService>();
-
 
 var app = builder.Build();
-
-// Testing template
-// app.MapGet("/generate-leave-request", async context =>
-// {
-//     string templatePath = Path.Combine("Helpers", "Documents", "Template", "TEMPLATE-LeaveRequestTemplate.docx");
-
-//     var docxStream = DocxBookmarkInserter.InsertEmployeeData(
-//         templatePath, "Nguyen Hoang Minh Quan", "Lap trinh vien", "Khối Công nghệ");
-
-//     string fileName = $"LeaveRequest_{DateTime.Now:yyyyMMddHHmmssfff}.docx";
-
-//     docxStream.Position = 0; // Ensure stream is at start
-
-//     context.Response.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-//     context.Response.Headers.ContentDisposition = $"attachment; filename={fileName}";
-//     await docxStream.CopyToAsync(context.Response.Body);
-// });
-
-// Enable Swagger
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>

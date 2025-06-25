@@ -1,12 +1,13 @@
 namespace portal.Controllers;
 
+using System.Security.Claims;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using portal.DTOs;
 using portal.Models;
 using portal.Services;
-using portal.Services.JWT;
 
 [Route("api/[controller]s")]
 public class EmployeeController
@@ -14,14 +15,12 @@ public class EmployeeController
 {
     private readonly IEmployeeService _employeeService;
     private readonly ILogger<EmployeeController> _logger;
-    private readonly IJwtService _jwtService;
 
-    public EmployeeController(IEmployeeService service, ILogger<EmployeeController> logger, IJwtService jwtService)
+    public EmployeeController(IEmployeeService service, ILogger<EmployeeController> logger)
         : base(service)
     {
         _employeeService = service;
         _logger = logger;
-        _jwtService = jwtService;
     }
 
     [Authorize]
@@ -46,7 +45,7 @@ public class EmployeeController
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<LoginResponseDTO>> Login([FromBody] LoginRequestDTO dto)
+    public async Task<ActionResult<EmployeeDTO>> Login([FromBody] LoginRequestDTO dto)
     {
         _logger.LogInformation("Login attempt for MainId={MainId}", dto.MainId);
 
@@ -61,20 +60,21 @@ public class EmployeeController
             return Unauthorized("Invalid credentials");
         }
 
-        _logger.LogInformation("Login successful for MainId={MainId}", dto.MainId);
+        await AuthHelper.SignInEmployeeAsync(
+            HttpContext,
+            id:  user.Id.ToString(),
+            mainId: user.MainId ?? "",
+            role: "Employee",
+            organizationEntityIds: user.OrganizationEntityIds);
 
-        string token = _jwtService.GenerateToken(
-            user.Id.ToString(),
-            user.MainId ?? "",
-            "Employee",
-            organizationEntityIds: user.OrganizationEntityIds
-        );
+        return Ok(user);
+    }
 
-        return Ok(new LoginResponseDTO
-        {
-            Token = token,
-            Employee = user
-        });
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync("Cookies");
+        return Ok(new { Message = "Logged out" });
     }
 
     [HttpPut("{employeeId}/details")]
