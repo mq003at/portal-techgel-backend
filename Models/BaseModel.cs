@@ -19,7 +19,7 @@ public abstract class BaseModel
 public abstract class BaseModelWithOnlyId
 {
     [Key]
-    public int Id { get; set; }
+    public long Id { get; set; }
 }
 
 

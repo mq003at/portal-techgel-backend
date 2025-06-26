@@ -60,15 +60,23 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<EmergencyContactInfo> EmergencyContactInfos { get; set; }
     public DbSet<ScheduleInfo> ScheduleInfos { get; set; }
     public DbSet<Signature> Signatures { get; set; }
+
     // Ending Employee Setup
     // Join table Emp - OrganizationEntity
     public DbSet<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<DocumentSignature> DocumentSignatures { get; set; }
 
-    public DbSet<LeaveRequestWorkflow> LeaveRequestWorkflows { get; set; }
-    public DbSet<LeaveRequestNode> LeaveRequestNodes { get; set; }
+
 
     public DbSet<DocumentAssociation> DocumentAssociations { get; set; }
     public DbSet<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; }
+
+    // Workflow setip
+    public DbSet<LeaveRequestWorkflow> LeaveRequestWorkflows { get; set; }
+    public DbSet<LeaveRequestNode> LeaveRequestNodes { get; set; }
+
+    public DbSet<GatePassWorkflow> GatePassWorkflows { get; set; }
+    public DbSet<GatePassNode> GatePassNodes { get; set; }
+
 }

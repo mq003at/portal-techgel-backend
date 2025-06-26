@@ -32,3 +32,28 @@ public abstract class BaseModelProfile<
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
     }
 }
+
+public abstract class BaseModelWithOnlyIdProfile<
+    TModel,
+    TDto,
+    TCreateDto,
+    TUpdateDto>
+    : Profile
+    where TModel : BaseModelWithOnlyId
+    where TDto : BaseModelWithOnlyIdDTO
+    where TCreateDto : BaseModelWithOnlyIdCreateDTO
+    where TUpdateDto : BaseModelWithOnlyIdUpdateDTO
+{
+    public BaseModelWithOnlyIdProfile()
+    {
+        // Model -> DTO
+        CreateMap<TModel, TDto>().ReverseMap();
+        // Create DTO -> Model
+        CreateMap<TCreateDto, TModel>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore());
+
+        // Update DTO -> Model
+        CreateMap<TUpdateDto, TModel>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore());
+    }
+}

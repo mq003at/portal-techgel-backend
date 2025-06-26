@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace portal.Configuration.Models;
+namespace portal.Configuration;
 
 public class OrganizationEntityEmployeeConfiguration : IEntityTypeConfiguration<OrganizationEntityEmployee>
 {

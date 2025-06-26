@@ -17,7 +17,5 @@ public class LeaveRequestNodeConfiguration : BaseWorkflowNodeConfiguration<Leave
             .WithMany(w => w.LeaveRequestNodes)
             .HasForeignKey(n => n.WorkflowId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        
     }
 }

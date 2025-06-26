@@ -1,5 +1,6 @@
 using AutoMapper;
 using portal.DTOs;
+using portal.Extensions;
 using portal.Models;
 
 namespace portal.Mappings;
@@ -20,13 +21,8 @@ public class LeaveRequestWorkflowProfile : BaseWorkflowProfile<
     {
         CreateMap<LeaveRequestWorkflow, LeaveRequestWorkflowDTO>()
             .IncludeBase<BaseWorkflow, BaseWorkflowDTO>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null
-                ? string.Join(" ", new[] {
-                    src.Employee.LastName,
-                    src.Employee.MiddleName,
-                    src.Employee.FirstName
-                }.Where(n => !string.IsNullOrWhiteSpace(n)))
-                : null))
+            .ForMember(dest => dest.EmployeeMainId, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.MainId : string.Empty))
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.GetDisplayName()))
             .ForMember(dest => dest.LeaveRequestNodes, opt => opt.MapFrom(src => src.LeaveRequestNodes))
             .ReverseMap();
 

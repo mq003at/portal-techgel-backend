@@ -22,7 +22,7 @@ public abstract class BaseModelUpdateDTO
 
 public abstract class BaseModelWithOnlyIdDTO
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
 }
 public abstract class BaseModelWithOnlyIdCreateDTO
 {

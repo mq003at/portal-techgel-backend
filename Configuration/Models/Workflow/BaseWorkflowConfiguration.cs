@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using portal.Models;
 
 namespace portal.Configuration;
-
-
-
 public abstract class BaseWorkflowConfiguration<TWorkflow> : BaseModelConfiguration<TWorkflow>
     where TWorkflow : BaseWorkflow
 {
@@ -25,6 +22,8 @@ public abstract class BaseWorkflowConfiguration<TWorkflow> : BaseModelConfigurat
             .IsRequired()
             .HasConversion<string>();
 
-        // Add any other shared workflow configs here.
+        builder.Property(w => w.RejectReason)
+            .HasMaxLength(1000)
+            .IsRequired(false);
     }
 }

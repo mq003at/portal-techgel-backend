@@ -27,7 +27,6 @@ public class LeaveRequestWorkflow : BaseWorkflow
     public double EmployeeCompensatoryLeaveTotalDays { get; set; }
     public double FinalEmployeeCompensatoryLeaveTotalDays { get; set; }
     public virtual List<LeaveRequestNode> LeaveRequestNodes { get; set; } = new List<LeaveRequestNode>();
-    public string? RejectReason { get; set; }
     public string? Notes { get; set; }
     public string AssigneeDetails { get; set; } = null!;
 }

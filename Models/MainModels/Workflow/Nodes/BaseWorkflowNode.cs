@@ -13,7 +13,13 @@ public abstract class BaseWorkflowNode : BaseModel
     [Required]
     public GeneralWorkflowStatusType Status { get; set; }
 
-    // Reference to the employee who has a RACI role in the workflow. By standard, every node must need at least 1 employee
+    // null = no approval logic, workflownode participants will only have 1 element in the  list    
+    public int WorkflowId { get; set; }
+    [ForeignKey("WorkflowId")]
+
+    // Not map field so that we do not cluster up the db
+    [NotMapped]
     public List<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; } = new List<WorkflowNodeParticipant>();
+    [NotMapped]
     public List<DocumentAssociation> DocumentAssociations { get; set; } = new List<DocumentAssociation>();
 }

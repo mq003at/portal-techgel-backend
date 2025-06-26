@@ -15,7 +15,7 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO
 
     public int EmployeeId { get; set; }
     public string EmployeeName { get; set; } = null!;
-
+    public string EmployeeMainId { get; set; } = string.Empty;
     public double TotalDays { get; set; }
     public double EmployeeAnnualLeaveTotalDays { get; set; }
     public double FinalEmployeeAnnualLeaveTotalDays { get; set; }
