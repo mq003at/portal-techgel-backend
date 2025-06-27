@@ -14,7 +14,7 @@ public class NotificationCategory : BaseModelWithOnlyId
 
 // public class AllowedRole : BaseModelWithOnlyId
 // {
-//     public int NotificationCategoryId { get; set; }
+//     public long NotificationCategoryId { get; set; }
 //     public NotificationCategory NotificationCategory { get; set; } = null!;
 //     public int RoleId { get; set; }
 //     public Role Role { get; set; } = null!;

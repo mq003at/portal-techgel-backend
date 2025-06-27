@@ -6,7 +6,7 @@ public class Notification : BaseModel
     [Required]
     public int EmployeeId { get; set; }
     public Employee Employee { get; set; } = null!;
-    public int NotificationCategoryId { get; set; }
+    public long NotificationCategoryId { get; set; }
     public NotificationCategory NotificationCategory { get; set; } = null!;
 
     [Required]
