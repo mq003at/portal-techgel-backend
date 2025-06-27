@@ -307,6 +307,12 @@ public class LeaveRequestWorkflowService
                 .ToList();
         }
 
+        workflow.DocumentAssociations = await _context.DocumentAssociations
+            .Where(da => da.WorkflowId == workflow.Id && da.EntityType == "LeaveRequest")
+            .Include(da => da.Document) // Eager load the Document
+            .Select(da => da.Document)
+            .ToListAsync();
+
         return _mapper.Map<LeaveRequestWorkflowDTO>(workflow);
     }
 

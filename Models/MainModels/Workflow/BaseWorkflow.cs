@@ -20,5 +20,5 @@ public abstract class BaseWorkflow : BaseModel
     // Reference to document system  (retrieved from nodes with LINQ)
     
     [NotMapped]
-    public List<DocumentAssociation> DocumentAssociations { get; set; } = new List<DocumentAssociation>();
+    public List<Document> DocumentAssociations { get; set; } = new List<Document>();
 }

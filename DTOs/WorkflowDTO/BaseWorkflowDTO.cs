@@ -8,7 +8,7 @@ public class BaseWorkflowDTO : BaseModelDTO
     public GeneralWorkflowStatusType Status { get; set; }
 
     public List<WorkflowNodeParticipantDTO> WorkflowNodeParticipants { get; set; } = new();
-    public List<DocumentAssociationDTO> DocumentAssociations { get; set; } = new();
+    public List<DocumentDTO> DocumentAssociations { get; set; } = new();
 }
 
 // Input the sender information
