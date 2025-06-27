@@ -286,13 +286,25 @@ public class LeaveRequestWorkflowService
 
     public override async Task<LeaveRequestWorkflowDTO?> GetByIdAsync(int id)
     {
-        LeaveRequestWorkflow workflow = await _dbSet.Include(wf => wf.LeaveRequestNodes).FirstOrDefaultAsync(wf => wf.Id == id) ?? throw new KeyNotFoundException($"Workflow with ID {id} not found.");
+                // Step 1: Get workflow and its nodes
+        LeaveRequestWorkflow workflow = await _dbSet
+            .Include(wf => wf.LeaveRequestNodes)
+            .FirstOrDefaultAsync(wf => wf.Id == id)
+            ?? throw new KeyNotFoundException($"Workflow with ID {id} not found.");
 
+        // Step 2: Load all participants in one query
+        var nodeIds = workflow.LeaveRequestNodes.Select(n => n.Id).ToList();
+
+        var participants = await _context.WorkflowNodeParticipants
+            .Where(p => nodeIds.Contains(p.WorkflowNodeId) && p.WorkflowNodeType == "LeaveRequest")
+            .ToListAsync();
+
+        // Step 3: Assign participants to nodes
         foreach (var node in workflow.LeaveRequestNodes)
         {
-            node.WorkflowNodeParticipants = await _context.WorkflowNodeParticipants
-                .Where(p => p.WorkflowNodeId == node.Id && p.WorkflowNodeType == "LeaveRequest")
-                .ToListAsync();
+            node.WorkflowNodeParticipants = participants
+                .Where(p => p.WorkflowNodeId == node.Id)
+                .ToList();
         }
 
         return _mapper.Map<LeaveRequestWorkflowDTO>(workflow);
@@ -459,14 +471,16 @@ public class LeaveRequestWorkflowService
             Division = Division
         };
 
-        var newDocumentAssociation = new DocumentAssociation
+        DocumentAssociation newDocumentAssociation = new DocumentAssociation
         {
             Document = newMetadata,
             EntityType = "LeaveRequest",
-            EntityId = nodeId // Associate with the workflow ID
+            EntityId = nodeId, // Associate with the workflow ID
+            WorkflowId = workflow.Id
         };
 
         _context.Documents.Add(newMetadata);
+        _context.DocumentAssociations.Add(newDocumentAssociation);
         await _context.SaveChangesAsync();
 
         return true;
