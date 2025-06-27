@@ -87,7 +87,8 @@ builder.Services.AddAuthentication(options =>
     options.AccessDeniedPath = "/denied";
     options.Cookie.Name = ".Techgel.Auth";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SameSite = SameSiteMode.Lax; // Use Lax for CSRF protection
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Always use secure cookies
     options.ExpireTimeSpan = TimeSpan.FromHours(2);
     options.SlidingExpiration = true;
 
