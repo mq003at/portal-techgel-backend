@@ -6,6 +6,10 @@ namespace portal.DTOs;
 public abstract class WorkflowNodeDTO : BaseModelDTO
 {
     public string Name { get; set; } = null!;
+    public int WorkflowId { get; set; } 
+    public GeneralWorkflowStatusType Status { get; set; }
+    public LeaveApprovalStepType StepType { get; set; } 
+    public string Description { get; set; } = null!;
 
     // Navigation fields
     public List<WorkflowNodeParticipantDTO> WorkflowNodeParticipants { get; set; } = new();
