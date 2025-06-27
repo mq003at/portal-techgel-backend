@@ -286,13 +286,14 @@ public class LeaveRequestWorkflowService
 
     public override async Task<LeaveRequestWorkflowDTO?> GetByIdAsync(int id)
     {
-        LeaveRequestWorkflow workflow = await _dbSet.FirstOrDefaultAsync(wf => wf.Id == id) ?? throw new KeyNotFoundException($"Workflow with ID {id} not found.");
+        LeaveRequestWorkflow workflow = await _dbSet.Include(wf => wf.LeaveRequestNodes).FirstOrDefaultAsync(wf => wf.Id == id) ?? throw new KeyNotFoundException($"Workflow with ID {id} not found.");
 
-        List<LeaveRequestNode> nodes = await _context.LeaveRequestNodes
-            .Where(n => n.WorkflowId == id)
-            .Include(n => n.WorkflowNodeParticipants)
-            .ToListAsync();
-        workflow.LeaveRequestNodes = nodes;
+        foreach (var node in workflow.LeaveRequestNodes)
+        {
+            node.WorkflowNodeParticipants = await _context.WorkflowNodeParticipants
+                .Where(p => p.WorkflowNodeId == node.Id && p.WorkflowNodeType == "LeaveRequest")
+                .ToListAsync();
+        }
 
         return _mapper.Map<LeaveRequestWorkflowDTO>(workflow);
     }
