@@ -1,10 +1,13 @@
 namespace portal.Controllers;
 
 using System.Security.Claims;
+using System.Text.Json;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using portal.Db;
 using portal.DTOs;
 using portal.Models;
 using portal.Services;
@@ -15,12 +18,14 @@ public class EmployeeController
 {
     private readonly IEmployeeService _employeeService;
     private readonly ILogger<EmployeeController> _logger;
+    private readonly ApplicationDbContext _context;
 
-    public EmployeeController(IEmployeeService service, ILogger<EmployeeController> logger)
+    public EmployeeController(IEmployeeService service, ILogger<EmployeeController> logger, ApplicationDbContext context)
         : base(service)
     {
         _employeeService = service;
         _logger = logger;
+        _context = context;
     }
 
     [HttpGet]
@@ -75,12 +80,14 @@ public class EmployeeController
             _logger.LogWarning("Invalid login for MainId={MainId}", dto.MainId);
             return Unauthorized("Invalid credentials");
         }
-        
-        // Get organizationEntityIds from OrganizationEntityEmployees table with employeeId=user.Id
-        List<int> organizationEntityIds = user.OrganizationEntityEmployees
+
+        // get Ids out of user.OrganizationEntityEmployees
+        List<int> organizationEntityIds = user?.OrganizationEntitiesEmployees?
             .Select(oe => oe.OrganizationEntityId)
-            .ToList();
-        string organizationEntityIdsString = string.Join(",", organizationEntityIds);
+            .ToList() ?? new List<int>();
+
+        // Get organizationEntityIds from OrganizationEntityEmployees table with employeeId=user.Id
+        // Extract all OrganizationEntityId entries from the OrganizationEntityEmployees table for this user
 
         await AuthHelper.SignInEmployeeAsync(
             HttpContext,

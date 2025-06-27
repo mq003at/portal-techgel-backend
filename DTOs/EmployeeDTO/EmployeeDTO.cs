@@ -28,7 +28,7 @@ public class EmployeeDTO : BaseModelDTO
     public List<EmployeeQualificationInfoDTO>? EmployeeQualificationInfos { get; set; }
     public ScheduleInfoDTO? ScheduleInfo { get; set; }
     public SignatureDTO? Signature { get; set; }
-    public List<OrganizationEntityDTO>? OrganizationEntities { get; set; }
+    public List<OrganizationEntityEmployeeDTO>? OrganizationEntitiesEmployees { get; set; }
 
     // Role Info
     public int? SupervisorId { get; set; }

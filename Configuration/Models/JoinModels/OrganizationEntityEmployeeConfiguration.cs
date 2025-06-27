@@ -3,31 +3,43 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace portal.Configuration;
 
-public class OrganizationEntityEmployeeConfiguration : IEntityTypeConfiguration<OrganizationEntityEmployee>
+public class OrganizationEntityEmployeeConfiguration 
+    : BaseModelConfiguration<OrganizationEntityEmployee>, 
+      IEntityTypeConfiguration<OrganizationEntityEmployee>
 {
-    public void Configure(EntityTypeBuilder<OrganizationEntityEmployee> builder)
+    public override void Configure(EntityTypeBuilder<OrganizationEntityEmployee> builder)
     {
-        // Composite Key
-        builder.HasKey(x => new { x.OrganizationEntityId, x.EmployeeId });
+        // Apply base configuration (Id, MainId, timestamps)
+        base.Configure(builder);
 
-        // Relationships
+        // Foreign key to OrganizationEntity
         builder.HasOne(x => x.OrganizationEntity)
                .WithMany(x => x.OrganizationEntityEmployees)
                .HasForeignKey(x => x.OrganizationEntityId)
-               .OnDelete(DeleteBehavior.Cascade); 
+               .OnDelete(DeleteBehavior.Cascade);
 
+        // Foreign key to Employee
         builder.HasOne(x => x.Employee)
                .WithMany(x => x.OrganizationEntityEmployees)
                .HasForeignKey(x => x.EmployeeId)
-               .OnDelete(DeleteBehavior.Cascade); 
+               .OnDelete(DeleteBehavior.Cascade);
 
+        // Enum Conversion (as string)
         builder.Property(x => x.OrganizationRelationType)
                .HasConversion<string>()
                .IsRequired();
 
+        // Unique constraint (optional — ensure no duplicate org-employee pair)
+        builder.HasIndex(x => new { x.OrganizationEntityId, x.EmployeeId })
+               .IsUnique();
+
+        // Index for optimization
         builder.HasIndex(x => new { x.OrganizationEntityId, x.IsPrimary });
 
+        // Additional configuration
         builder.Property(x => x.IsPrimary)
+               .IsRequired()
+               .HasDefaultValue(false)
                .HasComment("Marks the primary association of this employee to the org entity.");
     }
 }

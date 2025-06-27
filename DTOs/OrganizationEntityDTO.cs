@@ -57,9 +57,16 @@ public class UpdateOrganizationEntityDTO : BaseModelUpdateDTO
     public string? Description { get; set; }
     public OrganizationStatus? Status { get; set; }
     public int? SortOrder { get; set; }
-    public List<int>? EmployeeIds { get; set; }
     public OrganizationRelationType? OrganizationRelationType { get; set; }
     public bool? IsPrimary { get; set; }
     public int? MangerId { get; set; }
     public int? DeputyManagerId { get; set; }
 }
+
+public class OrganizationEntityUpdateEmployeesDTO : BaseModelUpdateDTO
+{
+    public int EmployeeIds { get; set; }
+    public bool IsPrimary { get; set; }
+    public OrganizationRelationType OrganizationRelationType { get; set; }
+}
+

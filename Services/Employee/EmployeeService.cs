@@ -341,6 +341,17 @@ public class EmployeeService
                 .FirstOrDefaultAsync(e => e.MainId == MainId && e.Password == password)
             ?? throw new UnauthorizedAccessException("Invalid credentials");
 
+       
+        List<OrganizationEntityEmployee> raw = await _context.OrganizationEntityEmployees
+            .Where(oe => oe.EmployeeId == employee.Id)
+            .AsNoTracking()
+            .ToListAsync();
+
+        _logger.LogInformation("Raw OrganizationEntityEmployees: {raw}", JsonSerializer.Serialize(raw));
+
+        employee.OrganizationEntityEmployees = raw;
+        _logger.LogInformation("Login successful for {a}", JsonSerializer.Serialize(employee));
+
         return _mapper.Map<EmployeeDTO>(employee);
     }
 
