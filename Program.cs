@@ -171,6 +171,8 @@ builder.Services.AddScoped<ISignatureService, SignatureService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ILeaveRequestNodeService, LeaveRequestNodeService>();
 builder.Services.AddScoped<ILeaveRequestWorkflowService, LeaveRequestWorkflowService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationCategoryService, NotificationCategoryService>();
 
 
 
