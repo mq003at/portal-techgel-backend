@@ -7,12 +7,11 @@ using DocumentFormat.OpenXml;
 
 public static class WordBookmarkReplacer
 {
-    public static void ReplacePlaceholders(Stream wordStream, Dictionary<string, string> placeholders)
+    public static void ReplacePlaceholders(Stream wordStream, Dictionary<string, (string Text, bool IsBold)> placeholders)
     {
         if (wordStream == null || !wordStream.CanRead || !wordStream.CanSeek)
             throw new ArgumentException("Stream must be readable and seekable", nameof(wordStream));
 
-        // Ensure the stream is at the beginning
         wordStream.Seek(0, SeekOrigin.Begin);
 
         using (var wordDoc = WordprocessingDocument.Open(wordStream, true))
@@ -21,17 +20,14 @@ public static class WordBookmarkReplacer
             if (mainPart?.Document?.Body == null)
                 throw new InvalidDataException("Invalid Word document structure");
 
-            // Replace in body
             ReplaceBookmarksInElement(mainPart.Document.Body, placeholders);
 
-            // Replace in headers
             foreach (var header in mainPart.HeaderParts)
             {
                 ReplaceBookmarksInElement(header.Header, placeholders);
                 header.Header.Save();
             }
 
-            // Replace in footers
             foreach (var footer in mainPart.FooterParts)
             {
                 ReplaceBookmarksInElement(footer.Footer, placeholders);
@@ -41,11 +37,10 @@ public static class WordBookmarkReplacer
             mainPart.Document.Save();
         }
 
-        // Reset stream position if caller needs to read the result
         wordStream.Seek(0, SeekOrigin.Begin);
     }
 
-    private static void ReplaceBookmarksInElement(OpenXmlElement root, Dictionary<string, string> placeholders)
+    private static void ReplaceBookmarksInElement(OpenXmlElement root, Dictionary<string, (string Text, bool IsBold)> placeholders)
     {
         var bookmarks = root.Descendants<BookmarkStart>();
 
@@ -54,30 +49,30 @@ public static class WordBookmarkReplacer
             if (bookmarkStart.Name == null || !placeholders.ContainsKey(bookmarkStart.Name!))
                 continue;
 
-            var replacementText = placeholders[bookmarkStart.Name!];
+            var (text, isBold) = placeholders[bookmarkStart.Name!];
 
             // Remove all elements between BookmarkStart and BookmarkEnd
             var current = bookmarkStart.NextSibling();
 
-            while (current != null && !(current is BookmarkEnd && ((BookmarkEnd)current).Id == bookmarkStart.Id))
+            while (current != null && !(current is BookmarkEnd be && be.Id == bookmarkStart.Id))
             {
                 var next = current.NextSibling();
                 current.Remove();
                 current = next;
             }
 
-            var run = new Run(
-            new RunProperties(
+            var runProps = new RunProperties(
                 new RunFonts { Ascii = "Arial", HighAnsi = "Arial", ComplexScript = "Arial" },
                 new FontSize { Val = "24" },
                 new FontSizeComplexScript { Val = "24" }
-            ),
-            new Text(replacementText) { Space = SpaceProcessingModeValues.Preserve }
             );
 
-            // Insert replacement text
-            bookmarkStart.Parent?.InsertAfter(run, bookmarkStart);
+            if (isBold)
+                runProps.Append(new Bold());
 
+            var run = new Run(runProps, new Text(text) { Space = SpaceProcessingModeValues.Preserve });
+
+            bookmarkStart.Parent?.InsertAfter(run, bookmarkStart);
         }
     }
 }

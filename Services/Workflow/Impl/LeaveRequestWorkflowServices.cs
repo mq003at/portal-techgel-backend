@@ -51,7 +51,7 @@ public class LeaveRequestWorkflowService
 
         // Calculate number of leave days (min 0.5)
         var totalDays = DateHelper.CalculateLeaveDays(dto.StartDate, (int)dto.StartDateDayNightType, dto.EndDate, (int)dto.EndDateDayNightType);
-        
+
         if (totalDays < 0.4)
             throw new ArgumentException("End date must be after start date and at least half a day apart.");
 
@@ -73,7 +73,7 @@ public class LeaveRequestWorkflowService
             throw new InvalidOperationException("Cannot request Annual or Compensatory leave while on probation.");
         }
 
-  
+
         // Building Leave information using Employee navigation properties
         var compensatoryLeaveInit = companyInfo.CompensatoryLeaveTotalDays;
         var annualLeaveInit = companyInfo.AnnualLeaveTotalDays;
@@ -99,7 +99,7 @@ public class LeaveRequestWorkflowService
                 throw new InvalidOperationException("Not enough annual leave days available. Contact admins to see if anything is wrong.");
             }
             finalEmployeeAnnualLeaveTotalDays = annualLeaveInit - totalDays;
-             _logger.LogError("finalDays: {fdays}", finalEmployeeAnnualLeaveTotalDays);
+            _logger.LogError("finalDays: {fdays}", finalEmployeeAnnualLeaveTotalDays);
 
         }
 
@@ -115,7 +115,7 @@ public class LeaveRequestWorkflowService
 
         // Build up receiver IDs for workflow
         // Compose workflow steps
-        
+
 
         // Initiate nodes creation: 2 nodes for now, first one has 2 participants, second one has 2 participants
         var steps = new List<(string Name, LeaveApprovalStepType StepType, int Status, List<WorkflowNodeParticipant> nodeParticipants)>
@@ -140,7 +140,7 @@ public class LeaveRequestWorkflowService
                 WorkflowNodeParticipants = step.nodeParticipants,
                 Description = step.Name,
             };
-            
+
             nodes.Add(node);
 
         }
@@ -286,7 +286,7 @@ public class LeaveRequestWorkflowService
 
     public override async Task<LeaveRequestWorkflowDTO?> GetByIdAsync(int id)
     {
-                // Step 1: Get workflow and its nodes
+        // Step 1: Get workflow and its nodes
         LeaveRequestWorkflow workflow = await _dbSet
             .Include(wf => wf.LeaveRequestNodes)
             .FirstOrDefaultAsync(wf => wf.Id == id)
@@ -316,7 +316,7 @@ public class LeaveRequestWorkflowService
         return _mapper.Map<LeaveRequestWorkflowDTO>(workflow);
     }
 
-    public async Task<LeaveRequestNodeDTO?> GetAllWorkflowByEmployeeId (int employeeId)
+    public async Task<LeaveRequestNodeDTO?> GetAllWorkflowByEmployeeId(int employeeId)
     {
         var workflow = await _context.LeaveRequestWorkflows
             .Include(w => w.LeaveRequestNodes)
@@ -329,7 +329,7 @@ public class LeaveRequestWorkflowService
         return workflowDto;
     }
 
-    
+
     public override async Task<IEnumerable<LeaveRequestWorkflowDTO>> GetAllAsync()
     {
         var workflows = await base.GetAllAsync();
@@ -395,45 +395,47 @@ public class LeaveRequestWorkflowService
         var newTargetPath = Path.Combine("erp", "documents", Division, "Ho_So", "Nghi_Phep", newFileName).Replace("\\", "/");
 
         // Filling in steps
-        var placeholders = new Dictionary<string, string>
+        var placeholders = new Dictionary<string, (string Text, bool IsBold)>
         {
             // English
-            ["fullName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
-            ["department"] = employee.CompanyInfo?.Department ?? "",
-            ["position"] = employee.CompanyInfo?.Position ?? "",
-            ["startDate"] = workflow.StartDate.ToString("dd/MM/yyyy"),
-            ["endDate"] = workflow.EndDate.ToString("dd/MM/yyyy"),
-            ["reason"] = workflow.Reason ?? "",
-            ["leaveRequestStartDate"] = workflow.StartDateDayNightType == 0 ? "Sáng " : "Chiều " + workflow.StartDate.ToString("dd/MM/yyyy"),
-            ["leaveRequestEndDate"] = workflow.EndDateDayNightType == 0 ? "Sáng " : "Chiều " + workflow.EndDate.ToString("dd/MM/yyyy"),
-            ["totalDaysTop"] = workflow.TotalDays.ToString(),
-            ["totalDaysBox"] = workflow.TotalDays.ToString(),
-            ["finalAnnualTotal"] = workflow.FinalEmployeeAnnualLeaveTotalDays.ToString(),
+            ["fullName"] = ($"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(), false),
+            ["department"] = (employee.CompanyInfo?.Department ?? "", false),
+            ["position"] = (employee.CompanyInfo?.Position ?? "", false),
+            ["startDate"] = (workflow.StartDate.ToString("dd/MM/yyyy"), false),
+            ["endDate"] = (workflow.EndDate.ToString("dd/MM/yyyy"), false),
+            ["reason"] = (workflow.Reason ?? "", false),
+            ["leaveRequestStartDate"] = (
+         (workflow.StartDateDayNightType == 0 ? "Sáng " : "Chiều ") + workflow.StartDate.ToString("dd/MM/yyyy"),
+         false
+     ),
+            ["leaveRequestEndDate"] = (
+         (workflow.EndDateDayNightType == 0 ? "Sáng " : "Chiều ") + workflow.EndDate.ToString("dd/MM/yyyy"),
+         false
+     ),
+            ["totalDaysTop"] = (workflow.TotalDays.ToString(), false),
+            ["totalDaysBox"] = (workflow.TotalDays.ToString(), false),
+            ["finalAnnualTotal"] = (workflow.FinalEmployeeAnnualLeaveTotalDays.ToString(), false),
 
-            ["employeeName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
-            ["employeeId"] = employee.Id.ToString(),
-            ["employeeSignDate"] = today.ToString("dd/MM/yyyy"),
-            ["assigneeDetails"] = workflow.AssigneeDetails,
-            ["notes"] = workflow.Notes ?? "",
+            ["employeeName"] = ($"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(), false),
+            ["employeeId"] = (employee.Id.ToString(), false),
+            ["employeeSignDate"] = (today.ToString("dd/MM/yyyy"), false),
+            ["assigneeDetails"] = (workflow.AssigneeDetails, false),
+            ["notes"] = (workflow.Notes ?? "", false),
 
-            ["empAnnualTotal"] = employee.CompanyInfo?.AnnualLeaveTotalDays.ToString() ?? "",
-            ["empCompensatoryTotal"] = employee.CompanyInfo?.CompensatoryLeaveTotalDays.ToString() ?? "",
-            ["totalAnnualDays"] = workflow.TotalDays.ToString(),
-            ["finalAnnualTotal"] = workflow.FinalEmployeeAnnualLeaveTotalDays.ToString(),
-            ["finalCompensatoryTotal"] = workflow.FinalEmployeeCompensatoryLeaveTotalDays.ToString(),
+            ["empAnnualTotal"] = (employee.CompanyInfo?.AnnualLeaveTotalDays.ToString() ?? "", false),
+            ["empCompensatoryTotal"] = (employee.CompanyInfo?.CompensatoryLeaveTotalDays.ToString() ?? "", false),
+            ["totalAnnualDays"] = (workflow.TotalDays.ToString(), false),
+            ["finalCompensatoryTotal"] = (workflow.FinalEmployeeCompensatoryLeaveTotalDays.ToString(), false),
 
-            ["employeeFullName"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
-            ["employeeFullNameBottom"] = $"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(),
-            ["employeeSignDate"] = workflow.CreatedAt.ToString("dd/MM/yyyy"),
+            ["employeeFullName"] = ($"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(), false),
+            ["employeeFullNameBottom"] = ($"{employee.LastName} {employee.MiddleName} {employee.FirstName}".Trim(), false),
+            ["employeeSignDate"] = (workflow.CreatedAt.ToString("dd/MM/yyyy"), false),
 
-            ["approverPosition"] = approver.CompanyInfo?.Position?.ToUpper() ?? "",
-            ["approverFullName"] = $"{approver.LastName} {approver.MiddleName} {approver.FirstName}".Trim(),
-            ["approverSignDate"] = today.ToString("dd/MM/yyyy"),
-            
-            // Custom: If assigneeId == employeeId, add a special note
+            ["approverPosition"] = (approver.CompanyInfo?.Position?.ToUpper() ?? "", true), // BOLD
+            ["approverFullName"] = ($"{approver.LastName} {approver.MiddleName} {approver.FirstName}".Trim(), false),
+            ["approverSignDate"] = (today.ToString("dd/MM/yyyy"), false),
 
-            // Vietnamese for LeaveApprovalCategory
-            ["type"] = workflow.LeaveApprovalCategory switch
+            ["type"] = (workflow.LeaveApprovalCategory switch
             {
                 LeaveApprovalCategory.AnnualLeave => "Nghỉ phép có lương",
                 LeaveApprovalCategory.UnpaidLeave => "Nghỉ phép không lương",
@@ -442,8 +444,7 @@ public class LeaveRequestWorkflowService
                 LeaveApprovalCategory.PaternityLeave => "Nghỉ tang",
                 LeaveApprovalCategory.CompensatoryLeave => "Nghỉ bù",
                 _ => workflow.LeaveApprovalCategory.ToString()
-            },
-
+            }, false)
         };
 
         MemoryStream newMemoryDoc = await FileHandling.ToMemoryStreamAsync(
