@@ -270,13 +270,11 @@ public class EmployeeService
         if (dto.OrganizationEntityEmployees is { Count: > 0 })
         {
             var validUpdates = dto.OrganizationEntityEmployees
-                .Where(x => x.OrganizationEntityId != 0 && x.OrganizationRelationType != 0)
+                .Where(x => x.OrganizationEntityId != 0)
                 .Select(x => new OrganizationEntityEmployee
                 {
                     EmployeeId = employeeId,
                     OrganizationEntityId = x.OrganizationEntityId,
-                    OrganizationRelationType = x.OrganizationRelationType,
-                    IsPrimary = x.IsPrimary
                 }).ToList();
 
             // Remove old ones

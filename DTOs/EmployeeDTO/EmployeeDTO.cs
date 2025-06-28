@@ -95,7 +95,7 @@ public class UpdateEmployeeDetailsDTO
     public int? DeputySupervisorId { get; set; }
     public List<int>? SubordinateIds { get; set; }
     public List<int>? DeputySubordinateIds { get; set; }
-    public List<UpdateOrganizationEntityEmployeeDTO>? OrganizationEntityEmployees { get; set; }
+    public List<OrganizationEntityEmployeeUpdateDTO>? OrganizationEntityEmployees { get; set; }
 }
 
 public class LoginRequestDTO

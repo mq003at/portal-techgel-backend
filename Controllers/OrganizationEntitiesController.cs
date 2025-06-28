@@ -42,13 +42,13 @@ public class OrganizationEntitiesController
     }
 
     // Change who belongs to what orgentities
-    // [HttpPut("{id}/employees")]
-    // public async Task<IActionResult> UpdateEmployees(
-    //     int id,
-    //     [FromBody]  dto
-    // )
-    // {
-    //     var result = await _entityService.UpdateEmployeesAsync(id, dto);
-    //     return Ok(result);
-    // }
+    [HttpPut("{id}/employees")]
+    public async Task<IActionResult> UpdateEmployees(
+        int id,
+        [FromBody] List<OrganizationEntityEmployeeCreateDTO> dto
+    )
+    {
+        var result = await _entityService.UpdateEmployeesAsync(id, dto);
+        return Ok(result);
+    }
 }

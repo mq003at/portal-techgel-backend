@@ -12,7 +12,5 @@ public class OrganizationEntityEmployee : BaseModel
     public OrganizationEntity OrganizationEntity { get; set; } = null!;
     public int EmployeeId { get; set; }
     public Employee Employee { get; set; } = null!;
-    public bool IsPrimary { get; set; }
-    public OrganizationRelationType OrganizationRelationType { get; set; }
 
 }

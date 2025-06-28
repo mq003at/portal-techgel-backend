@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using portal.Db;
 using portal.DTOs;
 using portal.Enums;
+using portal.Extensions;
 using portal.Helpers;
 using portal.Models;
 using Serilog;
@@ -234,7 +235,31 @@ public class LeaveRequestWorkflowService
     }
 
 
+    public override async Task<bool> DeleteAsync(int id)
+    {
+        // Check if the workflow exists
+        var workflow = await _dbSet.FindAsync(id);
+        if (workflow == null)
+        {
+            throw new KeyNotFoundException($"Không tìm thấy đơn nghỉ. Chắc là bạn đã xóa nó. Vui lòng quay lại trang trước để kiểm tra lại.");
+        }
 
+        // Check if the workflow is in a state that allows deletion
+        if (workflow.Status != GeneralWorkflowStatusType.DRAFT)
+        {
+            throw new InvalidOperationException("Chỉ có những đơn từ nào chưa được ký duyệt mới có thể xóa.");
+        }
+
+        // Delete all associated nodes and participants
+        var nodes = await _context.LeaveRequestNodes
+            .Where(n => n.WorkflowId == id)
+            .ToListAsync();
+
+        _context.LeaveRequestNodes.RemoveRange(nodes);
+        _dbSet.Remove(workflow);
+        await _context.SaveChangesAsync();
+        return true;
+    }
     public override async Task<LeaveRequestWorkflowDTO> CreateAsync(
         LeaveRequestWorkflowCreateDTO dto
     )
@@ -251,6 +276,11 @@ public class LeaveRequestWorkflowService
 
         // CDTO -> Model
         var entity = _mapper.Map<LeaveRequestWorkflow>(dto);
+        var employee = await _context.Employees
+            .Include(e => e.Supervisor)
+            .Include(e => e.DeputySupervisor)
+            .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId) ?? throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
+        entity.Description = $"Hồ sơ nghỉ phép nhân viên {employee.GetDisplayName()} từ {dto.StartDate:dd/MM/yyyy} đến {dto.EndDate:dd/MM/yyyy}. Người ký: {employee.Supervisor?.GetDisplayName()} và {employee.DeputySupervisor?.GetDisplayName()}";
 
         // Generate Id + timestamp + roles
         _context.LeaveRequestWorkflows.Add(entity);

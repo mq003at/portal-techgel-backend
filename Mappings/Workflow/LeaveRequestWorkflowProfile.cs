@@ -1,5 +1,6 @@
 using AutoMapper;
 using portal.DTOs;
+using portal.Enums;
 using portal.Extensions;
 using portal.Models;
 
@@ -28,12 +29,13 @@ public class LeaveRequestWorkflowProfile : BaseWorkflowProfile<
 
         CreateMap<LeaveRequestWorkflowCreateDTO, LeaveRequestWorkflow>()
             .IncludeBase<BaseModelCreateDTO, BaseModel>()
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => "Nghỉ phép nhân viên" ))
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => "Nghỉ phép nhân viên"))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => GeneralWorkflowStatusType.DRAFT))
             .ForMember(dest => dest.MainId, opt => opt.MapFrom(src => "AL-" + "TG" + src.EmployeeId.ToString().PadLeft(6, '0') + "-" + src.StartDate.ToString("dd.MM") + "-" + src.EndDate.ToString("dd.MM")))
-            .ForMember(dest => dest.Description, opt => opt.MapFrom((src, dest) =>
-                "Hồ sơ nghỉ phép nhân viên " + src.EmployeeId +
-                " Từ: " + src.StartDate.ToString("HH:mm dd/MM/yyyy") +
-                " tới ngày " + src.EndDate.ToString("HH:mm dd/MM/yyyy")))
+            // .ForMember(dest => dest.Description, opt => opt.MapFrom((src, dest) =>
+            //     "Hồ sơ nghỉ phép nhân viên " + src.EmployeeId +
+            //     " Từ: " + src.StartDate.ToString("HH:mm dd/MM/yyyy") +
+            //     " tới ngày " + src.EndDate.ToString("HH:mm dd/MM/yyyy")))
             .ForMember(dest => dest.LeaveRequestNodes, opt => opt.Ignore());
 
     }

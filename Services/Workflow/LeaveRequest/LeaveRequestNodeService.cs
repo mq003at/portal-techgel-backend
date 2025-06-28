@@ -34,9 +34,11 @@ public class LeaveRequestNodeService : BaseService<
     
     public async Task<string> ApproveAsync(int nodeId, int approverId)
     {
-        LeaveRequestNode node = await _context.LeaveRequestNodes
+        LeaveRequestNode node = await _context.LeaveRequestNodes.Include(n => n.Workflow)
             .FirstOrDefaultAsync(n => n.Id == nodeId) ?? throw new InvalidOperationException("Node not found.");
 
+        LeaveRequestWorkflow workflow = node.Workflow ?? throw new InvalidOperationException("Workflow not found for the node.");
+        
         // Manually fetch participants and attach to node
         var participants = await _context.WorkflowNodeParticipants
             .Where(p => p.WorkflowNodeId == nodeId && p.WorkflowNodeType == "LeaveRequest")
@@ -57,6 +59,9 @@ public class LeaveRequestNodeService : BaseService<
         if (participant.ApprovalStartDate > DateTime.UtcNow)
             return "You cannot approve this node before the approval start date.";
 
+        // If approving is successful, update the wf to pending so that it cannot be changed or delete anymore
+        workflow.Status = GeneralWorkflowStatusType.PENDING;
+
         // Uncomment if you want to enforce an approval deadline    
         // if (participant.ApprovalDeadline < DateTime.UtcNow)
         // {
@@ -65,7 +70,11 @@ public class LeaveRequestNodeService : BaseService<
 
         participant.ApprovalStatus = ApprovalStatusType.APPROVED;
         participant.ApprovalDate = DateTime.UtcNow;
-        participant.TAT = participant.ApprovalDate - participant.ApprovalStartDate;
+
+        if (participant.ApprovalDate > participant.ApprovalStartDate)
+            // Calculate Turnaround Time (TAT) as the difference between ApprovalDate and ApprovalStartDate
+            participant.TAT = participant.ApprovalDate - participant.ApprovalStartDate;
+        else participant.TAT = TimeSpan.Zero;
 
         // If all participants approved
         var allApproved = participants
@@ -81,10 +90,6 @@ public class LeaveRequestNodeService : BaseService<
 
             if (isFinalNode)
             {
-                LeaveRequestWorkflow workflow = _context.LeaveRequestWorkflows
-                    .FirstOrDefault(w => w.Id == node.WorkflowId) ?? throw new InvalidOperationException("Workflow not found.");
-                _logger.LogInformation("Final node reached for workflow ID: {WorkflowId} with {Name}", workflow.Id, workflow.Name);
-
                 workflow.Status = GeneralWorkflowStatusType.APPROVED;
                 await _workflowService.FinalizeIfCompleteAsync(workflow, approverId, nodeId);
 
@@ -104,9 +109,10 @@ public class LeaveRequestNodeService : BaseService<
 
     public async Task<string> RejectAsync(int nodeId, int approverId, string RejectReason)
     {
-        LeaveRequestNode node = await _context.LeaveRequestNodes
-            .Include(n => n.WorkflowNodeParticipants )
+        LeaveRequestNode node = await _context.LeaveRequestNodes.Include(n => n.Workflow)
             .FirstOrDefaultAsync(n => n.Id == nodeId) ?? throw new InvalidOperationException("Node not found.");
+
+        LeaveRequestWorkflow workflow = node.Workflow ?? throw new InvalidOperationException("Workflow not found for the node.");
 
         List<WorkflowNodeParticipant> participants = node.WorkflowNodeParticipants ?? throw new InvalidOperationException("Node has no participants.");
         WorkflowNodeParticipant participant = participants
@@ -132,8 +138,6 @@ public class LeaveRequestNodeService : BaseService<
         node.Status = GeneralWorkflowStatusType.REJECTED;
 
         // Also mark the entire workflow as Rejected
-        var workflow = _context.LeaveRequestWorkflows
-            .FirstOrDefault(w => w.Id == node.WorkflowId);
             if (workflow != null)
             {
                 workflow.Status = GeneralWorkflowStatusType.REJECTED;

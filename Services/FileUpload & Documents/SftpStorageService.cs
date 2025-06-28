@@ -88,10 +88,55 @@ public class SftpFileStorageService : IFileStorageService
     }
 
     // Upload a single file to remote path
+    // public async Task<string> UploadAsync(Stream fileStream, string remotePath)
+    // {
+    //     _logger.LogInformation("Uploading file to SFTP: {RemotePath}", remotePath);
+    //     await _sync.WaitAsync();
+    //     try
+    //     {
+    //         using var client = new SftpClient(
+    //             _opts.Host,
+    //             _opts.Port,
+    //             _opts.Username,
+    //             _opts.Password
+    //         );
+
+    //         client.Connect();
+
+    //         var directory = Path.GetDirectoryName(remotePath)?.Replace('\\', '/');
+    //         if (!string.IsNullOrEmpty(directory) && !client.Exists(directory))
+    //         {
+    //             // _logger.LogInformation("Creating directory: {Directory}", directory);
+    //             // client.CreateDirectory(directory);
+    //             throw new DirectoryNotFoundException($"Remote directory not found: {directory}");
+    //         }
+
+    //         // Check if the file already exists
+    //         if (client.Exists(remotePath))
+    //         {
+    //             _logger.LogWarning("Không thể ghi đè file: {RemotePath}", remotePath);
+    //             throw new IOException($"Không thể ghi đè file: {remotePath}");
+    //         }
+
+    //         fileStream.Position = 0;
+    //         _logger.LogInformation("Uploading file to Directory: {Directory}", directory);
+    //         _logger.LogInformation("File size: {Size} bytes", fileStream.Length);
+    //         client.UploadFile(fileStream, remotePath, true);
+    //         client.Disconnect();
+
+    //         return remotePath;
+    //     }
+    //     finally
+    //     {
+    //         _sync.Release();
+    //     }
+    // }
+
     public async Task<string> UploadAsync(Stream fileStream, string remotePath)
     {
         _logger.LogInformation("Uploading file to SFTP: {RemotePath}", remotePath);
         await _sync.WaitAsync();
+
         try
         {
             using var client = new SftpClient(
@@ -103,37 +148,19 @@ public class SftpFileStorageService : IFileStorageService
 
             client.Connect();
 
-            // // Get all directories
-            // var directories = client.ListDirectory("/")
-            //     .Where(f => f.IsDirectory && f.Name != "." && f.Name != "..")
-            //     .Select(d => d.FullName)
-            //     .ToList();
-
-            // // list all directories
-            // foreach (var dir in directories)
-            // {
-            //     _logger.LogInformation("Checking directory: {Directory}", dir);
-            // }
-
             var directory = Path.GetDirectoryName(remotePath)?.Replace('\\', '/');
             if (!string.IsNullOrEmpty(directory) && !client.Exists(directory))
             {
-                // _logger.LogInformation("Creating directory: {Directory}", directory);
-                // client.CreateDirectory(directory);
                 throw new DirectoryNotFoundException($"Remote directory not found: {directory}");
             }
 
-            // Check if the file already exists
-            if (client.Exists(remotePath))
-            {
-                _logger.LogWarning("File already exists at remote path: {RemotePath}", remotePath);
-                throw new IOException($"File already exists at remote path: {remotePath}");
-            }
-
             fileStream.Position = 0;
-            _logger.LogInformation("Uploading file to Diretory: {Directory}", directory);
+            _logger.LogInformation("Uploading file to Directory: {Directory}", directory);
             _logger.LogInformation("File size: {Size} bytes", fileStream.Length);
+
+            // Upload and overwrite if exists
             client.UploadFile(fileStream, remotePath, true);
+
             client.Disconnect();
 
             return remotePath;

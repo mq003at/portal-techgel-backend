@@ -10,5 +10,5 @@ public interface IOrganizationEntityService
         CreateOrganizationEntityDTO,
         UpdateOrganizationEntityDTO>
 {
-    Task<bool> UpdateEmployeesAsync(int id, List<CreateOrganizationEntityEmployeeDTO> dto);
+    Task<bool> UpdateEmployeesAsync(int id, List<OrganizationEntityEmployeeCreateDTO> dto);
 }

@@ -66,7 +66,7 @@ public class OrganizationEntityService
 
     public async Task<bool> UpdateEmployeesAsync(
         int id,
-        List<CreateOrganizationEntityEmployeeDTO> dtos
+        List<OrganizationEntityEmployeeCreateDTO> dtos
     )
     {
         _logger.LogInformation("Updating employees for OrganizationEntity: {Id}", id);
@@ -85,10 +85,7 @@ public class OrganizationEntityService
             var link = new OrganizationEntityEmployee
             {
                 OrganizationEntityId = id,
-                EmployeeId = dto.EmployeeId,
-                IsPrimary = dto.IsPrimary,
-                OrganizationRelationType = dto.OrganizationRelationType != default ? dto.OrganizationRelationType : OrganizationRelationType.MEMBER
-                
+                EmployeeId = dto.EmployeeId,      
             };
             _context.OrganizationEntityEmployees.Add(link);
         }

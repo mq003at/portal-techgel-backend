@@ -21,9 +21,9 @@ public class OrganizationEntityEmployeeProfile : Profile
 
         CreateMap<OrganizationEntityEmployeeDTO, OrganizationEntityEmployee>();
 
-        CreateMap<CreateOrganizationEntityEmployeeDTO, OrganizationEntityEmployee>();
+        CreateMap<OrganizationEntityEmployeeCreateDTO, OrganizationEntityEmployee>();
 
-        CreateMap<UpdateOrganizationEntityEmployeeDTO, OrganizationEntityEmployee>()
+        CreateMap<OrganizationEntityEmployeeUpdateDTO, OrganizationEntityEmployee>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     }
 }
