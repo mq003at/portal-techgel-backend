@@ -246,7 +246,7 @@ public class LeaveRequestWorkflowService
 
         if (existingWorkflow != null)
         {
-            throw new InvalidOperationException("You already have a pending leave request. Please wait for it to be processed before creating a new one.");
+            throw new InvalidOperationException("Đã có 1 đơn nghỉ phép đang chờ xử lý cho nhân viên này. Vui lòng đợi hoặc hủy đơn trước.");
         }
 
         // CDTO -> Model

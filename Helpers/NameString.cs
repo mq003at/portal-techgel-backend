@@ -27,4 +27,9 @@ public static class FileNameHelper
         return Uri.UnescapeDataString(encodedFileName);
     }
 
+    public static string PadWithZeros(int number, int totalLength = 5)
+{
+    return number.ToString().PadLeft(totalLength, '0');
+}
+
 }

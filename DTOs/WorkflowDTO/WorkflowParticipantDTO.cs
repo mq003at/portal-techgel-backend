@@ -15,6 +15,7 @@ public class WorkflowNodeParticipantDTO : BaseModelWithOnlyIdDTO
 
     public DateTime? ApprovalDate { get; set; }
     public DateTime? ApprovalDeadline { get; set; }
+    public DateTime? ApprovalStartDate { get; set; }
 
     public ApprovalStatusType ApprovalStatus { get; set; }
     public TimeSpan TAT { get; set; } = TimeSpan.Zero;

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using portal.Db;
 using portal.DTOs;
+using portal.Helpers;
 using portal.Models;
 
 namespace portal.Services;
@@ -81,7 +82,7 @@ public class EmployeeService
         await _context.SaveChangesAsync();
 
         // manifest an id
-        string mainId = "TG" + PadWithZeros(employee.Id);
+        string mainId = "TG" + FileNameHelper.PadWithZeros(employee.Id);
         employee.MainId = mainId;
         await _context.SaveChangesAsync();
 
@@ -338,6 +339,7 @@ public class EmployeeService
                 .Include(e => e.CompanyInfo)
                 .Include(e => e.ScheduleInfo)
                 .Include(e => e.EmergencyContactInfos)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.MainId == MainId && e.Password == password)
             ?? throw new UnauthorizedAccessException("Invalid credentials");
 
@@ -347,10 +349,7 @@ public class EmployeeService
             .AsNoTracking()
             .ToListAsync();
 
-        _logger.LogInformation("Raw OrganizationEntityEmployees: {raw}", JsonSerializer.Serialize(raw));
-
         employee.OrganizationEntityEmployees = raw;
-        _logger.LogInformation("Login successful for {a}", JsonSerializer.Serialize(employee));
 
         return _mapper.Map<EmployeeDTO>(employee);
     }
@@ -380,8 +379,5 @@ public class EmployeeService
         return $"{prefix}{number.ToString().PadLeft(totalDigits, '0')}";
     }
     
-    private string PadWithZeros(int number, int totalLength = 5)
-{
-    return number.ToString().PadLeft(totalLength, '0');
-}
+    
 }
