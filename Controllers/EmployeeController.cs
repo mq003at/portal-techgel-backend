@@ -20,7 +20,11 @@ public class EmployeeController
     private readonly ILogger<EmployeeController> _logger;
     private readonly ApplicationDbContext _context;
 
-    public EmployeeController(IEmployeeService service, ILogger<EmployeeController> logger, ApplicationDbContext context)
+    public EmployeeController(
+        IEmployeeService service,
+        ILogger<EmployeeController> logger,
+        ApplicationDbContext context
+    )
         : base(service)
     {
         _employeeService = service;
@@ -33,15 +37,20 @@ public class EmployeeController
     public override async Task<ActionResult<IEnumerable<EmployeeDTO>>> GetAll()
     {
         // If user is HR
-        string claimValue = User.FindFirst("OrganizationEntityIds")?.Value ?? throw new UnauthorizedAccessException("OrganizationEntityIds claim not found.");
-        string idClaim = User.FindFirst("Id")?.Value ?? throw new UnauthorizedAccessException("Id claim not found.");
+        string claimValue =
+            User.FindFirst("OrganizationEntityIds")?.Value
+            ?? throw new UnauthorizedAccessException("OrganizationEntityIds claim not found.");
+        string idClaim =
+            User.FindFirst("Id")?.Value
+            ?? throw new UnauthorizedAccessException("Id claim not found.");
         int id = int.Parse(idClaim);
         var organizationIds = claimValue
             .Split(",", StringSplitOptions.RemoveEmptyEntries)
             .Select(id => int.Parse(id))
             .ToList();
 
-        if (organizationIds.Contains(11)) return await base.GetAll();
+        if (organizationIds.Contains(11))
+            return await base.GetAll();
         else
         {
             var employee = await _employeeService.GetByIdAsync(id);
@@ -52,23 +61,22 @@ public class EmployeeController
 
     [HttpGet("me")]
     [Authorize]
-
     public IActionResult Me()
     {
-        return Ok(new
-        {
-            IsAuthenticated = User.Identity?.IsAuthenticated,
-            Name = User.Identity?.Name,
-            Claims = User.Claims.Select(c => new { c.Type, c.Value })
-        });
+        return Ok(
+            new
+            {
+                IsAuthenticated = User.Identity?.IsAuthenticated,
+                Name = User.Identity?.Name,
+                Claims = User.Claims.Select(c => new { c.Type, c.Value })
+            }
+        );
     }
-
 
     [HttpPost("login")]
     public async Task<ActionResult<EmployeeDTO>> Login([FromBody] LoginRequestDTO dto)
     {
         _logger.LogInformation("Login attempt for MainId={MainId}", dto.MainId);
-        
 
         EmployeeDTO user;
         try
@@ -88,9 +96,9 @@ public class EmployeeController
         }
 
         // get Ids out of user.OrganizationEntityEmployees
-        List<int> organizationEntityIds = user.OrganizationEntitiesEmployees?
-            .Select(oe => oe.OrganizationEntityId)
-            .ToList() ?? new List<int>();
+        List<int> organizationEntityIds =
+            user.OrganizationEntities?.Where(o => o != null).Select(o => o.Id).ToList()
+            ?? new List<int>();
 
         // Get organizationEntityIds from OrganizationEntityEmployees table with employeeId=user.Id
         // Extract all OrganizationEntityId entries from the OrganizationEntityEmployees table for this user
@@ -100,7 +108,8 @@ public class EmployeeController
             id: user.Id.ToString(),
             mainId: user.MainId ?? "",
             role: "Employee",
-            organizationEntityIds: organizationEntityIds);
+            organizationEntityIds: organizationEntityIds
+        );
 
         return Ok(user);
     }
@@ -113,7 +122,10 @@ public class EmployeeController
     }
 
     [HttpPut("{employeeId}/details")]
-    public async Task<IActionResult> UpdateDetails(int employeeId, [FromBody] UpdateEmployeeDetailsDTO dto)
+    public async Task<IActionResult> UpdateDetails(
+        int employeeId,
+        [FromBody] UpdateEmployeeDetailsDTO dto
+    )
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -132,4 +144,4 @@ public class EmployeeController
             return StatusCode(500, "An error occurred while updating employee details.");
         }
     }
-    }
+}

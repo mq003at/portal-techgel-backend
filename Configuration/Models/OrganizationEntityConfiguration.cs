@@ -12,30 +12,27 @@ public class OrganizationEntityConfiguration : BaseModelConfiguration<Organizati
 
         builder.ToTable("OrganizationEntities");
 
-        builder.Property(e => e.Level)
-            .IsRequired();
+        builder.Property(e => e.MainId).IsRequired().HasMaxLength(50);
+        builder.HasIndex(e => e.MainId).IsUnique();
 
-        builder.Property(e => e.Name)
-            .IsRequired()
-            .HasMaxLength(200);
+        builder.Property(e => e.ChildrenIds).HasColumnType("integer[]");
 
-        builder.Property(e => e.Description)
-            .IsRequired()
-            .HasMaxLength(1000);
+        builder.Property(e => e.Level).IsRequired();
 
-        builder.Property(e => e.Status)
-            .HasConversion<string>() 
-            .HasMaxLength(20) 
-            .IsRequired();
+        builder.Property(e => e.Name).IsRequired().HasMaxLength(200);
 
-        builder.Property(e => e.SortOrder)
-            .HasDefaultValue(0);
+        builder.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+
+        builder.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+
+        builder.Property(e => e.SortOrder).HasDefaultValue(0);
 
         // Self-referencing relationship for hierarchy
-        builder.HasOne(e => e.Parent)
+        builder
+            .HasOne(e => e.Parent)
             .WithMany(e => e.Children)
             .HasForeignKey(e => e.ParentId)
-            .OnDelete(DeleteBehavior.Restrict); 
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Many-to-many relationship: OrganizationEntity ↔ Employees (through OrganizationEntityEmployee)
         builder

@@ -36,9 +36,7 @@ public class ApplicationDbContext : IdentityDbContext
     {
         base.OnConfiguring(optionsBuilder);
         optionsBuilder.AddInterceptors(_saveChangesInterceptor); // Register SaveChangesInterceptor
-        optionsBuilder
-                .LogTo(Console.WriteLine)            
-                .EnableSensitiveDataLogging(); 
+        //optionsBuilder.LogTo(Console.WriteLine).EnableSensitiveDataLogging();
     }
 
     public override int SaveChanges()
@@ -66,8 +64,6 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<DocumentSignature> DocumentSignatures { get; set; }
-
-
 
     public DbSet<DocumentAssociation> DocumentAssociations { get; set; }
     public DbSet<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; }

@@ -37,11 +37,14 @@ public class CreateOrganizationEntityDTO : BaseModelCreateDTO
 {
     [Required]
     public int Level { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string MainId { get; set; } = null!;
+
     [Required]
     public string Name { get; set; } = null!;
+
     [Required]
     public string Description { get; set; } = null!;
     public OrganizationStatus Status { get; set; } = OrganizationStatus.ACTIVE;

@@ -39,7 +39,7 @@ public class EmployeeDTO : BaseModelDTO
     public List<string> SubordinateNames { get; set; } = new();
     public List<int> DeputySubordinateIds { get; set; } = new();
     public List<string> DeputySubordinateNames { get; set; } = new();
-    public List<OrganizationEntityEmployeeDTO> OrganizationEntityEmployees { get; set; } = new();
+    public List<OrganizationEntityDTO> OrganizationEntities { get; set; } = new();
 }
 
 public class CreateEmployeeDTO : BaseModelCreateDTO
@@ -95,7 +95,6 @@ public class UpdateEmployeeDetailsDTO
     public int? DeputySupervisorId { get; set; }
     public List<int>? SubordinateIds { get; set; }
     public List<int>? DeputySubordinateIds { get; set; }
-    public List<OrganizationEntityEmployeeUpdateDTO>? OrganizationEntityEmployees { get; set; }
 }
 
 public class LoginRequestDTO

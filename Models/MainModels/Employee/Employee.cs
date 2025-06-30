@@ -31,6 +31,7 @@ public class Employee : BaseModel
     public List<Employee> Subordinates { get; set; } = new List<Employee>();
     public List<Employee> DeputySubordinates { get; set; } = new List<Employee>();
     public List<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } = new();
+
     [NotMapped]
     public IEnumerable<Employee> AllSubordinates =>
         Subordinates.Concat(DeputySubordinates).Distinct();

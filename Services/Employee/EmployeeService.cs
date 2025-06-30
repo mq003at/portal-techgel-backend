@@ -29,12 +29,11 @@ public class EmployeeService
         _oee = context.Set<OrganizationEntityEmployee>();
     }
 
-
     public override async Task<IEnumerable<EmployeeDTO>> GetAllAsync()
     {
         // 1) Get the base list of DTOs (no RoleInfo lists yet)
-        var employees = await _context.Employees
-            .Include(e => e.CompanyInfo)
+        var employees = await _context
+            .Employees.Include(e => e.CompanyInfo)
             .Include(e => e.ScheduleInfo)
             .Include(e => e.EmergencyContactInfos)
             .Include(e => e.PersonalInfo)
@@ -45,6 +44,8 @@ public class EmployeeService
             .Include(e => e.Supervisor)
             .Include(e => e.DeputySupervisor)
             .Include(e => e.Subordinates)
+            .Include(e => e.OrganizationEntityEmployees)
+            .ThenInclude(oe => oe.OrganizationEntity)
             .ToListAsync();
 
         var dtos = _mapper.Map<IEnumerable<EmployeeDTO>>(employees);
@@ -53,8 +54,8 @@ public class EmployeeService
 
     public override async Task<EmployeeDTO?> GetByIdAsync(int id)
     {
-        var employee = await _context.Employees
-            .Include(e => e.CompanyInfo)
+        var employee = await _context
+            .Employees.Include(e => e.CompanyInfo)
             .Include(e => e.ScheduleInfo)
             .Include(e => e.EmergencyContactInfos)
             .Include(e => e.PersonalInfo)
@@ -65,6 +66,8 @@ public class EmployeeService
             .Include(e => e.Supervisor)
             .Include(e => e.DeputySupervisor)
             .Include(e => e.Subordinates)
+            .Include(e => e.OrganizationEntityEmployees)
+            .ThenInclude(oe => oe.OrganizationEntity)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         var dto = _mapper.Map<EmployeeDTO>(employee);
@@ -86,15 +89,22 @@ public class EmployeeService
         employee.MainId = mainId;
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Employee inserted with Id={Id} and personalInfoId = {pId}", employee.Id, employee.PersonalInfo.Id);
+        _logger.LogInformation(
+            "Employee inserted with Id={Id} and personalInfoId = {pId}",
+            employee.Id,
+            employee.PersonalInfo.Id
+        );
 
         return _mapper.Map<EmployeeDTO>(employee);
     }
 
-    public async Task<EmployeeDTO> UpdateEmployeeDetailsAsync(int employeeId, UpdateEmployeeDetailsDTO dto)
+    public async Task<EmployeeDTO> UpdateEmployeeDetailsAsync(
+        int employeeId,
+        UpdateEmployeeDetailsDTO dto
+    )
     {
-        var employee = await _context.Employees
-            .Include(e => e.CompanyInfo)
+        var employee = await _context
+            .Employees.Include(e => e.CompanyInfo)
             .Include(e => e.ScheduleInfo)
             .Include(e => e.EmergencyContactInfos)
             .Include(e => e.EmployeeQualificationInfos)
@@ -103,6 +113,7 @@ public class EmployeeService
             .Include(e => e.InsuranceInfo)
             .Include(e => e.PersonalInfo)
             .Include(e => e.OrganizationEntityEmployees)
+            .ThenInclude(oe => oe.OrganizationEntity)
             .FirstOrDefaultAsync(e => e.Id == employeeId);
 
         if (employee == null)
@@ -120,7 +131,6 @@ public class EmployeeService
             }
             else
             {
-
                 _mapper.Map(dto.PersonalInfo, employee.PersonalInfo);
                 _context.Entry(employee.PersonalInfo).State = EntityState.Modified;
             }
@@ -129,7 +139,6 @@ public class EmployeeService
         // CompanyInfo
         if (dto.CompanyInfo != null)
         {
-
             if (employee.CompanyInfo == null)
             {
                 var newCompanyInfo = _mapper.Map<CompanyInfo>(dto.CompanyInfo);
@@ -216,19 +225,21 @@ public class EmployeeService
         if (dto.EmergencyContactInfos is { Count: > 0 })
         {
             // Step 1: Remove all existing contacts for this employee
-            var existingContacts = await _context.EmergencyContactInfos
-                .Where(c => c.EmployeeId == employeeId)
+            var existingContacts = await _context
+                .EmergencyContactInfos.Where(c => c.EmployeeId == employeeId)
                 .ToListAsync();
 
             _context.EmergencyContactInfos.RemoveRange(existingContacts);
 
             // Step 2: Add new contacts
-            var newContacts = dto.EmergencyContactInfos.Select(c =>
-            {
-                var entity = _mapper.Map<EmergencyContactInfo>(c);
-                entity.EmployeeId = employeeId;
-                return entity;
-            }).ToList();
+            var newContacts = dto
+                .EmergencyContactInfos.Select(c =>
+                {
+                    var entity = _mapper.Map<EmergencyContactInfo>(c);
+                    entity.EmployeeId = employeeId;
+                    return entity;
+                })
+                .ToList();
 
             _context.EmergencyContactInfos.AddRange(newContacts);
         }
@@ -237,19 +248,21 @@ public class EmployeeService
         if (dto.EmployeeQualificationInfos is { Count: > 0 })
         {
             // Step 1: Remove existing qualifications
-            var existingQualifications = await _context.EmployeeQualificationInfos
-                .Where(q => q.EmployeeId == employeeId)
+            var existingQualifications = await _context
+                .EmployeeQualificationInfos.Where(q => q.EmployeeId == employeeId)
                 .ToListAsync();
 
             _context.EmployeeQualificationInfos.RemoveRange(existingQualifications);
 
             // Step 2: Add new qualifications
-            var newQualifications = dto.EmployeeQualificationInfos.Select(q =>
-            {
-                var entity = _mapper.Map<EmployeeQualificationInfo>(q);
-                entity.EmployeeId = employeeId;
-                return entity;
-            }).ToList();
+            var newQualifications = dto
+                .EmployeeQualificationInfos.Select(q =>
+                {
+                    var entity = _mapper.Map<EmployeeQualificationInfo>(q);
+                    entity.EmployeeId = employeeId;
+                    return entity;
+                })
+                .ToList();
 
             _context.EmployeeQualificationInfos.AddRange(newQualifications);
         }
@@ -262,31 +275,19 @@ public class EmployeeService
         if (dto.DeputySupervisorId.HasValue)
             employee.DeputySupervisorId = dto.DeputySupervisorId;
         if (dto.DeputySubordinateIds != null)
-            employee.DeputySubordinates = await _context.Employees.Where(e => dto.DeputySubordinateIds.Contains(e.Id)).ToListAsync();
+            employee.DeputySubordinates = await _context
+                .Employees.Where(e => dto.DeputySubordinateIds.Contains(e.Id))
+                .ToListAsync();
         if (dto.SubordinateIds != null)
-            employee.Subordinates = await _context.Employees.Where(e => dto.SubordinateIds.Contains(e.Id)).ToListAsync();
-
-        // OrganizationEntityEmployees — clear and re-add
-        if (dto.OrganizationEntityEmployees is { Count: > 0 })
-        {
-            var validUpdates = dto.OrganizationEntityEmployees
-                .Where(x => x.OrganizationEntityId != 0)
-                .Select(x => new OrganizationEntityEmployee
-                {
-                    EmployeeId = employeeId,
-                    OrganizationEntityId = x.OrganizationEntityId,
-                }).ToList();
-
-            // Remove old ones
-            _context.OrganizationEntityEmployees.RemoveRange(employee.OrganizationEntityEmployees);
-            employee.OrganizationEntityEmployees = validUpdates;
-        }
+            employee.Subordinates = await _context
+                .Employees.Where(e => dto.SubordinateIds.Contains(e.Id))
+                .ToListAsync();
 
         await _context.SaveChangesAsync();
 
         // Reload fully
-        var updated = await _context.Employees
-            .Include(e => e.CompanyInfo)
+        var updated = await _context
+            .Employees.Include(e => e.CompanyInfo)
             .Include(e => e.ScheduleInfo)
             .Include(e => e.EmergencyContactInfos)
             .Include(e => e.EmployeeQualificationInfos)
@@ -298,7 +299,8 @@ public class EmployeeService
             .Include(e => e.DeputySupervisor)
             .Include(e => e.Subordinates)
             .Include(e => e.DeputySubordinates)
-            .Include(e => e.OrganizationEntityEmployees).ThenInclude(o => o.OrganizationEntity)
+            .Include(e => e.OrganizationEntityEmployees)
+            .ThenInclude(oe => oe.OrganizationEntity)
             .FirstOrDefaultAsync(e => e.Id == employeeId);
 
         return _mapper.Map<EmployeeDTO>(updated!);
@@ -320,7 +322,7 @@ public class EmployeeService
         _mapper.Map(dto, entity);
 
         // 4) replace the links
-        
+
 
         // 5) save
         _employees.Update(entity);
@@ -331,23 +333,23 @@ public class EmployeeService
 
     public async Task<EmployeeDTO> LoginAsync(string MainId, string password)
     {
-        var employee =
-            await _employees
-                .Include(e => e.PersonalInfo)
-                .Include(e => e.CompanyInfo)
+        Employee employee =
+            await _context
+                .Employees.Include(e => e.CompanyInfo)
                 .Include(e => e.ScheduleInfo)
                 .Include(e => e.EmergencyContactInfos)
-                .AsNoTracking()
+                .Include(e => e.PersonalInfo)
+                .Include(e => e.CareerPathInfo)
+                .Include(e => e.TaxInfo)
+                .Include(e => e.InsuranceInfo)
+                .Include(e => e.EmployeeQualificationInfos)
+                .Include(e => e.Supervisor)
+                .Include(e => e.DeputySupervisor)
+                .Include(e => e.Subordinates)
+                .Include(e => e.OrganizationEntityEmployees)
+                .ThenInclude(oe => oe.OrganizationEntity)
                 .FirstOrDefaultAsync(e => e.MainId == MainId && e.Password == password)
-            ?? throw new UnauthorizedAccessException("Invalid credentials");
-
-       
-        List<OrganizationEntityEmployee> raw = await _context.OrganizationEntityEmployees
-            .Where(oe => oe.EmployeeId == employee.Id)
-            .AsNoTracking()
-            .ToListAsync();
-
-        employee.OrganizationEntityEmployees = raw;
+            ?? throw new UnauthorizedAccessException("Sai tên đăng nhập hoặc mật khẩu");
 
         return _mapper.Map<EmployeeDTO>(employee);
     }
@@ -355,7 +357,8 @@ public class EmployeeService
     public async Task<List<string>> GetUserNamesByIdsAsync(List<int> userIds)
     {
         // Replace Employee with your actual user entity name if needed
-        var employees = await _context.Set<Employee>()
+        var employees = await _context
+            .Set<Employee>()
             .Where(e => userIds.Contains(e.Id))
             .ToListAsync();
 
@@ -376,6 +379,4 @@ public class EmployeeService
 
         return $"{prefix}{number.ToString().PadLeft(totalDigits, '0')}";
     }
-    
-    
 }
