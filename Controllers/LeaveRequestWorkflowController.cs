@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using portal.DTOs;
 using portal.Models;
@@ -7,11 +8,13 @@ namespace portal.Controllers;
 
 [ApiController]
 [Route("api/leave-requests")]
-public class LeaveRequestWorkflowController : BaseController<
-    LeaveRequestWorkflow,
-    LeaveRequestWorkflowDTO,
-    LeaveRequestWorkflowCreateDTO,
-    LeaveRequestWorkflowUpdateDTO>
+public class LeaveRequestWorkflowController
+    : BaseController<
+        LeaveRequestWorkflow,
+        LeaveRequestWorkflowDTO,
+        LeaveRequestWorkflowCreateDTO,
+        LeaveRequestWorkflowUpdateDTO
+    >
 {
     private readonly ILeaveRequestWorkflowService _workflowService;
 
@@ -30,6 +33,34 @@ public class LeaveRequestWorkflowController : BaseController<
         return Ok(nodes);
     }
 
-    // replace get with this one. If else for me. Check OrganizationEntityEmployees to see if this employeeId has access to organizationEntityId = 11
+    [HttpGet]
+    [Authorize]
+    public override async Task<ActionResult<IEnumerable<LeaveRequestWorkflowDTO>>> GetAll()
+    {
+        // If user is HR
+        string claimValue =
+            User.FindFirst("OrganizationEntityIds")?.Value
+            ?? throw new UnauthorizedAccessException("OrganizationEntityIds claim not found.");
+        string idClaim =
+            User.FindFirst("Id")?.Value
+            ?? throw new UnauthorizedAccessException("Id claim not found.");
+        int id = int.Parse(idClaim);
+        var organizationIds = claimValue
+            .Split(",", StringSplitOptions.RemoveEmptyEntries)
+            .Select(id => int.Parse(id))
+            .ToList();
 
+        var targetIds = new List<int> { 11, 3 };
+        if (organizationIds.Any(targetIds.Contains))
+            return await base.GetAll();
+        else
+        {
+            LeaveRequestWorkflowDTO workflow =
+                await _workflowService.GetByIdAsync(id)
+                ?? throw new Exception("Workflow not found.");
+            return new List<LeaveRequestWorkflowDTO> { workflow };
+        }
+    }
+
+    // replace get with this one. If else for me. Check OrganizationEntityEmployees to see if this employeeId has access to organizationEntityId = 11
 }

@@ -49,7 +49,8 @@ public class EmployeeController
             .Select(id => int.Parse(id))
             .ToList();
 
-        if (organizationIds.Contains(11))
+        var targetIds = new List<int> { 11, 3 };
+        if (organizationIds.Any(targetIds.Contains))
             return await base.GetAll();
         else
         {
