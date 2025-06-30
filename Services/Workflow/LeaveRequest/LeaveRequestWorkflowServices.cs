@@ -306,12 +306,20 @@ public class LeaveRequestWorkflowService
         LeaveRequestWorkflowUpdateDTO dto
     )
     {
-        var workflow = await base.UpdateAsync(id, dto);
+        LeaveRequestWorkflow workflow = _dbSet.FirstOrDefaultAsync(wf => wf.Id == id)
+            .Result ?? throw new KeyNotFoundException($"Không tìm thấy đơn nghỉ. Vui lòng quay lại trang trước để kiểm tra lại.");
 
-        if (workflow == null)
-            return null;
-        // Populate metadata after update
-        return workflow;
+        if (workflow.Status != GeneralWorkflowStatusType.DRAFT)
+        {
+            throw new InvalidOperationException("Chỉ có những đơn nghỉ phép chưa được ký duyệt mới có thể cập nhật.");
+        }
+        else workflow = _mapper.Map(dto, workflow);
+
+        // Update the workflow
+        _context.Entry(workflow).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Updated workflow with ID {Id}", id);
+        return _mapper.Map<LeaveRequestWorkflowDTO>(workflow);
     }
 
     public override async Task<LeaveRequestWorkflowDTO?> GetByIdAsync(int id)

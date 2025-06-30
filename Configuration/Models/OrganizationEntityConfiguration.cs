@@ -24,6 +24,8 @@ public class OrganizationEntityConfiguration : BaseModelConfiguration<Organizati
             .HasMaxLength(1000);
 
         builder.Property(e => e.Status)
+            .HasConversion<string>() 
+            .HasMaxLength(20) 
             .IsRequired();
 
         builder.Property(e => e.SortOrder)
@@ -33,13 +35,27 @@ public class OrganizationEntityConfiguration : BaseModelConfiguration<Organizati
         builder.HasOne(e => e.Parent)
             .WithMany(e => e.Children)
             .HasForeignKey(e => e.ParentId)
-            .OnDelete(DeleteBehavior.Restrict); // Avoid cascade delete in hierarchy
+            .OnDelete(DeleteBehavior.Restrict); 
 
-        // Many-to-many via linking table
+        // Many-to-many relationship: OrganizationEntity ↔ Employees (through OrganizationEntityEmployee)
         builder
             .HasMany(e => e.OrganizationEntityEmployees)
             .WithOne(oe => oe.OrganizationEntity)
             .HasForeignKey(oe => oe.OrganizationEntityId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade); // If an org is deleted, clean up join table
+
+        // Direct relationship: Manager
+        builder
+            .HasOne(e => e.Manager)
+            .WithMany()
+            .HasForeignKey(e => e.ManagerId)
+            .OnDelete(DeleteBehavior.Restrict); // Prevent org deletion if employee still exists
+
+        // Direct relationship: Deputy Manager
+        builder
+            .HasOne(e => e.DeputyManager)
+            .WithMany()
+            .HasForeignKey(e => e.DeputyManagerId)
+            .OnDelete(DeleteBehavior.Restrict); // Prevent org deletion if employee still exists
     }
 }

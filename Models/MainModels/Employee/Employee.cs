@@ -34,4 +34,8 @@ public class Employee : BaseModel
     [NotMapped]
     public IEnumerable<Employee> AllSubordinates =>
         Subordinates.Concat(DeputySubordinates).Distinct();
+
+    [NotMapped]
+    public List<OrganizationEntity> OrganizationEntities =>
+        OrganizationEntityEmployees.Select(x => x.OrganizationEntity).ToList();
 }

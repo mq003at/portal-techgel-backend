@@ -42,7 +42,9 @@ public class AppDbContextSaveChangesInterceptor : SaveChangesInterceptor
             }
             else if (entry.State == EntityState.Modified)
             {
+                // Prevent overwriting CreatedAt accidentally
                 entry.Property(nameof(BaseModel.CreatedAt)).IsModified = false;
+
                 entry.Entity.UpdatedAt = utcNow;
             }
         }

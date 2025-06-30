@@ -81,8 +81,14 @@ public class EmployeeController
             return Unauthorized("Invalid credentials");
         }
 
+        if (user == null)
+        {
+            _logger.LogWarning("Login failed: user not found for MainId={MainId}", dto.MainId);
+            return Unauthorized("Invalid credentials");
+        }
+
         // get Ids out of user.OrganizationEntityEmployees
-        List<int> organizationEntityIds = user?.OrganizationEntitiesEmployees?
+        List<int> organizationEntityIds = user.OrganizationEntitiesEmployees?
             .Select(oe => oe.OrganizationEntityId)
             .ToList() ?? new List<int>();
 

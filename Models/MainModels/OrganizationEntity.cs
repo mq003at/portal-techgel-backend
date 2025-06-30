@@ -14,7 +14,16 @@ public class OrganizationEntity : BaseModel
     public int? ParentId { get; set; }
     public OrganizationEntity? Parent { get; set; }
     public List<OrganizationEntity>? Children { get; set; } = new List<OrganizationEntity>();
-    public List<Employee> Employees { get; set; } = new List<Employee>();
     public List<OrganizationEntityEmployee> OrganizationEntityEmployees { get; set; } =
         new List<OrganizationEntityEmployee>();
+
+    public Employee? Manager { get; set; }
+    public int? ManagerId { get; set; }
+    public Employee? DeputyManager { get; set; }
+    public int? DeputyManagerId { get; set; }
+
+    [NotMapped]
+    public List<Employee> Employees => OrganizationEntityEmployees
+        .Select(x => x.Employee)
+        .ToList();
 }

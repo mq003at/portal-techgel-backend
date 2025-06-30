@@ -12,8 +12,8 @@ using portal.Db;
 namespace portal_techgel_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250627081935_AnotherFixToLinktable")]
-    partial class AnotherFixToLinktable
+    [Migration("20250629170203_createUpdateAtFix")]
+    partial class createUpdateAtFix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -332,12 +332,6 @@ namespace portal_techgel_api.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("IsPrimary")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasComment("Marks the primary association of this employee to the org entity.");
-
                     b.Property<string>("MainId")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -346,10 +340,6 @@ namespace portal_techgel_api.Migrations
 
                     b.Property<int>("OrganizationEntityId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("OrganizationRelationType")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
@@ -362,8 +352,6 @@ namespace portal_techgel_api.Migrations
 
                     b.HasIndex("OrganizationEntityId", "EmployeeId")
                         .IsUnique();
-
-                    b.HasIndex("OrganizationEntityId", "IsPrimary");
 
                     b.ToTable("OrganizationEntityEmployees");
                 });
@@ -655,9 +643,6 @@ namespace portal_techgel_api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int?>("OrganizationEntityId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Password")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -673,8 +658,6 @@ namespace portal_techgel_api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DeputySupervisorId");
-
-                    b.HasIndex("OrganizationEntityId");
 
                     b.HasIndex("SupervisorId");
 
@@ -1100,6 +1083,9 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<int?>("DeputyManagerId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -1114,6 +1100,9 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1127,8 +1116,10 @@ namespace portal_techgel_api.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
@@ -1136,6 +1127,10 @@ namespace portal_techgel_api.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeputyManagerId");
+
+                    b.HasIndex("ManagerId");
 
                     b.HasIndex("ParentId");
 
@@ -1558,10 +1553,6 @@ namespace portal_techgel_api.Migrations
                         .HasForeignKey("DeputySupervisorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("portal.Models.OrganizationEntity", null)
-                        .WithMany("Employees")
-                        .HasForeignKey("OrganizationEntityId");
-
                     b.HasOne("portal.Models.Employee", "Supervisor")
                         .WithMany("Subordinates")
                         .HasForeignKey("SupervisorId")
@@ -1659,10 +1650,24 @@ namespace portal_techgel_api.Migrations
 
             modelBuilder.Entity("portal.Models.OrganizationEntity", b =>
                 {
+                    b.HasOne("portal.Models.Employee", "DeputyManager")
+                        .WithMany()
+                        .HasForeignKey("DeputyManagerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("portal.Models.Employee", "Manager")
+                        .WithMany()
+                        .HasForeignKey("ManagerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("portal.Models.OrganizationEntity", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DeputyManager");
+
+                    b.Navigation("Manager");
 
                     b.Navigation("Parent");
                 });
@@ -1775,8 +1780,6 @@ namespace portal_techgel_api.Migrations
             modelBuilder.Entity("portal.Models.OrganizationEntity", b =>
                 {
                     b.Navigation("Children");
-
-                    b.Navigation("Employees");
 
                     b.Navigation("OrganizationEntityEmployees");
                 });

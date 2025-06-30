@@ -4,6 +4,7 @@ public enum OrganizationStatus
 {
     ACTIVE,
     INACTIVE,
+    DRAFT,
     ARCHIVED
 }
 

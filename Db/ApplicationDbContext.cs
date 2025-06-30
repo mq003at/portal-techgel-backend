@@ -36,9 +36,9 @@ public class ApplicationDbContext : IdentityDbContext
     {
         base.OnConfiguring(optionsBuilder);
         optionsBuilder.AddInterceptors(_saveChangesInterceptor); // Register SaveChangesInterceptor
-        // optionsBuilder
-        //         .LogTo(Console.WriteLine)            
-        //         .EnableSensitiveDataLogging(); 
+        optionsBuilder
+                .LogTo(Console.WriteLine)            
+                .EnableSensitiveDataLogging(); 
     }
 
     public override int SaveChanges()
