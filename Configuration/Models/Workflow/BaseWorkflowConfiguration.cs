@@ -18,5 +18,10 @@ public abstract class BaseWorkflowConfiguration<TWorkflow> : BaseModelConfigurat
         builder.Property(w => w.Status).IsRequired().HasConversion<string>();
 
         builder.Property(w => w.RejectReason).HasMaxLength(1000).IsRequired(false);
+        builder
+            .HasOne(l => l.Sender) // navigation property on LeaveRequestWorkflow
+            .WithMany() // no reverse navigation on Employee
+            .HasForeignKey(l => l.SenderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

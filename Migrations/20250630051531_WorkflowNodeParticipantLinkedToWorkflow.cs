@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,40 +11,33 @@ namespace portal_techgel_api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_LeaveRequestWorkflows_Employees_EmployeeId",
-                table: "LeaveRequestWorkflows");
-
             migrationBuilder.AddColumn<int>(
                 name: "WorkflowId",
                 table: "WorkflowNodeParticipants",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<int>(
-                name: "SenderId",
-                table: "LeaveRequestWorkflows",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "SenderId",
                 table: "GatePassWorkflows",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_LeaveRequestWorkflows_SenderId",
                 table: "LeaveRequestWorkflows",
-                column: "SenderId");
+                column: "SenderId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_GatePassWorkflows_SenderId",
                 table: "GatePassWorkflows",
-                column: "SenderId");
+                column: "SenderId"
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_GatePassWorkflows_Employees_SenderId",
@@ -51,7 +45,8 @@ namespace portal_techgel_api.Migrations
                 column: "SenderId",
                 principalTable: "Employees",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_LeaveRequestWorkflows_Employees_EmployeeId",
@@ -59,7 +54,8 @@ namespace portal_techgel_api.Migrations
                 column: "EmployeeId",
                 principalTable: "Employees",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_LeaveRequestWorkflows_Employees_SenderId",
@@ -67,7 +63,8 @@ namespace portal_techgel_api.Migrations
                 column: "SenderId",
                 principalTable: "Employees",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
         }
 
         /// <inheritdoc />
@@ -75,35 +72,36 @@ namespace portal_techgel_api.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_GatePassWorkflows_Employees_SenderId",
-                table: "GatePassWorkflows");
+                table: "GatePassWorkflows"
+            );
 
             migrationBuilder.DropForeignKey(
                 name: "FK_LeaveRequestWorkflows_Employees_EmployeeId",
-                table: "LeaveRequestWorkflows");
+                table: "LeaveRequestWorkflows"
+            );
 
             migrationBuilder.DropForeignKey(
                 name: "FK_LeaveRequestWorkflows_Employees_SenderId",
-                table: "LeaveRequestWorkflows");
+                table: "LeaveRequestWorkflows"
+            );
 
             migrationBuilder.DropIndex(
                 name: "IX_LeaveRequestWorkflows_SenderId",
-                table: "LeaveRequestWorkflows");
+                table: "LeaveRequestWorkflows"
+            );
 
             migrationBuilder.DropIndex(
                 name: "IX_GatePassWorkflows_SenderId",
-                table: "GatePassWorkflows");
+                table: "GatePassWorkflows"
+            );
 
-            migrationBuilder.DropColumn(
-                name: "WorkflowId",
-                table: "WorkflowNodeParticipants");
+            migrationBuilder.DropColumn(name: "WorkflowId", table: "WorkflowNodeParticipants");
 
-            migrationBuilder.DropColumn(
-                name: "SenderId",
-                table: "LeaveRequestWorkflows");
+            migrationBuilder.DropColumn(name: "ChildrenIds", table: "OrganizationEntities");
 
-            migrationBuilder.DropColumn(
-                name: "SenderId",
-                table: "GatePassWorkflows");
+            migrationBuilder.DropColumn(name: "SenderId", table: "LeaveRequestWorkflows");
+
+            migrationBuilder.DropColumn(name: "SenderId", table: "GatePassWorkflows");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_LeaveRequestWorkflows_Employees_EmployeeId",
@@ -111,7 +109,8 @@ namespace portal_techgel_api.Migrations
                 column: "EmployeeId",
                 principalTable: "Employees",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                onDelete: ReferentialAction.Restrict
+            );
         }
     }
 }

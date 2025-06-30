@@ -13,7 +13,7 @@ using portal.Db;
 namespace portal_techgel_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250630045158_WorkflowNodeParticipantLinkedToWorkflow")]
+    [Migration("20250630051531_WorkflowNodeParticipantLinkedToWorkflow")]
     partial class WorkflowNodeParticipantLinkedToWorkflow
     {
         /// <inheritdoc />
