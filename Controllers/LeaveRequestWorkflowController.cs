@@ -24,6 +24,31 @@ public class LeaveRequestWorkflowController
         _workflowService = workflowService;
     }
 
+    [HttpDelete("{id}")]
+    [Authorize]
+    public override async Task<ActionResult> Delete(int id)
+    {
+        string orgEntClaim =
+            User.FindFirst("OrganizationEntityIds")?.Value
+            ?? throw new UnauthorizedAccessException("OrganizationEntityIds claim not found.");
+        string idClaim =
+            User.FindFirst("Id")?.Value
+            ?? throw new UnauthorizedAccessException("Id claim not found.");
+
+        var organizationIds = orgEntClaim
+            .Split(",", StringSplitOptions.RemoveEmptyEntries)
+            .Select(int.Parse)
+            .ToList();
+
+        var targetIds = new List<int> { 11, 3 };
+        if (organizationIds.Any(targetIds.Contains) || int.Parse(idClaim) == id)
+            return await base.Delete(id);
+        else
+        {
+            return Unauthorized("You do not have permission to delete this workflow.");
+        }
+    }
+
     // Tắt bớt các route nếu không cần → giữ nguyên GetAll, GetById, Create, Update, Delete
     // GET api/leave-requests/{id}/nodes
     [HttpGet("{id}/nodes")]
@@ -55,10 +80,10 @@ public class LeaveRequestWorkflowController
             return await base.GetAll();
         else
         {
-            LeaveRequestWorkflowDTO workflow =
-                await _workflowService.GetByIdAsync(id)
+            List<LeaveRequestWorkflowDTO> workflows =
+                await _workflowService.GetAllByEmployeeIdAsync(id)
                 ?? throw new Exception("Workflow not found.");
-            return new List<LeaveRequestWorkflowDTO> { workflow };
+            return workflows;
         }
     }
 }

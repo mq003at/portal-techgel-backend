@@ -28,6 +28,7 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO
 
     public List<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new();
 }
+
 // Create form
 public class LeaveRequestWorkflowCreateDTO : BaseWorkflowCreateDTO
 {
@@ -58,8 +59,18 @@ public class LeaveRequestWorkflowCreateDTO : BaseWorkflowCreateDTO
     public string? Notes { get; set; }
 }
 
-// Update Workflow (only use Comment from BaseWorkflowUpdateDTO)
+// Update Workflow (only usable when workflow is in draft status)
 public class LeaveRequestWorkflowUpdateDTO : BaseWorkflowUpdateDTO
 {
     public string? Reason { get; set; }
+    public string? Notes { get; set; }
+    public DateTime? StartDate { get; set; }
+
+    public DayNightEnum? StartDateDayNightType { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public DayNightEnum? EndDateDayNightType { get; set; }
+    public int EmployeeId { get; set; }
 }
+

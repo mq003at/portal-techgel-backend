@@ -1,10 +1,13 @@
 using portal.Enums;
+
 namespace portal.DTOs;
 
 public class BaseWorkflowDTO : BaseModelDTO
 {
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
+    public int SenderId { get; set; }
+    public string SenderName { get; set; } = null!;
     public GeneralWorkflowStatusType Status { get; set; }
 
     public List<WorkflowNodeParticipantDTO> WorkflowNodeParticipants { get; set; } = new();
@@ -20,5 +23,4 @@ public class BaseWorkflowCreateDTO : BaseModelCreateDTO
 
 public class BaseWorkflowUpdateDTO : BaseModelUpdateDTO
 {
-    public GeneralWorkflowStatusType? Status { get; set; }
 }

@@ -40,13 +40,15 @@ public abstract class BaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateD
         TModel workflow =
             await _context.Set<TModel>().FindAsync(id)
             ?? throw new Exception("Không thấy. Có thể đã bị xóa hoặc không tồn tại.");
-
+        
         if (workflow.Status != GeneralWorkflowStatusType.DRAFT)
             throw new InvalidOperationException(
                 "Chỉ có thể xóa các quy trình làm việc ở trạng thái nháp(khi chưa có ai ký)."
             );
 
+
         _context.Set<TModel>().Remove(workflow);
+        
         await _context.SaveChangesAsync();
         return true;
     }

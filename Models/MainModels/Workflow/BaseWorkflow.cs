@@ -9,6 +9,9 @@ public abstract class BaseWorkflow : BaseModel
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    public int SenderId { get; set; }
+    public Employee Sender { get; set; } = null!;
+
     [Required]
     public string Description { get; set; } = string.Empty;
     public string? RejectReason { get; set; }

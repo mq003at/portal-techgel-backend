@@ -46,13 +46,13 @@ public class OrganizationEntityConfiguration : BaseModelConfiguration<Organizati
             .HasOne(e => e.Manager)
             .WithMany()
             .HasForeignKey(e => e.ManagerId)
-            .OnDelete(DeleteBehavior.Restrict); // Prevent org deletion if employee still exists
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Direct relationship: Deputy Manager
         builder
             .HasOne(e => e.DeputyManager)
             .WithMany()
             .HasForeignKey(e => e.DeputyManagerId)
-            .OnDelete(DeleteBehavior.Restrict); // Prevent org deletion if employee still exists
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

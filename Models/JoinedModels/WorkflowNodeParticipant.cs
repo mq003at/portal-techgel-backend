@@ -16,6 +16,10 @@ public class WorkflowNodeParticipant : BaseModelWithOnlyId
     public int WorkflowNodeId { get; set; }
     public string WorkflowNodeType { get; set; } = null!;
 
+    // Link back to workflow to delete it
+    [Required]
+    public int WorkflowId { get; set; }
+
     // Order in the nodes
     public int Order { get; set; }
 

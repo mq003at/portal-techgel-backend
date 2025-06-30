@@ -284,7 +284,8 @@ public class LeaveRequestWorkflowService
                     ApprovalStatus = participant.ApprovalStatus,
                     TAT = participant.TAT,
                     WorkflowNodeType = "LeaveRequest",
-                    WorkflowNodeId = participant.WorkflowNodeId
+                    WorkflowNodeId = participant.WorkflowNodeId,
+                    WorkflowId = workflow.Id
                 }
             );
 
@@ -383,8 +384,16 @@ public class LeaveRequestWorkflowService
 
         // Delete all associated nodes and participants
         var nodes = await _context.LeaveRequestNodes.Where(n => n.WorkflowId == id).ToListAsync();
-
         _context.LeaveRequestNodes.RemoveRange(nodes);
+
+        var participants = await _context
+            .WorkflowNodeParticipants.Where(p =>
+                p.WorkflowId == id && p.WorkflowNodeType == "LeaveRequest"
+            )
+            .ToListAsync();
+        _context.WorkflowNodeParticipants.RemoveRange(participants);
+
+        // Delete the workflow itself
         _dbSet.Remove(workflow);
         await _context.SaveChangesAsync();
         return true;

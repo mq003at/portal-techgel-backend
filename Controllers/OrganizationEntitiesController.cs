@@ -26,10 +26,10 @@ public class OrganizationEntitiesController
         [FromBody] CreateOrganizationEntityDTO dto
     )
     {
-        
-        OrganizationEntityDTO created = await _entityService.CreateAsync(dto) ?? throw new InvalidOperationException("Failed to create organization entity.");
+        OrganizationEntityDTO created =
+            await _entityService.CreateAsync(dto)
+            ?? throw new InvalidOperationException("Failed to create organization entity.");
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-
     }
 
     [HttpPut("{id}")]

@@ -8,18 +8,23 @@ public abstract class BaseWorkflowNode : BaseModel
 {
     [Required]
     public string Name { get; set; } = null!;
+
     [Required]
     public string Description { get; set; } = null!;
+
     [Required]
     public GeneralWorkflowStatusType Status { get; set; }
 
-    // null = no approval logic, workflownode participants will only have 1 element in the  list    
+    // null = no approval logic, workflownode participants will only have 1 element in the  list
     public int WorkflowId { get; set; }
-    [ForeignKey("WorkflowId")]
 
+    [ForeignKey("WorkflowId")]
     // Not map field so that we do not cluster up the db
     [NotMapped]
-    public List<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; } = new List<WorkflowNodeParticipant>();
+    public List<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; } =
+        new List<WorkflowNodeParticipant>();
+
     [NotMapped]
-    public List<DocumentAssociation> DocumentAssociations { get; set; } = new List<DocumentAssociation>();
+    public List<DocumentAssociation> DocumentAssociations { get; set; } =
+        new List<DocumentAssociation>();
 }

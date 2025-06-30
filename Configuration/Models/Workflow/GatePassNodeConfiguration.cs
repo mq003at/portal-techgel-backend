@@ -9,14 +9,13 @@ public class GatePassNodeConfiguration : BaseWorkflowNodeConfiguration<GatePassN
     public override void Configure(EntityTypeBuilder<GatePassNode> builder)
     {
         base.Configure(builder);
-        builder.Property(n => n.StepType)
-            .IsRequired()
-            .HasConversion<string>();
+        builder.Property(n => n.StepType).IsRequired().HasConversion<string>();
 
         // Common navigation: workflow
-        builder.HasOne(n => n.Workflow)
+        builder
+            .HasOne(n => n.Workflow)
             .WithMany(w => w.GatePassNodes)
             .HasForeignKey(n => n.WorkflowId)
-            .OnDelete(DeleteBehavior.Cascade);        
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
