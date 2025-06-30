@@ -26,4 +26,5 @@ public interface ILeaveRequestWorkflowService
         LeaveRequestWorkflow workflow,
         int nodeId
     );
+    Task<List<LeaveRequestWorkflowDTO>> GetAllByEmployeeIdAsync(int id);
 }

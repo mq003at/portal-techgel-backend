@@ -19,7 +19,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -28,7 +29,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -37,7 +39,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -46,7 +49,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -55,7 +59,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<string>(
                 name: "MainId",
@@ -66,7 +71,8 @@ namespace portal_techgel_api.Migrations
                 defaultValue: "",
                 oldClrType: typeof(string),
                 oldType: "text",
-                oldDefaultValue: "");
+                oldDefaultValue: ""
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -75,7 +81,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -84,7 +91,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -93,7 +101,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -102,7 +111,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -111,7 +121,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -120,7 +131,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -129,7 +141,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -138,7 +151,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -147,7 +161,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -156,7 +171,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -165,7 +181,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -174,7 +191,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -183,7 +201,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -192,7 +211,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -201,13 +221,15 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+                oldDefaultValueSql: "CURRENT_TIMESTAMP"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrganizationEntities_MainId",
                 table: "OrganizationEntities",
                 column: "MainId",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
@@ -215,11 +237,10 @@ namespace portal_techgel_api.Migrations
         {
             migrationBuilder.DropIndex(
                 name: "IX_OrganizationEntities_MainId",
-                table: "OrganizationEntities");
+                table: "OrganizationEntities"
+            );
 
-            migrationBuilder.DropColumn(
-                name: "ChildrenIds",
-                table: "OrganizationEntities");
+            migrationBuilder.DropColumn(name: "ChildrenIds", table: "OrganizationEntities");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -228,7 +249,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -237,7 +259,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -246,7 +269,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -255,7 +279,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -264,7 +289,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<string>(
                 name: "MainId",
@@ -275,7 +301,8 @@ namespace portal_techgel_api.Migrations
                 oldClrType: typeof(string),
                 oldType: "character varying(50)",
                 oldMaxLength: 50,
-                oldDefaultValue: "");
+                oldDefaultValue: ""
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -284,7 +311,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -293,7 +321,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -302,7 +331,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -311,7 +341,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -320,7 +351,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -329,7 +361,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -338,7 +371,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -347,7 +381,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -356,7 +391,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -365,7 +401,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -374,7 +411,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -383,7 +421,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -392,7 +431,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -401,7 +441,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -410,7 +451,8 @@ namespace portal_techgel_api.Migrations
                 nullable: false,
                 defaultValueSql: "CURRENT_TIMESTAMP",
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "timestamp with time zone"
+            );
         }
     }
 }

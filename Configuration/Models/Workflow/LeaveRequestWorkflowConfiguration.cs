@@ -13,10 +13,11 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         builder.Property(w => w.Reason).IsRequired().HasMaxLength(1000);
         builder.Property(w => w.RejectReason).IsRequired(false).HasMaxLength(1000);
 
-        builder.HasOne(l => l.Employee)
+        builder
+            .HasOne(l => l.Employee)
             .WithMany()
             .HasForeignKey(l => l.EmployeeId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(l => l.TotalDays).IsRequired();
         builder.Property(l => l.EmployeeAnnualLeaveTotalDays).IsRequired();
@@ -28,22 +29,14 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         builder.Property(l => l.Notes).HasMaxLength(1000);
         builder.Property(l => l.RejectReason).HasMaxLength(1000);
 
-        builder.Property(l => l.StartDate)
-            .IsRequired();
+        builder.Property(l => l.StartDate).IsRequired();
 
-        builder.Property(l => l.EndDate)
-            .IsRequired();
+        builder.Property(l => l.EndDate).IsRequired();
 
-        builder.Property(l => l.StartDateDayNightType)
-            .HasConversion<int>()
-            .IsRequired();
+        builder.Property(l => l.StartDateDayNightType).HasConversion<int>().IsRequired();
 
-        builder.Property(l => l.EndDateDayNightType)
-            .HasConversion<int>()
-            .IsRequired();
-            
-        builder.Property(l => l.LeaveApprovalCategory)
-            .HasConversion<int>() 
-            .IsRequired();
+        builder.Property(l => l.EndDateDayNightType).HasConversion<int>().IsRequired();
+
+        builder.Property(l => l.LeaveApprovalCategory).HasConversion<int>().IsRequired();
     }
 }

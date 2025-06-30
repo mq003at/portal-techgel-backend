@@ -61,6 +61,4 @@ public class LeaveRequestWorkflowController
             return new List<LeaveRequestWorkflowDTO> { workflow };
         }
     }
-
-    // replace get with this one. If else for me. Check OrganizationEntityEmployees to see if this employeeId has access to organizationEntityId = 11
 }

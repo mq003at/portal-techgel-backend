@@ -38,5 +38,5 @@ public class WorkflowNodeParticipantUpdateDTO : BaseModelWithOnlyIdUpdateDTO
     public WorkflowParticipantRoleType RaciRole { get; set; }
     public int NodeStep { get; set; }
     public DateTime? ApprovalDeadline { get; set; }
-    public ApprovalStatusType? ApprovalStatus { get; set; } 
+    public ApprovalStatusType? ApprovalStatus { get; set; }
 }
