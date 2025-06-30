@@ -12,22 +12,20 @@ public abstract class BaseModelDTO
     public DateTime? UpdatedAt { get; set; }
 }
 
-public abstract class BaseModelCreateDTO
-{
-}
+public abstract class BaseModelCreateDTO { }
 
-public abstract class BaseModelUpdateDTO
-{
-}
+public abstract class BaseModelUpdateDTO { }
 
 public abstract class BaseModelWithOnlyIdDTO
 {
     public long Id { get; set; }
 }
+
 public abstract class BaseModelWithOnlyIdCreateDTO
 {
     // No properties needed, as this is just a marker for creation
 }
+
 public abstract class BaseModelWithOnlyIdUpdateDTO
 {
     // No properties needed, as this is just a marker for updates

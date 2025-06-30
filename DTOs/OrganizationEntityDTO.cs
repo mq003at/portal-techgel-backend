@@ -68,9 +68,11 @@ public class UpdateOrganizationEntityDTO : BaseModelUpdateDTO
 
     public int? ManagerId { get; set; }
     public int? DeputyManagerId { get; set; }
+    public string? MainId { get; set; }
 }
 
 public class OrganizationEntityUpdateEmployeesDTO : BaseModelUpdateDTO
 {
+    public int OrganizationEntityId { get; set; }
     public List<int> EmployeeIds { get; set; } = new();
 }

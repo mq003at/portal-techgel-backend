@@ -40,8 +40,6 @@ public class OrganizationEntityService
     {
         var entity = _mapper.Map<OrganizationEntity>(dto);
 
-        
-
         if (entity.ManagerId != null)
         {
             int managerId = entity.ManagerId.Value;
@@ -126,32 +124,70 @@ public class OrganizationEntityService
         return await base.UpdateAsync(id, dto);
     }
 
-    public async Task<bool> UpdateEmployeesAsync(
-        int id,
-        List<OrganizationEntityEmployeeCreateDTO> dtos
+    public async Task<List<OrganizationEntityDTO>> UpdateEmployeeForOrganizationAsync(
+        List<OrganizationEntityUpdateEmployeesDTO> dtos
     )
     {
-        _logger.LogInformation("Updating employees for OrganizationEntity: {Id}", id);
-        // remove all links in OrganizationEntityEmployees that has OrganizationEntityId == id
-        var existingLinks = await _context
-            .OrganizationEntityEmployees.Where(link => link.OrganizationEntityId == id)
-            .ToListAsync();
-        if (existingLinks.Any())
-        {
-            _context.OrganizationEntityEmployees.RemoveRange(existingLinks);
-            await _context.SaveChangesAsync();
-        }
-        // add new links
-        foreach (var dto in dtos)
-        {
-            var link = new OrganizationEntityEmployee
-            {
-                OrganizationEntityId = id,
-                EmployeeId = dto.EmployeeId,
-            };
-            _context.OrganizationEntityEmployees.Add(link);
-        }
+        // Collect all entity IDs from the DTOs
+        var entityIds = dtos.Select(dto => dto.OrganizationEntityId).Distinct().ToList();
+
+        // Remove all existing links for the specified entity IDs
+        var existingLinks = _context.OrganizationEntityEmployees.Where(link =>
+            entityIds.Contains(link.OrganizationEntityId)
+        );
+        _context.OrganizationEntityEmployees.RemoveRange(existingLinks);
+
+        // Prepare new links
+        var newLinks = dtos.SelectMany(dto =>
+                dto.EmployeeIds.Select(employeeId => new OrganizationEntityEmployee
+                {
+                    OrganizationEntityId = dto.OrganizationEntityId,
+                    EmployeeId = employeeId
+                })
+            )
+            .ToList();
+
+        await _context.OrganizationEntityEmployees.AddRangeAsync(newLinks);
         await _context.SaveChangesAsync();
-        return true;
+
+        // Retrieve updated entities and map them to DTOs
+        var updatedEntities = await _dbSet
+            .Where(o => entityIds.Contains(o.Id))
+            .Include(o => o.Parent)
+            .Include(o => o.Children)
+            .Include(o => o.OrganizationEntityEmployees)
+            .ThenInclude(link => link.Employee)
+            .ToListAsync();
+
+        return _mapper.Map<List<OrganizationEntityDTO>>(updatedEntities);
     }
+
+    // public async Task<bool> UpdateEmployeesAsync(
+    //     int id,
+    //     List<OrganizationEntityEmployeeCreateDTO> dtos
+    // )
+    // {
+    //     _logger.LogInformation("Updating employees for OrganizationEntity: {Id}", id);
+    //     // remove all links in OrganizationEntityEmployees that has OrganizationEntityId == id
+    //     var existingLinks = await _context
+    //         .OrganizationEntityEmployees.Where(link => link.OrganizationEntityId == id)
+    //         .ToListAsync();
+    //     if (existingLinks.Any())
+    //     {
+    //         _context.OrganizationEntityEmployees.RemoveRange(existingLinks);
+    //         await _context.SaveChangesAsync();
+    //     }
+    //     // add new links
+    //     foreach (var dto in dtos)
+    //     {
+    //         var link = new OrganizationEntityEmployee
+    //         {
+    //             OrganizationEntityId = id,
+    //             EmployeeId = dto.EmployeeId,
+    //         };
+    //         _context.OrganizationEntityEmployees.Add(link);
+    //     }
+    //     await _context.SaveChangesAsync();
+    //     return true;
+    // }
 }

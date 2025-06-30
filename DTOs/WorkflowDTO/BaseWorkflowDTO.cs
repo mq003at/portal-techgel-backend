@@ -21,6 +21,4 @@ public class BaseWorkflowCreateDTO : BaseModelCreateDTO
     public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.DRAFT;
 }
 
-public class BaseWorkflowUpdateDTO : BaseModelUpdateDTO
-{
-}
+public class BaseWorkflowUpdateDTO : BaseModelUpdateDTO { }

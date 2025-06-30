@@ -73,4 +73,3 @@ public class LeaveRequestWorkflowUpdateDTO : BaseWorkflowUpdateDTO
     public DayNightEnum? EndDateDayNightType { get; set; }
     public int EmployeeId { get; set; }
 }
-

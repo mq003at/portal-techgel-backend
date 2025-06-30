@@ -63,14 +63,16 @@ public class BaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
             return null;
 
         _logger.LogInformation($"Updating before: {JsonSerializer.Serialize(entity)}");
-
-        entity.MainId = "";
-
+        _logger.LogInformation($"Updating DTO: {JsonSerializer.Serialize(dto)}");
         // Áp DTO lên entity
         _mapper.Map(dto, entity);
 
         await _context.SaveChangesAsync();
-        return _mapper.Map<TReadDTO>(entity);
+
+        var result = _mapper.Map<TReadDTO>(entity);
+        _logger.LogInformation($"Updating after: {JsonSerializer.Serialize(result)}");
+
+        return result;
     }
 
     public virtual async Task<bool> DeleteAsync(int id)

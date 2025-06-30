@@ -42,13 +42,19 @@ public class OrganizationEntitiesController
     }
 
     // Change who belongs to what orgentities
-    [HttpPut("{id}/employees")]
-    public async Task<IActionResult> UpdateEmployees(
-        int id,
-        [FromBody] List<OrganizationEntityEmployeeCreateDTO> dto
+    [HttpPut("employees")]
+    public async Task<ActionResult<List<OrganizationEntityDTO>>> UpdateEmployeesForOrganization(
+        [FromBody] List<OrganizationEntityUpdateEmployeesDTO> dtos
     )
     {
-        var result = await _entityService.UpdateEmployeesAsync(id, dto);
-        return Ok(result);
+        try
+        {
+            var updated = await _entityService.UpdateEmployeeForOrganizationAsync(dtos);
+            return Ok(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 }
