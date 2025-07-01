@@ -22,15 +22,15 @@ public class UploadSignatureDTO : BaseModelCreateDTO
     public int EmployeeId { get; set; }
 
     [Required]
-    [AllowedExtensions([".svg"], ErrorMessage = "Only SVG files are allowed.")]
+    [AllowedExtensions([".png"], ErrorMessage = "Only PNG files are allowed.")]
     [MaxFileSize(3 * 1024 * 1024, ErrorMessage = "File size cannot exceed 3 MB.")]
     public IFormFile File { get; set; } = null!;
 
     [
         Required,
         RegularExpression(
-            @"^[a-zA-Z0-9_\-]+\.svg$",
-            ErrorMessage = "Filename must be alphanumeric or _‐, ending in .svg"
+            @"^[a-zA-Z0-9_\-]+\.png$",
+            ErrorMessage = "Filename must be alphanumeric or _‐, ending in .png"
         )
     ]
     public string FileName { get; set; } = null!;
@@ -38,7 +38,7 @@ public class UploadSignatureDTO : BaseModelCreateDTO
 
 public class UpdateSignatureDTO : BaseModelUpdateDTO
 {
-    [AllowedExtensions([".svg"], ErrorMessage = "Only SVG files are allowed.")]
+    [AllowedExtensions([".png"], ErrorMessage = "Only PNG files are allowed.")]
     [MaxFileSize(3 * 1024 * 1024, ErrorMessage = "File size cannot exceed 3 MB.")]
     public IFormFile? File { get; set; }
 }

@@ -122,7 +122,7 @@ public class DocumentController : ControllerBase
         return deleted ? NoContent() : NotFound();
     }
 
-    // HEAD: api/document/exist?category=LEGAL&fileName=abc.svg
+    // HEAD: api/document/exist?category=LEGAL&fileName=abc.png
     // Check if file exist in the specified category
     [HttpHead("exist")]
     public async Task<IActionResult> CheckFileExist(
@@ -137,10 +137,11 @@ public class DocumentController : ControllerBase
     // template handling
     // POST: api/document/template
     [HttpPost("template")]
-    public async Task<ActionResult<DocumentDTO>> CreateTemplate([FromForm] DocumentTemplateCreateDTO dto)
+    public async Task<ActionResult<DocumentDTO>> CreateTemplate(
+        [FromForm] DocumentTemplateCreateDTO dto
+    )
     {
         var result = await _documentService.CreateTemplateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
-
 }

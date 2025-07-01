@@ -30,10 +30,14 @@ public class LeaveRequestWorkflowController
     {
         string orgEntClaim =
             User.FindFirst("OrganizationEntityIds")?.Value
-            ?? throw new UnauthorizedAccessException("OrganizationEntityIds claim not found.");
+            ?? throw new UnauthorizedAccessException(
+                "Lỗi chứng thực người dùng. Xin đăng xuất và đăng nhập lại."
+            );
         string idClaim =
             User.FindFirst("Id")?.Value
-            ?? throw new UnauthorizedAccessException("Id claim not found.");
+            ?? throw new UnauthorizedAccessException(
+                "Lỗi không nhận diện được người dùng này. Vui lòng đăng nhập lại."
+            );
 
         var organizationIds = orgEntClaim
             .Split(",", StringSplitOptions.RemoveEmptyEntries)
@@ -45,7 +49,7 @@ public class LeaveRequestWorkflowController
             return await base.Delete(id);
         else
         {
-            return Unauthorized("You do not have permission to delete this workflow.");
+            return Unauthorized("Người dùng không có thẩm quyền xóa.");
         }
     }
 

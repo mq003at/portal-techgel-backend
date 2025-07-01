@@ -72,45 +72,50 @@ builder
     .AddDefaultTokenProviders();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOperationException("Missing JWT SecretKey"));
+var key = Encoding.UTF8.GetBytes(
+    jwtSettings["SecretKey"] ?? throw new InvalidOperationException("Thiếu mã bảo vệ JWT.")
+);
 
 // 🔐 Configure authentication services with named schemes
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = "Cookies";
-    options.DefaultChallengeScheme = "Cookies";
-    options.DefaultScheme = "Cookies"; // Optional — fallback
-})
-.AddCookie("Cookies", options =>
-{
-    options.LoginPath = "/api/login";
-    options.AccessDeniedPath = "/denied";
-    options.Cookie.Name = ".Techgel.Auth";
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = SameSiteMode.None; // Use Lax for CSRF protection
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Always use secure cookies
-    options.ExpireTimeSpan = TimeSpan.FromHours(2);
-    options.SlidingExpiration = true;
-
-    options.Events = new CookieAuthenticationEvents
+builder
+    .Services.AddAuthentication(options =>
     {
-        OnRedirectToLogin = ctx =>
+        options.DefaultAuthenticateScheme = "Cookies";
+        options.DefaultChallengeScheme = "Cookies";
+        options.DefaultScheme = "Cookies"; // Optional — fallback
+    })
+    .AddCookie(
+        "Cookies",
+        options =>
         {
-            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return Task.CompletedTask;
-        },
-        OnRedirectToAccessDenied = ctx =>
-        {
-            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-            return Task.CompletedTask;
-        }
-    };
-});
+            options.LoginPath = "/api/login";
+            options.AccessDeniedPath = "/denied";
+            options.Cookie.Name = ".Techgel.Auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.None; // Use Lax for CSRF protection
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Always use secure cookies
+            options.ExpireTimeSpan = TimeSpan.FromHours(2);
+            options.SlidingExpiration = true;
 
-//  Enable session support 
+            options.Events = new CookieAuthenticationEvents
+            {
+                OnRedirectToLogin = ctx =>
+                {
+                    ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                },
+                OnRedirectToAccessDenied = ctx =>
+                {
+                    ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    return Task.CompletedTask;
+                }
+            };
+        }
+    );
+
+//  Enable session support
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
-
 
 // Add controllers and Swagger
 builder.Services.AddControllers();
@@ -121,13 +126,17 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173") // <-- chính xác origin
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials(); // <-- nếu dùng cookie
-    });
+    options.AddPolicy(
+        "AllowFrontend",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:5173") // <-- chính xác origin
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials(); // <-- nếu dùng cookie
+        }
+    );
 });
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
@@ -174,8 +183,6 @@ builder.Services.AddScoped<ILeaveRequestNodeService, LeaveRequestNodeService>();
 builder.Services.AddScoped<ILeaveRequestWorkflowService, LeaveRequestWorkflowService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationCategoryService, NotificationCategoryService>();
-
-
 
 var app = builder.Build();
 

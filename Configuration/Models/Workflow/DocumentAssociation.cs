@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using portal.Models;
 
 public class DocumentAssociationConfiguration : IEntityTypeConfiguration<DocumentAssociation>
 {
@@ -13,18 +14,21 @@ public class DocumentAssociationConfiguration : IEntityTypeConfiguration<Documen
         builder.Property(e => e.DocumentId).IsRequired();
 
         // Navigation to Document
-        builder.HasOne(d => d.Document)
+        builder
+            .HasOne(d => d.Document)
             .WithMany(d => d.DocumentAssociations)
             .HasForeignKey(d => d.DocumentId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
-        builder.Property(e => e.EntityType)
-            .IsRequired()
-            .HasMaxLength(255);
+        builder.Property(e => e.EntityType).IsRequired().HasMaxLength(255);
 
         builder.HasIndex(d => new { d.EntityId, d.EntityType });
 
-        builder.Property(e => e.EntityId).IsRequired();
-      }
+        builder
+            .HasOne<LeaveRequestWorkflow>()
+            .WithMany()
+            .HasForeignKey(d => d.EntityId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
 }

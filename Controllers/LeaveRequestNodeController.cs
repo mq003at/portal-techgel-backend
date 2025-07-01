@@ -7,11 +7,13 @@ namespace portal.Controllers;
 
 [ApiController]
 [Route("api/leave-request-nodes")]
-public class LeaveRequestNodeController : BaseController<
-    LeaveRequestNode,
-    LeaveRequestNodeDTO,
-    LeaveRequestNodeCreateDTO,
-    LeaveRequestNodeUpdateDTO>
+public class LeaveRequestNodeController
+    : BaseController<
+        LeaveRequestNode,
+        LeaveRequestNodeDTO,
+        LeaveRequestNodeCreateDTO,
+        LeaveRequestNodeUpdateDTO
+    >
 {
     private readonly ILeaveRequestNodeService _nodeService;
 
@@ -33,7 +35,11 @@ public class LeaveRequestNodeController : BaseController<
     [HttpPut("{id}/reject")]
     public async Task<IActionResult> Reject(int id, [FromBody] RejectDTO rejectDTO)
     {
-        var success = await _nodeService.RejectAsync(id, rejectDTO.approverId, rejectDTO.rejectReason);
+        var success = await _nodeService.RejectAsync(
+            id,
+            rejectDTO.approverId,
+            rejectDTO.rejectReason
+        );
         return Ok(success);
     }
 }

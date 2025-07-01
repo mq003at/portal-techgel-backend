@@ -39,10 +39,14 @@ public class EmployeeController
         // If user is HR
         string claimValue =
             User.FindFirst("OrganizationEntityIds")?.Value
-            ?? throw new UnauthorizedAccessException("OrganizationEntityIds claim not found.");
+            ?? throw new UnauthorizedAccessException(
+                "Lỗi không nhận diện được phòng ban người này. Vui lòng đăng nhập lại."
+            );
         string idClaim =
             User.FindFirst("Id")?.Value
-            ?? throw new UnauthorizedAccessException("Id claim not found.");
+            ?? throw new UnauthorizedAccessException(
+                "Lỗi không nhận diện được người dùng này.  Vui lòng đăng nhập lại."
+            );
         int id = int.Parse(idClaim);
         var organizationIds = claimValue
             .Split(",", StringSplitOptions.RemoveEmptyEntries)

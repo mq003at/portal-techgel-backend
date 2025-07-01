@@ -12,7 +12,4 @@ public class DocumentAssociation : BaseModelWithOnlyId
     [Required]
     public string EntityType { get; set; } = null!;
     public int EntityId { get; set; }
-
-    public int WorkflowId { get; set; } 
 }
-

@@ -48,7 +48,6 @@ public class LeaveRequestWorkflowService
         var workflows = await _context
             .LeaveRequestWorkflows.Where(w => w.EmployeeId == id)
             .Include(w => w.LeaveRequestNodes)
-            .ThenInclude(n => n.WorkflowNodeParticipants)
             .ToListAsync();
 
         var workflowDtos = _mapper.Map<List<LeaveRequestWorkflowDTO>>(workflows);
@@ -94,17 +93,17 @@ public class LeaveRequestWorkflowService
         CompanyInfo companyInfo =
             employee.CompanyInfo
             ?? throw new InvalidOperationException(
-                $"CompanyInfo for employee {dto.EmployeeId} not found."
+                $"Nhân viên chưa được cập nhật Thông tin Công ty. Vui lòng liên hệ bộ phận HR."
             );
         Employee supervisor =
             employee.Supervisor
             ?? throw new InvalidOperationException(
-                $"Supervisor for employee {dto.EmployeeId} not found."
+                $"Không tìm thấy Quản lý trực thuộc cho nhân viên này. Xin vui lòng liên hệ bộ phận HR."
             );
         Employee deputySupervisor =
             employee.DeputySupervisor
             ?? throw new InvalidOperationException(
-                $"Deputy Supervisor for employee {dto.EmployeeId} not found."
+                $"Không tìm thấy Quản lý Gián tiếp cho nhân viên này. Xin vui lòng liên hệ bộ phận HR."
             );
         // ScheduleInfo scheduleInfo = employee.ScheduleInfo ?? throw new InvalidOperationException($"ScheduleInfo for employee {dto.EmployeeId} not found.");
 
@@ -403,7 +402,7 @@ public class LeaveRequestWorkflowService
         LeaveRequestWorkflowCreateDTO dto
     )
     {
-        // check if the employee already has a workflow in pending state
+        // check for existing pending workflow
         var existingWorkflow = await _context
             .LeaveRequestWorkflows.Where(w =>
                 w.EmployeeId == dto.EmployeeId && w.Status == GeneralWorkflowStatusType.PENDING
@@ -417,34 +416,45 @@ public class LeaveRequestWorkflowService
             );
         }
 
-        // CDTO -> Model
-        var entity = _mapper.Map<LeaveRequestWorkflow>(dto);
-        var employee =
-            await _context
-                .Employees.Include(e => e.Supervisor)
-                .Include(e => e.DeputySupervisor)
-                .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId)
-            ?? throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
-        entity.Description =
-            $"Hồ sơ nghỉ phép nhân viên {employee.GetDisplayName()} từ {dto.StartDate:dd/MM/yyyy} đến {dto.EndDate:dd/MM/yyyy}. Người ký: {employee.Supervisor?.GetDisplayName()} và {employee.DeputySupervisor?.GetDisplayName()}";
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // Map DTO to entity
+            var entity = _mapper.Map<LeaveRequestWorkflow>(dto);
 
-        // Generate Id + timestamp + roles
-        _context.LeaveRequestWorkflows.Add(entity);
-        await _context.SaveChangesAsync();
+            // Fetch employee
+            var employee =
+                await _context
+                    .Employees.Include(e => e.Supervisor)
+                    .Include(e => e.DeputySupervisor)
+                    .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId)
+                ?? throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
 
-        // Generate nodes based on the workflow. We already have roles from tables
-        var nodes = await GenerateNodesAsync(dto, entity);
+            // Generate workflow description
+            entity.Description =
+                $"Hồ sơ nghỉ phép nhân viên {employee.GetDisplayName()} từ {dto.StartDate:dd/MM/yyyy} đến {dto.EndDate:dd/MM/yyyy}. Người ký: {employee.Supervisor?.GetDisplayName()} và {employee.DeputySupervisor?.GetDisplayName()}";
 
-        var finalDto = _mapper.Map<LeaveRequestWorkflowDTO>(entity);
-        _logger.LogError(
-            "Generated {NodeCount} employeeAnualLeave for this {WorkflowId} in dto",
-            entity.EmployeeAnnualLeaveTotalDays,
-            finalDto.EmployeeAnnualLeaveTotalDays
-        );
-        // Populate thêm metadata nếu cần
-        finalDto.LeaveRequestNodes = nodes;
+            // Save workflow first to get its Id
+            _context.LeaveRequestWorkflows.Add(entity);
+            await _context.SaveChangesAsync();
 
-        return finalDto;
+            // Generate workflow nodes with entity.Id now available
+            var nodes = await GenerateNodesAsync(dto, entity);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            // Map to DTO after commit
+            var finalDto = _mapper.Map<LeaveRequestWorkflowDTO>(entity);
+            finalDto.LeaveRequestNodes = _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
+
+            return finalDto;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public override async Task<LeaveRequestWorkflowDTO?> UpdateAsync(
@@ -488,6 +498,7 @@ public class LeaveRequestWorkflowService
             .WorkflowNodeParticipants.Where(p =>
                 nodeIds.Contains(p.WorkflowNodeId) && p.WorkflowNodeType == "LeaveRequest"
             )
+            .Include(p => p.Employee)
             .ToListAsync();
 
         // Step 3: Assign participants to nodes
@@ -500,7 +511,7 @@ public class LeaveRequestWorkflowService
 
         workflow.DocumentAssociations = await _context
             .DocumentAssociations.Where(da =>
-                da.WorkflowId == workflow.Id && da.EntityType == "LeaveRequest"
+                da.EntityId == workflow.Id && da.EntityType == "LeaveRequest"
             )
             .Include(da => da.Document) // Eager load the Document
             .Select(da => da.Document)
@@ -730,12 +741,13 @@ public class LeaveRequestWorkflowService
             Division = Division
         };
 
+        _logger.LogInformation(System.Text.Json.JsonSerializer.Serialize(workflow.Id));
+
         DocumentAssociation newDocumentAssociation = new DocumentAssociation
         {
             Document = newMetadata,
             EntityType = "LeaveRequest",
-            EntityId = nodeId, // Associate with the workflow ID
-            WorkflowId = workflow.Id
+            EntityId = workflow.Id, // Associate with the workflow ID
         };
 
         _context.Documents.Add(newMetadata);
