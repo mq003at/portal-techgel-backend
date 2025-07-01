@@ -29,6 +29,15 @@ public class EmployeeService
         _oee = context.Set<OrganizationEntityEmployee>();
     }
 
+    public async Task<IEnumerable<EmployeeDTO>> GetPhoneBookAllEmployeesAsync()
+    {
+        List<Employee> employees = await _context
+            .Employees.Include(e => e.PersonalInfo)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<EmployeeDTO>>(employees);
+    }
+
     public override async Task<IEnumerable<EmployeeDTO>> GetAllAsync()
     {
         // 1) Get the base list of DTOs (no RoleInfo lists yet)

@@ -33,6 +33,13 @@ public class EmployeeController
     }
 
     [HttpGet]
+    public async Task<ActionResult<IEnumerable<EmployeeDTO>>> PhoneBookGetAllAsync()
+    {
+        var employees = await _employeeService.GetPhoneBookAllEmployeesAsync();
+        return Ok(employees);
+    }
+
+    [HttpGet]
     [Authorize]
     public override async Task<ActionResult<IEnumerable<EmployeeDTO>>> GetAll()
     {
