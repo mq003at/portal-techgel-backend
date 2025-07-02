@@ -405,7 +405,7 @@ public class LeaveRequestWorkflowService
         // check for existing pending workflow
         var existingWorkflow = await _context
             .LeaveRequestWorkflows.Where(w =>
-                w.EmployeeId == dto.EmployeeId && w.Status == GeneralWorkflowStatusType.PENDING
+                w.EmployeeId == dto.EmployeeId && (w.Status == GeneralWorkflowStatusType.PENDING || w.Status == GeneralWorkflowStatusType.DRAFT)
             )
             .FirstOrDefaultAsync();
 

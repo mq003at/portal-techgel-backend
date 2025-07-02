@@ -32,7 +32,7 @@ public class EmployeeController
         _context = context;
     }
 
-    [HttpGet]
+    [HttpGet("phonebook")]
     public async Task<ActionResult<IEnumerable<EmployeeDTO>>> PhoneBookGetAllAsync()
     {
         var employees = await _employeeService.GetPhoneBookAllEmployeesAsync();
@@ -60,7 +60,7 @@ public class EmployeeController
             .Select(id => int.Parse(id))
             .ToList();
 
-        var targetIds = new List<int> { 11, 3 };
+        var targetIds = new List<int> { 3, 10, 11, 12, 13, 64 };
         if (organizationIds.Any(targetIds.Contains))
             return await base.GetAll();
         else

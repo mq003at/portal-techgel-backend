@@ -131,7 +131,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:5173") // <-- chính xác origin
+                .WithOrigins("http://localhost:5173", "https://portal.quan-ng.uk") // <-- chính xác origin
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); // <-- nếu dùng cookie
@@ -194,7 +194,6 @@ app.UseSwaggerUI(c =>
 });
 app.MapOpenApi();
 
-app.UseCors();
 app.UseCors("AllowFrontend");
 app.UseRouting();
 app.UseAuthentication();
