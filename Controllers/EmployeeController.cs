@@ -32,6 +32,35 @@ public class EmployeeController
         _context = context;
     }
 
+    [HttpPut("/password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePasswordDTO dto)
+    {
+        string idClaim =
+            User.FindFirst("Id")?.Value
+            ?? throw new UnauthorizedAccessException(
+                "Lỗi không nhận diện được người dùng này.  Vui lòng đăng nhập lại."
+            );
+
+        int id = int.Parse(idClaim);
+
+        try
+        {
+            bool result = await _employeeService.ChangePasswordAsync(
+                id,
+                dto.OldPassword,
+                dto.NewPassword
+            );
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error changing password for employee");
+            return StatusCode(500, "An error occurred while changing the password.");
+        }
+    }
+
     [HttpGet("phonebook")]
     public async Task<ActionResult<IEnumerable<EmployeeDTO>>> PhoneBookGetAllAsync()
     {

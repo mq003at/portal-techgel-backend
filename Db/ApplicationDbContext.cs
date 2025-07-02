@@ -79,4 +79,9 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<NotificationCategory> NotificationCategories { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<OnlyForOrganizationEntity> OnlyForOrganizationEntities { get; set; }
+
+    // Survey & Feedback Setup
+    public DbSet<Survey> Surveys { get; set; }
+    public DbSet<SurveyQuestion> SurveyQuestions { get; set; }
+    public DbSet<SurveyResponse> SurveyResponses { get; set; }
 }

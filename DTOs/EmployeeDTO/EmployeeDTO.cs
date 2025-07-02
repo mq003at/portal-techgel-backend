@@ -108,3 +108,12 @@ public class LoginResponseDTO
     public string Token { get; set; } = null!;
     public EmployeeDTO Employee { get; set; } = null!;
 }
+
+public class ChangePasswordDTO
+{
+    [Required]
+    public string OldPassword { get; set; } = null!;
+
+    [Required]
+    public string NewPassword { get; set; } = null!;
+}

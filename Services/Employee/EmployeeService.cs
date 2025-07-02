@@ -83,9 +83,30 @@ public class EmployeeService
         return dto;
     }
 
+    public async Task<bool> ChangePasswordAsync(
+        int employeeId,
+        string oldPassword,
+        string newPassword
+    )
+    {
+        var employee = await _context.Employees.FindAsync(employeeId);
+        if (employee == null)
+            throw new KeyNotFoundException($"Không thấy nhân viên. Vui lòng đăng nhập lại.");
+
+        if (employee.Password != oldPassword)
+            throw new UnauthorizedAccessException("Mật khẩu cũ không đúng.");
+
+        employee.Password = newPassword;
+        _context.Employees.Update(employee);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
     public override async Task<EmployeeDTO> CreateAsync(CreateEmployeeDTO dto)
     {
         _logger.LogInformation("CreateAsync called with DTO: {@dto}", dto);
+        dto.Password = "1234";
 
         // employee generation
         Employee employee = _mapper.Map<Employee>(dto);
