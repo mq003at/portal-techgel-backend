@@ -4,12 +4,7 @@ using portal.Models;
 
 namespace portal.Mappings;
 
-public abstract class BaseModelProfile<
-    TModel,
-    TDto,
-    TCreateDto,
-    TUpdateDto>
-    : Profile
+public abstract class BaseModelProfile<TModel, TDto, TCreateDto, TUpdateDto> : Profile
     where TModel : BaseModel
     where TDto : BaseModelDTO
     where TCreateDto : BaseModelCreateDTO
@@ -18,7 +13,8 @@ public abstract class BaseModelProfile<
     public BaseModelProfile()
     {
         // Model -> DTO
-        CreateMap<TModel, TDto>().ReverseMap();
+        CreateMap<TModel, TDto>()
+            .ReverseMap();
         // Create DTO -> Model
         CreateMap<TCreateDto, TModel>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -33,12 +29,7 @@ public abstract class BaseModelProfile<
     }
 }
 
-public abstract class BaseModelWithOnlyIdProfile<
-    TModel,
-    TDto,
-    TCreateDto,
-    TUpdateDto>
-    : Profile
+public abstract class BaseModelWithOnlyIdProfile<TModel, TDto, TCreateDto, TUpdateDto> : Profile
     where TModel : BaseModelWithOnlyId
     where TDto : BaseModelWithOnlyIdDTO
     where TCreateDto : BaseModelWithOnlyIdCreateDTO
@@ -47,7 +38,8 @@ public abstract class BaseModelWithOnlyIdProfile<
     public BaseModelWithOnlyIdProfile()
     {
         // Model -> DTO
-        CreateMap<TModel, TDto>().ReverseMap();
+        CreateMap<TModel, TDto>()
+            .ReverseMap();
         // Create DTO -> Model
         CreateMap<TCreateDto, TModel>()
             .ForMember(dest => dest.Id, opt => opt.Ignore());

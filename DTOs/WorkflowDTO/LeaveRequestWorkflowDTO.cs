@@ -63,6 +63,8 @@ public class LeaveRequestWorkflowCreateDTO : BaseWorkflowCreateDTO
 public class LeaveRequestWorkflowUpdateDTO : BaseWorkflowUpdateDTO
 {
     public string? Reason { get; set; }
+
+    public string? AssigneeDetails { get; set; }
     public string? Notes { get; set; }
     public DateTime? StartDate { get; set; }
 

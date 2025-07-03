@@ -9,23 +9,16 @@ public abstract class BaseModelConfiguration<T> : IEntityTypeConfiguration<T>
     {
         // Primary Key, auto-increment
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id)
-            .ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
         // MainId: Required, Default to empty string
-        builder.Property(e => e.MainId)
-            .IsRequired()
-            .HasDefaultValue(string.Empty);
+        builder.Property(e => e.MainId).IsRequired().HasDefaultValue(string.Empty);
 
         // CreatedAt: Required, default value SQL, set at DB insert
-        builder.Property(e => e.CreatedAt)
-            .IsRequired()
-           ;
+        builder.Property(e => e.CreatedAt).IsRequired();
 
         // UpdatedAt: Required, default value SQL, updated by DB on update
-        builder.Property(e => e.UpdatedAt)
-            .IsRequired()
-            ;
+        builder.Property(e => e.UpdatedAt).IsRequired();
     }
 }
 
@@ -36,7 +29,6 @@ public abstract class BaseModelWithOnlyIdConfiguration<T> : IEntityTypeConfigura
     {
         // Primary Key, auto-increment
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id)
-            .ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
     }
 }
