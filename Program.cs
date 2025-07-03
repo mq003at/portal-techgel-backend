@@ -40,13 +40,13 @@ builder
     {
         // Only listen to HTTP, let Railway handle HTTPS
         serverOptions.ListenAnyIP(5000); // http://localhost:5000
-        serverOptions.ListenAnyIP(
-            5001,
-            listenOpts =>
-            {
-                listenOpts.UseHttps(); // https://localhost:5001
-            }
-        );
+        // serverOptions.ListenAnyIP(
+        //     5001,
+        //     listenOpts =>
+        //     {
+        //         listenOpts.UseHttps(); // https://localhost:5001
+        //     }
+        // );
     })
     .UseUrls("http://0.0.0.0:5000");
 ;
