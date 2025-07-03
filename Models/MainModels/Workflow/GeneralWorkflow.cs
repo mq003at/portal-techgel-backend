@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace portal.Models;
 
-public class LeaveRequestWorkflow : BaseWorkflow
+public class GeneralWorkflow : BaseWorkflow
 {
     [Required]
     public string Reason { get; set; } = string.Empty;
