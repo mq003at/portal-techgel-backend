@@ -119,7 +119,7 @@ public class LeaveRequestWorkflowService
         )
         {
             throw new InvalidOperationException(
-                "Cannot request Annual or Compensatory leave while on probation."
+                "Không thể xin nghỉ phép hay nghỉ bù khi đang trong giai đoạn thực tập."
             );
         }
 
@@ -137,7 +137,7 @@ public class LeaveRequestWorkflowService
             if (compensatoryLeaveInit < totalDays)
             {
                 throw new InvalidOperationException(
-                    "Not enough compensatory leave days available. Contact admins to see if anything is wrong."
+                    "Không đủ ngày nghỉ bù. Vui lòng liên hệ với quản trị viên để kiểm tra."
                 );
             }
             finalEmployeeCompensatoryLeaveTotalDays = compensatoryLeaveInit - totalDays;
@@ -148,7 +148,7 @@ public class LeaveRequestWorkflowService
             if (annualLeaveInit < totalDays)
             {
                 throw new InvalidOperationException(
-                    "Not enough annual leave days available. Contact admins to see if anything is wrong."
+                    "Không đủ ngày nghỉ phép. Vui lòng liên hệ với quản trị viên để kiểm tra."
                 );
             }
             finalEmployeeAnnualLeaveTotalDays = annualLeaveInit - totalDays;
@@ -403,18 +403,22 @@ public class LeaveRequestWorkflowService
     )
     {
         // check for existing pending workflow
-        var existingWorkflow = await _context
-            .LeaveRequestWorkflows.Where(w =>
-                w.EmployeeId == dto.EmployeeId && (w.Status == GeneralWorkflowStatusType.PENDING || w.Status == GeneralWorkflowStatusType.DRAFT)
-            )
-            .FirstOrDefaultAsync();
+        // var existingWorkflow = await _context
+        //     .LeaveRequestWorkflows.Where(w =>
+        //         w.EmployeeId == dto.EmployeeId
+        //         && (
+        //             w.Status == GeneralWorkflowStatusType.PENDING
+        //             || w.Status == GeneralWorkflowStatusType.DRAFT
+        //         )
+        //     )
+        //     .FirstOrDefaultAsync();
 
-        if (existingWorkflow != null)
-        {
-            throw new InvalidOperationException(
-                "Đã có 1 đơn nghỉ phép đang chờ xử lý cho nhân viên này. Vui lòng đợi hoặc hủy đơn trước."
-            );
-        }
+        // if (existingWorkflow != null)
+        // {
+        //     throw new InvalidOperationException(
+        //         "Đã có 1 đơn nghỉ phép đang chờ xử lý cho nhân viên này. Vui lòng đợi hoặc hủy đơn trước."
+        //     );
+        // }
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -428,7 +432,9 @@ public class LeaveRequestWorkflowService
                     .Employees.Include(e => e.Supervisor)
                     .Include(e => e.DeputySupervisor)
                     .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId)
-                ?? throw new InvalidOperationException($"Employee {dto.EmployeeId} not found.");
+                ?? throw new InvalidOperationException(
+                    $"Không tìm thấy nhân viên {dto.EmployeeId}."
+                );
 
             // Generate workflow description
             entity.Description =
@@ -611,7 +617,8 @@ public class LeaveRequestWorkflowService
         _logger.LogInformation("Employee signature is valid: {IsValid}", isImgValid);
 
         var Division = "6_Noi_Chinh";
-        var newFileName = $"{today:yyyy-MM-dd}-{Division}-DN-{employee.MainId}-v01{".docx"}";
+        var newFileName =
+            $"{workflow.Id}-{today:yyyy-MM-dd}-{Division}-DN-{employee.MainId}-v01{".docx"}";
         var newTargetPath = Path.Combine(
                 "erp",
                 "documents",
@@ -723,7 +730,7 @@ public class LeaveRequestWorkflowService
         // If filling in is completed, upload and make a new record of metadata
         var pathAfterUpload = await _storage.UploadAsync(newMemoryDoc, newTargetPath);
         if (string.IsNullOrEmpty(pathAfterUpload))
-            throw new InvalidOperationException("Failed to upload the document to storage.");
+            throw new InvalidOperationException("Tải file lên thất bại. Server bị quá tải.");
 
         var newMetadata = new Models.Document
         {

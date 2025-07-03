@@ -35,21 +35,30 @@ builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true;
 });
 
-builder
-    .WebHost.ConfigureKestrel(serverOptions =>
+builder.WebHost.ConfigureKestrel(
+    (context, serverOptions) =>
     {
-        // Only listen to HTTP, let Railway handle HTTPS
-        serverOptions.ListenAnyIP(5000); // http://localhost:5000
-        serverOptions.ListenAnyIP(
-            5001,
-            listenOpts =>
-            {
-                listenOpts.UseHttps(); // https://localhost:5001
-            }
-        );
-    })
-    .UseUrls("http://0.0.0.0:5000");
-;
+        if (context.HostingEnvironment.IsDevelopment())
+        {
+            // Local development: allow HTTP + HTTPS
+            serverOptions.ListenAnyIP(5000); // HTTP
+            serverOptions.ListenAnyIP(
+                5001,
+                listenOpts =>
+                {
+                    listenOpts.UseHttps(); // HTTPS
+                }
+            );
+        }
+        else
+        {
+            // Production: only listen on HTTP, behind proxy like Railway/Vercel
+            serverOptions.ListenAnyIP(5000); // HTTP only
+        }
+    }
+);
+
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 // Register PostgreSQL Database
 builder.Services.AddDbContext<ApplicationDbContext>(
