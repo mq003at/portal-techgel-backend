@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using portal.Configurations.CAP;
 using portal.Db;
 using portal.Mappings;
 using portal.Options;
@@ -122,6 +123,12 @@ builder
         }
     );
 
+builder.Services.AddAuthorization();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
+
 //  Enable session support
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
@@ -146,6 +153,35 @@ builder.Services.AddCors(options =>
                 .AllowCredentials(); // <-- nếu dùng cookie
         }
     );
+});
+
+// LevinMQ
+var rabbitMQSettings = builder.Configuration.GetSection("Cap:RabbitMQ").Get<RabbitMQSettings>()!;
+
+builder.Services.AddCap(options =>
+{
+    options.UseEntityFramework<ApplicationDbContext>();
+    options.UsePostgreSql(builder.Configuration.GetConnectionString("DefaultConnection"));
+
+    options.UseRabbitMQ(cfg =>
+    {
+        cfg.HostName =
+            builder.Configuration["Cap:RabbitMQ:HostName"]
+            ?? throw new InvalidOperationException("RabbitMQ HostName not configured");
+        cfg.UserName = builder.Configuration["Cap:RabbitMQ:UserName"] ?? "";
+        cfg.Password = builder.Configuration["Cap:RabbitMQ:Password"] ?? "";
+        cfg.Port = int.Parse(builder.Configuration["Cap:RabbitMQ:Port"] ?? "5672");
+        cfg.VirtualHost = builder.Configuration["Cap:RabbitMQ:VirtualHost"] ?? "/";
+
+        if (rabbitMQSettings.UseSsl)
+        {
+            cfg.ConnectionFactoryOptions = opts =>
+            {
+                opts.Ssl.Enabled = true;
+                opts.Ssl.ServerName = rabbitMQSettings.HostName;
+            };
+        }
+    });
 });
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
@@ -195,20 +231,27 @@ builder.Services.AddScoped<INotificationCategoryService, NotificationCategorySer
 
 var app = builder.Build();
 
+// Swagger
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Techgel ERP API v1");
-    c.RoutePrefix = string.Empty; // hiển thị UI tại https://localhost:5001/
+    c.RoutePrefix = string.Empty;
 });
 app.MapOpenApi();
 
-app.UseCors("AllowFrontend");
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
+// HTTPS and Routing
 app.UseHttpsRedirection();
+app.UseRouting(); 
+
+// CORS & Auth
+app.UseCors("AllowFrontend");
+app.UseAuthentication(); 
+app.UseAuthorization();
+
+// Endpoints
+app.MapControllers(); 
+app.MapHub<NotificationHub>("/hubs/notification").RequireAuthorization();
 
 app.Run();
 app.Logger.LogInformation("Adding Routes");

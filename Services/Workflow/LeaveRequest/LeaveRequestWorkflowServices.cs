@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DotNetCore.CAP;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using portal.Db;
@@ -28,19 +29,22 @@ public class LeaveRequestWorkflowService
     private readonly IFileStorageService _storage;
     private readonly DocumentOptions _docOpts;
     private readonly string _basePath;
+    private readonly ICapPublisher _capPublisher;
 
     public LeaveRequestWorkflowService(
         ApplicationDbContext context,
         IMapper mapper,
         ILogger<LeaveRequestWorkflowService> logger,
         IOptions<DocumentOptions> docOpts,
-        IFileStorageService storage
+        IFileStorageService storage,
+        ICapPublisher capPublisher
     )
         : base(context, mapper, logger)
     {
         _docOpts = docOpts.Value;
         _storage = storage;
         _basePath = AppDomain.CurrentDomain.BaseDirectory;
+        _capPublisher = capPublisher;
     }
 
     public async Task<List<LeaveRequestWorkflowDTO>> GetAllByEmployeeIdAsync(int id)
@@ -359,7 +363,24 @@ public class LeaveRequestWorkflowService
                 .FirstOrDefaultAsync(e => e.Id == approverId)
             ?? throw new InvalidOperationException($"Employee {approverId} not found.");
 
-        return await GenerateLeaveRequestFinalDocument(employee, approver, workflow, nodeId);
+        var result = await GenerateLeaveRequestFinalDocument(employee, approver, workflow, nodeId);
+
+        if (result)
+        {
+            var @event = new ApprovalEvent
+            {
+                WorkflowId = workflow.Id,
+                WorkflowType = WorkflowType.LEAVE_REQUEST,
+                EmployeeId = workflow.EmployeeId,
+                ApproverName = approver.GetDisplayName(),
+                ApprovedAt = DateTime.UtcNow,
+                TriggeredBy = approver.Id.ToString(),
+            };
+
+            await _capPublisher.PublishAsync("workflow.approved", @event);
+        }
+
+        return result;
     }
 
     public override async Task<bool> DeleteAsync(int id)

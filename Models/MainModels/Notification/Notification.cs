@@ -3,21 +3,44 @@ using portal.Models;
 
 public class Notification : BaseModel
 {
+    // == Who receives it ==
     [Required]
     public int EmployeeId { get; set; }
     public Employee Employee { get; set; } = null!;
+
+    // == Rule origin ==
     public long NotificationCategoryId { get; set; }
     public NotificationCategory NotificationCategory { get; set; } = null!;
 
+    // == Display content ==
     [Required]
     public string Title { get; set; } = null!;
 
     [Required]
     public string Message { get; set; } = null!;
-    public string? Url { get; set; }
+    public string? Url { get; set; } // Optional deep link to workflow page
+
+    // == Entity context (optional polymorphic pointer to source) ==
+    public string? TriggerEntity { get; set; } // e.g. "LeaveRequest"
+    public int? TriggerEntityId { get; set; }
+
+    // == Status ==
     public DateTime? ReadAt { get; set; }
     public DateTime? FinishedAt { get; set; }
     public UrgencyLevel UrgencyLevel { get; set; }
+
+    // == Delivery metadata ==
+    public DeliveryChannel DeliveryChannels { get; set; } = DeliveryChannel.SignalR;
+    public bool DeliveredViaSignalR { get; set; } = false;
+    public bool DeliveredViaEmail { get; set; } = false;
+    public bool DeliveredViaSMS { get; set; } = false;
+
+    // == Optional delay support ==
+    public DateTime? ScheduledAt { get; set; } // for delayed notifications
+    public bool IsSent { get; set; } = false;
+
+    // == Failure diagnostics (if you want to store it here) ==
+    public string? LastErrorMessage { get; set; }
 }
 
 /// <summary>

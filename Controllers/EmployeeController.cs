@@ -32,9 +32,12 @@ public class EmployeeController
         _context = context;
     }
 
-    [HttpPut("/password")]
+    [HttpPut("{employeeId}/password")]
     [Authorize]
-    public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePasswordDTO dto)
+    public async Task<IActionResult> ChangePasswordAsync(
+        int employeeId,
+        [FromBody] ChangePasswordDTO dto
+    )
     {
         string idClaim =
             User.FindFirst("Id")?.Value
