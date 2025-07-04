@@ -11,16 +11,17 @@ public class Notification : BaseModel
 
     [Required]
     public string Title { get; set; } = null!;
+
     [Required]
     public string Message { get; set; } = null!;
     public string? Url { get; set; }
-    public DateTime? ReadAt { get; set; } 
+    public DateTime? ReadAt { get; set; }
     public DateTime? FinishedAt { get; set; }
     public UrgencyLevel UrgencyLevel { get; set; }
 }
 
 /// <summary>
-/// Six colors for 5 urgency level. 
+/// Six colors for 5 urgency level.
 /// 0: Can be put on hold indefinitely -> grey
 /// 1: Can be put on hold for a long time -> green
 /// 2: Need to be done soon, caution. -> yellow
@@ -35,5 +36,3 @@ public enum UrgencyLevel
     URGENT = 3,
     CRITICAL = 4
 }
-
-

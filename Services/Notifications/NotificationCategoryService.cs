@@ -9,30 +9,37 @@ using portal.Models;
 namespace portal.Services;
 
 public class NotificationCategoryService
-    : BaseModelWithOnlyIdService<NotificationCategory, NotificationCategoryDTO, NotificationCategoryCreateDTO, NotificationCategoryUpdateDTO>,
-      INotificationCategoryService
+    : BaseModelWithOnlyIdService<
+        NotificationCategory,
+        NotificationCategoryDTO,
+        NotificationCategoryCreateDTO,
+        NotificationCategoryUpdateDTO
+    >,
+        INotificationCategoryService
 {
     public NotificationCategoryService(
         ApplicationDbContext context,
         IMapper mapper,
         ILogger<NotificationCategoryService> logger
-    ) : base(context, mapper, logger)
-    {
-    }
+    )
+        : base(context, mapper, logger) { }
 
-    public override async Task<NotificationCategoryDTO> CreateAsync(NotificationCategoryCreateDTO dto)
+    public override async Task<NotificationCategoryDTO> CreateAsync(
+        NotificationCategoryCreateDTO dto
+    )
     {
         var entity = _mapper.Map<NotificationCategory>(dto);
 
         // Gán mối liên hệ với các OrganizationEntity
         if (dto.OnlyForOrganizationEntityIds.Any())
         {
-            var linkEntities = dto.OnlyForOrganizationEntityIds
-                .Select(id => new OnlyForOrganizationEntity
+            var linkEntities = dto
+                .OnlyForOrganizationEntityIds.Select(id => new OnlyForOrganizationEntity
                 {
                     OrganizationEntityId = (int)id,
                     NotificationCategory = entity
-                }).ToList();
+                })
+                .ToList();
 
             entity.OnlyForOrganizationEntities = linkEntities;
         }
@@ -43,7 +50,10 @@ public class NotificationCategoryService
         return _mapper.Map<NotificationCategoryDTO>(entity);
     }
 
-    public override async Task<NotificationCategoryDTO?> UpdateAsync(int id, NotificationCategoryUpdateDTO dto)
+    public override async Task<NotificationCategoryDTO?> UpdateAsync(
+        int id,
+        NotificationCategoryUpdateDTO dto
+    )
     {
         var entity = await _dbSet
             .Include(nc => nc.OnlyForOrganizationEntities)
@@ -59,12 +69,13 @@ public class NotificationCategoryService
         {
             entity.OnlyForOrganizationEntities.Clear();
 
-            var newLinks = dto.OnlyForOrganizationEntityIds
-                .Select(orgId => new OnlyForOrganizationEntity
+            var newLinks = dto
+                .OnlyForOrganizationEntityIds.Select(orgId => new OnlyForOrganizationEntity
                 {
                     OrganizationEntityId = (int)orgId,
                     NotificationCategoryId = id
-                }).ToList();
+                })
+                .ToList();
 
             entity.OnlyForOrganizationEntities.AddRange(newLinks);
         }

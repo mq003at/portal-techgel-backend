@@ -10,15 +10,14 @@ namespace portal.Services;
 
 public class NotificationService
     : BaseService<Notification, NotificationDTO, NotificationCreateDTO, NotificationUpdateDTO>,
-      INotificationService
+        INotificationService
 {
     public NotificationService(
         ApplicationDbContext context,
         IMapper mapper,
         ILogger<NotificationService> logger
-    ) : base(context, mapper, logger)
-    {
-    }
+    )
+        : base(context, mapper, logger) { }
 
     public async Task<IEnumerable<NotificationDTO>> GetByEmployeeIdAsync(int employeeId)
     {

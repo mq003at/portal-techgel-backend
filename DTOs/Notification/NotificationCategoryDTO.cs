@@ -19,7 +19,7 @@ public class NotificationCategoryCreateDTO : BaseModelWithOnlyIdCreateDTO
 
 public class NotificationCategoryUpdateDTO : BaseModelWithOnlyIdUpdateDTO
 {
-    public string? Name { get; set; } 
+    public string? Name { get; set; }
     public string? Description { get; set; }
     public bool? IsUrgentByDefault { get; set; }
     public List<long>? OnlyForOrganizationEntityIds { get; set; }

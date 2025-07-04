@@ -1,5 +1,6 @@
 using DocumentFormat.OpenXml.Math;
 using portal.DTOs;
+
 public class NotificationDTO : BaseModelDTO
 {
     public int EmployeeId { get; set; }

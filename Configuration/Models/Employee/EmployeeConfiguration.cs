@@ -24,7 +24,6 @@ public class EmployeeConfiguration
         builder.Property(e => e.Avatar).HasMaxLength(255);
         builder.Property(e => e.Password).HasMaxLength(255);
 
-
         // One-to-one relationships
         builder
             .HasOne(e => e.PersonalInfo)
@@ -88,15 +87,16 @@ public class EmployeeConfiguration
             .HasForeignKey(oe => oe.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(e => e.Supervisor)
+        builder
+            .HasOne(e => e.Supervisor)
             .WithMany(e => e.Subordinates)
             .HasForeignKey(e => e.SupervisorId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(e => e.DeputySupervisor)
+        builder
+            .HasOne(e => e.DeputySupervisor)
             .WithMany(e => e.DeputySubordinates)
             .HasForeignKey(e => e.DeputySupervisorId)
             .OnDelete(DeleteBehavior.Restrict);
-
     }
 }
