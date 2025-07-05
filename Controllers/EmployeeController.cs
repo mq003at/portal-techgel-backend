@@ -43,6 +43,10 @@ public class EmployeeController
             );
 
         int id = int.Parse(idClaim);
+        _logger.LogInformation(
+            "Change password request for EmployeeId={EmployeeId}, OldPassword={OldPassword}, NewPassword={NewPassword}",
+            id, dto.OldPassword, dto.NewPassword
+        );
 
         try
         {
