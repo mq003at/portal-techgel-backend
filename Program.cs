@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using portal.Configurations.CAP;
 using portal.Db;
+using portal.Extensions;
 using portal.Mappings;
 using portal.Options;
 using portal.Services;
@@ -242,16 +243,15 @@ app.MapOpenApi();
 
 // HTTPS and Routing
 app.UseHttpsRedirection();
-app.UseRouting(); 
+app.UseRouting();
 
 // CORS & Auth
 app.UseCors("AllowFrontend");
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Endpoints
-app.MapControllers(); 
-app.MapHub<NotificationHub>("/hubs/notification").RequireAuthorization();
+app.MapControllers();
+app.MapHubs();
 
 app.Run();
-app.Logger.LogInformation("Adding Routes");
