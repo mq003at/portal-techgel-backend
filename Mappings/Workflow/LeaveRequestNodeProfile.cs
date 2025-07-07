@@ -44,6 +44,6 @@ public class LeaveRequestNodeProfile : BaseWorkflowNodeProfile<
         CreateMap<LeaveRequestNodeDTO, LeaveRequestNode>()
             .IncludeBase<WorkflowNodeDTO, BaseWorkflowNode>()
             .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType))
-            .ForMember(d => d.Workflow, o => o.Ignore()); 
+            .ForMember(d => d.Workflow, o => o.Ignore());
     }
 }

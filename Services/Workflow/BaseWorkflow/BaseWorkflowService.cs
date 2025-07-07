@@ -35,7 +35,7 @@ public abstract class BaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateD
     }
 
     //Delete
-    public async Task<bool> DeleteWorkflowAsync(int id)
+    public virtual async Task<bool> DeleteWorkflowAsync(int id)
     {
         TModel workflow =
             await _context.Set<TModel>().FindAsync(id)
@@ -51,4 +51,44 @@ public abstract class BaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateD
         await _context.SaveChangesAsync();
         return true;
     }
+
+    // Update
+    public virtual async Task<bool> UpdateWorkflowAsync(int id, TUpdateDTO dto)
+    {
+        TModel workflow =
+            await _context.Set<TModel>().FindAsync(id)
+            ?? throw new KeyNotFoundException("Không tìm thấy quy trình. Vui lòng kiểm tra lại.");
+
+        if (workflow.Status != GeneralWorkflowStatusType.DRAFT)
+            throw new InvalidOperationException(
+                "Chỉ có thể cập nhật các quy trình làm việc ở trạng thái nháp (khi chưa có ai ký)."
+            );
+
+        _ = await _context.Employees.FindAsync(workflow.SenderId)
+            ?? throw new KeyNotFoundException("Không tìm thấy người gửi. Vui lòng kiểm tra lại.");
+
+        _context.Set<TModel>().Update(workflow);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    // Get all workflows based on Sender ID
+    public async Task<List<TReadDTO>> GetAllByEmployeeIdAsync(int id)
+    {
+        var workflows = await _context.Set<TModel>().Where(w => w.SenderId == id).ToListAsync();
+
+        var workflowDtos = _mapper.Map<List<TReadDTO>>(workflows);
+
+        return workflowDtos;
+    }
+
+    // Get All
+    public virtual async Task<IEnumerable<TReadDTO>> GetAllWorkflowsAsync()
+    {
+        var workflowDtos = await _mapper
+            .ProjectTo<TReadDTO>(_context.Set<TModel>().AsNoTracking())
+            .ToListAsync();
+        return workflowDtos;
+    }
+
 }

@@ -13,5 +13,5 @@ public enum WorkflowType
     PERFORMANCE_REVIEW = 2,
     ONBOARDING = 3,
     OFFBOARDING = 4,
-    NORMAL_PROPOSAL = 5,
+    GENERAL_PROPOSAL = 5,
 }

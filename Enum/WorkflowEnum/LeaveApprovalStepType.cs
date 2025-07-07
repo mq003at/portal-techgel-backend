@@ -26,3 +26,4 @@ public enum DayNightEnum
     Day = 0,
     Night = 1,
 }
+
