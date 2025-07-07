@@ -47,7 +47,7 @@ public class LeaveRequestWorkflowService
         _capPublisher = capPublisher;
     }
 
-    public async Task<List<LeaveRequestWorkflowDTO>> GetAllByEmployeeIdAsync(int id)
+    public new async Task<List<LeaveRequestWorkflowDTO>> GetAllByEmployeeIdAsync(int id)
     {
         var workflows = await _context
             .LeaveRequestWorkflows.Where(w => w.EmployeeId == id)

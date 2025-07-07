@@ -162,7 +162,12 @@ var rabbitMQSettings = builder.Configuration.GetSection("Cap:RabbitMQ").Get<Rabb
 builder.Services.AddCap(options =>
 {
     options.UseEntityFramework<ApplicationDbContext>();
-    options.UsePostgreSql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    var capConnectionString =
+        builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException(
+            "CAP PostgreSQL connection string is not configured."
+        );
+    options.UsePostgreSql(capConnectionString);
 
     options.UseRabbitMQ(cfg =>
     {
@@ -229,6 +234,8 @@ builder.Services.AddScoped<ILeaveRequestNodeService, LeaveRequestNodeService>();
 builder.Services.AddScoped<ILeaveRequestWorkflowService, LeaveRequestWorkflowService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationCategoryService, NotificationCategoryService>();
+builder.Services.AddScoped<IGeneralProposalNodeService, GeneralProposalNodeService>();
+builder.Services.AddScoped<IGeneralProposalWorkflowService, GeneralProposalWorkflowService>();
 
 var app = builder.Build();
 

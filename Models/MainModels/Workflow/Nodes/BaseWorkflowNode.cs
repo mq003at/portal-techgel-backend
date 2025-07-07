@@ -23,8 +23,4 @@ public abstract class BaseWorkflowNode : BaseModel
     [NotMapped]
     public List<WorkflowNodeParticipant> WorkflowNodeParticipants { get; set; } =
         new List<WorkflowNodeParticipant>();
-
-    [NotMapped]
-    public List<DocumentAssociation> DocumentAssociations { get; set; } =
-        new List<DocumentAssociation>();
 }

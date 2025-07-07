@@ -25,20 +25,20 @@ public class LeaveRequestNodeController
 
     // PUT api/leave-request-nodes/{id}/approve?approverId=123
     [HttpPut("{id}/approve")]
-    public async Task<IActionResult> Approve(int id, [FromBody] ApproverDTO approverDTO)
+    public async Task<IActionResult> Approve(int id, [FromBody] ApproverDTO dto)
     {
-        var success = await _nodeService.ApproveAsync(id, approverDTO.approverId);
+        var success = await _nodeService.ApproveAsync(id, dto.ApproverId);
         return Ok(success);
     }
 
     // PUT api/leave-request-nodes/{id}/reject?approverId=123
     [HttpPut("{id}/reject")]
-    public async Task<IActionResult> Reject(int id, [FromBody] RejectDTO rejectDTO)
+    public async Task<IActionResult> Reject(int id, [FromBody] RejectDTO dto)
     {
         var success = await _nodeService.RejectAsync(
             id,
-            rejectDTO.approverId,
-            rejectDTO.rejectReason
+            dto.ApproverId,
+            dto.RejectReason
         );
         return Ok(success);
     }

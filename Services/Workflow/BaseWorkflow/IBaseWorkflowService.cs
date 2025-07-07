@@ -12,4 +12,5 @@ public interface IBaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
     where TNodeModel : BaseWorkflowNode
 {
     Task<bool> DeleteWorkflowAsync(int id);
+    Task<bool> UpdateWorkflowAsync(int id, TUpdateDTO dto);
 }

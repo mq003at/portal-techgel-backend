@@ -75,6 +75,9 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<GatePassWorkflow> GatePassWorkflows { get; set; }
     public DbSet<GatePassNode> GatePassNodes { get; set; }
 
+    public DbSet<GeneralProposalWorkflow> GeneralProposalWorkflows { get; set; }
+    public DbSet<GeneralProposalNode> GeneralProposalNodes { get; set; }
+
     // Notification Setup
     public DbSet<NotificationCategory> NotificationCategories { get; set; }
     public DbSet<Notification> Notifications { get; set; }

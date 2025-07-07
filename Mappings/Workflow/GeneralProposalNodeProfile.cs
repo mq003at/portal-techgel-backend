@@ -3,7 +3,7 @@ namespace portal.Mappings;
 using portal.DTOs;
 using portal.Models;
 
-public class LeaveRequestNodeProfile
+public class GeneralProposalNodeProfile
     : BaseWorkflowNodeProfile<
         LeaveRequestNode,
         LeaveRequestNodeDTO,
@@ -15,7 +15,7 @@ public class LeaveRequestNodeProfile
         BaseModelUpdateDTO
     >
 {
-    public LeaveRequestNodeProfile()
+    public GeneralProposalNodeProfile()
         : base()
     {
         /* ------------ base maps that were missing earlier ------------ */
@@ -25,7 +25,7 @@ public class LeaveRequestNodeProfile
         CreateMap<WorkflowNodeUpdateDTO, BaseWorkflowNode>();
 
         /* ------------ entity ➜ DTO ------------ */
-        CreateMap<LeaveRequestNode, LeaveRequestNodeDTO>()
+        CreateMap<GeneralProposalNode, GeneralProposalNodeDTO>()
             .IncludeBase<BaseWorkflowNode, WorkflowNodeDTO>()
             .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType))
             .ForMember(d => d.StepTypeName, o => o.Ignore())
@@ -37,16 +37,16 @@ public class LeaveRequestNodeProfile
             );
 
         /* ------------ DTO ➜ entity (create / update) ------------ */
-        CreateMap<LeaveRequestNodeCreateDTO, LeaveRequestNode>()
+        CreateMap<GeneralProposalNodeCreateDTO, GeneralProposalNode>()
             .IncludeBase<WorkflowNodeCreateDTO, BaseWorkflowNode>()
             .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType));
 
-        CreateMap<LeaveRequestNodeUpdateDTO, LeaveRequestNode>()
+        CreateMap<GeneralProposalNodeUpdateDTO, GeneralProposalNode>()
             .IncludeBase<WorkflowNodeUpdateDTO, BaseWorkflowNode>()
             .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType));
 
-        // Optional: if you ever need DTO → entity straight from LeaveRequestNodeDTO
-        CreateMap<LeaveRequestNodeDTO, LeaveRequestNode>()
+        // Optional: if you ever need DTO → entity straight from GeneralProposalNodeDTO
+        CreateMap<GeneralProposalNodeDTO, GeneralProposalNode>()
             .IncludeBase<WorkflowNodeDTO, BaseWorkflowNode>()
             .ForMember(d => d.StepType, o => o.MapFrom(s => s.StepType))
             .ForMember(d => d.Workflow, o => o.Ignore());

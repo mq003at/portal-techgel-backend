@@ -18,7 +18,6 @@ public class BaseWorkflowDTO : BaseModelDTO
 public class BaseWorkflowCreateDTO : BaseModelCreateDTO
 {
     public int SenderId { get; set; }
-    public GeneralWorkflowStatusType Status { get; set; } = GeneralWorkflowStatusType.DRAFT;
 }
 
 public class BaseWorkflowUpdateDTO : BaseModelUpdateDTO { }

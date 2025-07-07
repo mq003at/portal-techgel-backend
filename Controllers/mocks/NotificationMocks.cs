@@ -25,7 +25,7 @@ public class MockEventController : ControllerBase
         const string topic = "workflow.approved";
 
         _logger.LogInformation(
-            "📤 Mock publishing CAP event '{Topic}' with data: {@Data}",
+            "Mock publishing CAP event '{Topic}' with data: {@Data}",
             topic,
             mock
         );
