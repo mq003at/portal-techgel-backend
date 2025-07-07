@@ -35,8 +35,13 @@ public class GeneralProposalNodeService
         _workflowService = workflowService;
     }
 
-    public async Task<string> ApproveAsync(int nodeId, int approverId)
+    public async Task<string> ApproveAsync(int nodeId, ApproveWithCommentDTO dto)
     {
+        int approverId = dto.ApproverId;
+        string comment = dto.Comment;
+
+        // Fetch the node and its workflow
+
         GeneralProposalNode node =
             await _context
                 .GeneralProposalNodes.Include(n => n.Workflow)
@@ -107,15 +112,16 @@ public class GeneralProposalNodeService
             if (isFinalNode)
             {
                 workflow.Status = GeneralWorkflowStatusType.APPROVED;
+                workflow.Comment = comment;
                 await _workflowService.FinalizeIfCompleteAsync(workflow, approverId, nodeId);
             }
         }
 
         await _context.SaveChangesAsync();
-        return "Approval recorded successfully.";
+        return "Ký duyệt thành công.";
     }
 
-    public async Task<string> RejectAsync(int nodeId, int approverId, string RejectReason)
+    public async Task<string> RejectAsync(int nodeId, RejectDTO dto)
     {
         LeaveRequestNode node =
             await _context
@@ -131,10 +137,10 @@ public class GeneralProposalNodeService
             node.WorkflowNodeParticipants
             ?? throw new InvalidOperationException("Bước này không có người tham gia.");
         WorkflowNodeParticipant participant =
-            participants.FirstOrDefault(p => p.EmployeeId == approverId)
+            participants.FirstOrDefault(p => p.EmployeeId == dto.ApproverId)
             ?? throw new InvalidOperationException("Không tìm thấy người tham gia.");
 
-        if (approverId != participant.EmployeeId)
+        if (dto.ApproverId != participant.EmployeeId)
             return "Bạn không có quyền từ chối bước này.";
 
         if (participant == null)
@@ -157,11 +163,11 @@ public class GeneralProposalNodeService
         if (workflow != null)
         {
             workflow.Status = GeneralWorkflowStatusType.REJECTED;
-            workflow.RejectReason = RejectReason;
+            workflow.RejectReason = dto.RejectReason;
         }
 
         await _context.SaveChangesAsync();
 
-        return "Bước đã bị từ chối thành công.";
+        return "Từ chối thành công.";
     }
 }

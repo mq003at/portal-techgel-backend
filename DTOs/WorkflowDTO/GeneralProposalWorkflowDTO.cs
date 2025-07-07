@@ -30,9 +30,6 @@ public class GeneralProposalWorkflowCreateDTO : BaseWorkflowCreateDTO
     public string Description { get; set; } = null!;
 
     [Required]
-    public string Comment { get; set; } = null!;
-
-    [Required]
     public string ProjectName { get; set; } = null!;
 
     [Required]
@@ -48,13 +45,9 @@ public class GeneralProposalWorkflowCreateDTO : BaseWorkflowCreateDTO
 public class GeneralProposalWorkflowUpdateDTO : BaseWorkflowUpdateDTO
 {
     public string? About { get; set; } = null!;
-
-    public string? Comment { get; set; } = null!;
-
     public string? ProjectName { get; set; } = null!;
-
+    public string? Description { get; set; } = null!;
     public string? Reason { get; set; } = null!;
-
     public string? Proposal { get; set; } = null!;
     public int? ApproverId { get; set; }
 }

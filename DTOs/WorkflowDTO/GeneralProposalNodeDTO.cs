@@ -2,7 +2,6 @@ using portal.Enums;
 
 namespace portal.DTOs;
 
-
 public class GeneralProposalNodeDTO : WorkflowNodeDTO
 {
     public new GeneralProposalStepType StepType { get; set; }

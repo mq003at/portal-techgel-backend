@@ -24,11 +24,5 @@ public class DocumentAssociationConfiguration : IEntityTypeConfiguration<Documen
         builder.Property(e => e.EntityType).IsRequired().HasMaxLength(255);
 
         builder.HasIndex(d => new { d.EntityId, d.EntityType });
-
-        builder
-            .HasOne<LeaveRequestWorkflow>()
-            .WithMany()
-            .HasForeignKey(d => d.EntityId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

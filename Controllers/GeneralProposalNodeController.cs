@@ -24,20 +24,16 @@ public class GeneralProposalNodeController
     }
 
     [HttpPut("{id}/approve")]
-    public async Task<IActionResult> Approve(int id, [FromBody] ApproverDTO approverDTO)
+    public async Task<IActionResult> Approve(int id, [FromBody] ApproveWithCommentDTO dto)
     {
-        var success = await _nodeService.ApproveAsync(id, approverDTO.approverId);
+        var success = await _nodeService.ApproveAsync(id, dto);
         return Ok(success);
     }
 
     [HttpPut("{id}/reject")]
-    public async Task<IActionResult> Reject(int id, [FromBody] RejectDTO rejectDTO)
+    public async Task<IActionResult> Reject(int id, [FromBody] RejectDTO dto)
     {
-        var success = await _nodeService.RejectAsync(
-            id,
-            rejectDTO.approverId,
-            rejectDTO.rejectReason
-        );
+        var success = await _nodeService.RejectAsync(id, dto);
         return Ok(success);
     }
 }

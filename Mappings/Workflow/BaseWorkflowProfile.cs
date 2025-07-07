@@ -39,6 +39,10 @@ public abstract class BaseWorkflowProfile<
         // Create DTO -> Entity (client -> server)
         CreateMap<TWorkflowCreateDto, TWorkflow>()
             .IncludeBase<TModelCreateDto, TModel>()
+            .ForMember(
+                dest => dest.Status,
+                opt => opt.MapFrom(src => GeneralWorkflowStatusType.DRAFT)
+            )
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())

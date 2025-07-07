@@ -11,6 +11,6 @@ public interface IGeneralProposalNodeService
         GeneralProposalNodeUpdateDTO
     >
 {
-    Task<string> ApproveAsync(int nodeId, int approverId);
-    Task<string> RejectAsync(int nodeId, int approverId, string rejectReason);
+    Task<string> ApproveAsync(int nodeId, ApproveWithCommentDTO dto);
+    Task<string> RejectAsync(int nodeId, RejectDTO dto);
 }

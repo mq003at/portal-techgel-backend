@@ -6,6 +6,7 @@ using portal.Services;
 
 namespace portal.Controllers;
 
+[Route("api/general-proposal")]
 public class GeneralProposalWorkflowController
     : BaseController<
         GeneralProposalWorkflow,
@@ -13,7 +14,6 @@ public class GeneralProposalWorkflowController
         GeneralProposalWorkflowCreateDTO,
         GeneralProposalWorkflowUpdateDTO
     >
-
 {
     private readonly IGeneralProposalWorkflowService _workflowService;
 

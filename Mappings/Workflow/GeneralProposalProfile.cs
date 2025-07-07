@@ -46,7 +46,7 @@ public class GeneralProposalWorkflowProfile
         CreateMap<GeneralProposalWorkflowCreateDTO, GeneralProposalWorkflow>()
             .IncludeBase<BaseModelCreateDTO, BaseModel>()
             .ForMember(dest => dest.About, opt => opt.MapFrom(src => src.About))
-            .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
+            .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => ""))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
             .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
             .ForMember(dest => dest.Proposal, opt => opt.MapFrom(src => src.Proposal))

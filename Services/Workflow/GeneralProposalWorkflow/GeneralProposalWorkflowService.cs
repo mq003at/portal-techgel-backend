@@ -190,8 +190,7 @@ public class GeneralProposalWorkflowService
         };
         nodes[1].WorkflowNodeParticipants = new List<WorkflowNodeParticipant>
         {
-            WorkflowNodeParticipants[1],
-            WorkflowNodeParticipants[2]
+            WorkflowNodeParticipants[1]
         };
         await _context.SaveChangesAsync();
 
@@ -283,7 +282,8 @@ public class GeneralProposalWorkflowService
             // Save workflow first to get its Id
             _context.GeneralProposalWorkflows.Add(entity);
             await _context.SaveChangesAsync();
-
+            entity.MainId = $"{DateTime.Now:yyyy}/{entity.Id}/TTC";
+            entity.Name = $"Tờ trình chung số {entity.Id}, năm {DateTime.Now:yyyy}";
             // Generate workflow nodes with entity.Id now available
             var nodes = await GenerateNodesAsync(dto, entity);
 
@@ -349,8 +349,17 @@ public class GeneralProposalWorkflowService
         int nodeId
     )
     {
+        string className = this.GetType().Name;
+        string TemplateKey = className.Split(new[] { "Node", "Service", "Workflow" }, StringSplitOptions.None)[0];
+
+        _logger.LogError(
+            "Generating final document for workflow {WorkflowId} with template key {TemplateKey}",
+            workflow.Id,
+            TemplateKey
+        );
+
         var templateDocMetadata = await _context.Documents.FirstOrDefaultAsync(d =>
-            d.TemplateKey == "GeneralProposal"
+            d.TemplateKey == TemplateKey
         );
 
         var today = DateTime.UtcNow;
@@ -401,8 +410,8 @@ public class GeneralProposalWorkflowService
         {
             // English
             ["about"] = (workflow.About ?? "", false),
-            ["comment"] = (workflow.Comment ?? "", false),
-            ["employeeName"] = (employee.GetDisplayName().ToUpperInvariant(), false),
+            ["approverComment"] = (workflow.Comment ?? "", false),
+            ["employeeName"] = (employee.GetDisplayName(), false),
             ["employeePosition"] = (employee.CompanyInfo?.Position ?? "", false),
             ["project"] = (workflow.ProjectName, false),
             ["description"] = (workflow.Description, false),
@@ -411,12 +420,12 @@ public class GeneralProposalWorkflowService
 
             // Sign Area
             ["employeeSignDate"] = (workflow.CreatedAt.ToString("dd/MM/yyyy"), false),
-            ["employeeFullNameBottom"] = (employee.GetDisplayName().ToUpperInvariant(), false),
+            ["employeeFullNameBottom"] = (employee.GetDisplayName(), false),
 
             ["approverPosition"] = (approver.CompanyInfo?.Position ?? "", true),
             ["approverName"] = (approver.GetDisplayName().ToUpperInvariant(), false),
             ["approverSignDate"] = (today.ToString("dd/MM/yyyy"), false),
-            ["approverFullNameBottom"] = (approver.GetDisplayName().ToUpperInvariant(), false),
+            ["approverFullName"] = (approver.GetDisplayName().ToUpperInvariant(), false),
         };
 
         MemoryStream newMemoryDoc = await FileHandling.ToMemoryStreamAsync(newDoc);
@@ -460,7 +469,7 @@ public class GeneralProposalWorkflowService
         DocumentAssociation newDocumentAssociation = new DocumentAssociation
         {
             Document = newMetadata,
-            EntityType = "GeneralProposal",
+            EntityType = TemplateKey,
             EntityId = workflow.Id,
         };
 

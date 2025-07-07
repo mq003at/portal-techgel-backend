@@ -64,7 +64,8 @@ public abstract class BaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateD
                 "Chỉ có thể cập nhật các quy trình làm việc ở trạng thái nháp (khi chưa có ai ký)."
             );
 
-        _ = await _context.Employees.FindAsync(workflow.SenderId)
+        _ =
+            await _context.Employees.FindAsync(workflow.SenderId)
             ?? throw new KeyNotFoundException("Không tìm thấy người gửi. Vui lòng kiểm tra lại.");
 
         _context.Set<TModel>().Update(workflow);
@@ -90,5 +91,4 @@ public abstract class BaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateD
             .ToListAsync();
         return workflowDtos;
     }
-
 }
