@@ -279,7 +279,6 @@ public class LeaveRequestWorkflowService
                     EmployeeId =
                         _context.Employees.FirstOrDefault(e => e.MainId == participant.EmpId)?.Id
                         ?? 0,
-                    WorkflowNodeStepType = (int)participant.StepType,
                     Order = participant.Order,
                     ApprovalDate = participant.ApprovalDate,
                     ApprovalStartDate = participant.ApprovalStartDate,

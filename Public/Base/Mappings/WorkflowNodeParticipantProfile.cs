@@ -22,15 +22,12 @@ public class WorkflowNodeParticipantProfile : Profile
                     )
             )
             .ForMember(dest => dest.WorkflowNodeName, opt => opt.Ignore()) // No navigation, must be added manually
-            .ForMember(dest => dest.NodeStep, opt => opt.MapFrom(src => src.WorkflowNodeStepType))
             .ForMember(dest => dest.ApprovalStatus, opt => opt.MapFrom(src => src.ApprovalStatus));
 
         // Create DTO ➜ Entity
-        CreateMap<WorkflowNodeParticipantCreateDTO, WorkflowNodeParticipant>()
-            .ForMember(dest => dest.WorkflowNodeStepType, opt => opt.MapFrom(src => src.NodeStep));
+        CreateMap<WorkflowNodeParticipantCreateDTO, WorkflowNodeParticipant>();
 
         // Update DTO ➜ Entity
-        CreateMap<WorkflowNodeParticipantUpdateDTO, WorkflowNodeParticipant>()
-            .ForMember(dest => dest.WorkflowNodeStepType, opt => opt.MapFrom(src => src.NodeStep));
+        CreateMap<WorkflowNodeParticipantUpdateDTO, WorkflowNodeParticipant>();
     }
 }

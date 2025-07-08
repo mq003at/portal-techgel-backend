@@ -88,9 +88,7 @@ public class LeaveRequestNodeService
             participant.TAT = TimeSpan.Zero;
 
         // If all participants approved
-        var allApproved = participants
-            .Where(p => p.WorkflowNodeStepType == 1)
-            .Any(p => p.ApprovalStatus == ApprovalStatusType.APPROVED);
+        var allApproved = participants.Any(p => p.ApprovalStatus == ApprovalStatusType.APPROVED);
         if (allApproved)
         {
             node.Status = GeneralWorkflowStatusType.APPROVED;

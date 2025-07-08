@@ -118,7 +118,7 @@ public class SignatureService : ISignatureService
             employeeId,
             sig.StoragePath
         );
-        await _storage.DeleteAsync(sig.StoragePath);
+        await _storage.DeleteAsync(new[] { sig.StoragePath });
 
         _ctx.Signatures.Remove(sig);
         await _ctx.SaveChangesAsync();

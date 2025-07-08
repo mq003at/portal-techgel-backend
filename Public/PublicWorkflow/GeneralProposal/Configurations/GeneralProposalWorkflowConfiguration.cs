@@ -15,12 +15,6 @@ public class GeneralProposalWorkflowConfiguration
         builder.Property(w => w.RejectReason).IsRequired(false).HasMaxLength(1000);
 
         builder
-            .HasOne(l => l.Sender)
-            .WithMany()
-            .HasForeignKey(l => l.SenderId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder
             .HasOne(l => l.Approver)
             .WithMany()
             .HasForeignKey(l => l.ApproverId)

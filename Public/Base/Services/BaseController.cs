@@ -15,16 +15,10 @@ public abstract class BaseController<TModel, TReadDTO, TCreateDTO, TUpdateDTO> :
     where TUpdateDTO : BaseModelUpdateDTO
 {
     protected readonly IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO> _service;
-    private IGatePassNodeService nodeService;
 
     public BaseController(IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO> service)
     {
         _service = service;
-    }
-
-    protected BaseController(IGatePassNodeService nodeService)
-    {
-        this.nodeService = nodeService;
     }
 
     [HttpGet]
