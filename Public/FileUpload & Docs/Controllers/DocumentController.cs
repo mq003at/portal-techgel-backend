@@ -18,6 +18,13 @@ public class DocumentController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("folder-structure")]
+    public async Task<IActionResult> GetFolderStructure()
+    {
+        var structure = await _documentService.GetFolderStructure();
+        return Ok(structure);
+    }
+
     // GET: api/document
     // Retrieves all document metadata
     [HttpGet]
