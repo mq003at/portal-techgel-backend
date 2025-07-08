@@ -53,21 +53,16 @@ public class EmployeeController
             dto.NewPassword
         );
 
-        try
-        {
-            bool result = await _employeeService.ChangePasswordAsync(
-                id,
-                dto.OldPassword,
-                dto.NewPassword
-            );
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error changing password for employee");
-            return StatusCode(500, "An error occurred while changing the password.");
-        }
+        bool result = await _employeeService.ChangePasswordAsync(
+            id,
+            dto.OldPassword,
+            dto.NewPassword
+        );
+
+        return Ok(result);
+
+
     }
 
     [HttpGet("phonebook")]

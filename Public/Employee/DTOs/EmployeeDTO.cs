@@ -16,7 +16,7 @@ public class EmployeeDTO : BaseModelDTO
     public string LastName { get; set; } = null!;
     public string? Avatar { get; set; }
 
-    public string? Password { get; set; }
+    // public string? Password { get; set; }
 
     // sub-DTO
     public PersonalInfoDTO PersonalInfo { get; set; } = null!;
