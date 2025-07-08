@@ -3,6 +3,8 @@ namespace portal.Services;
 using Microsoft.Extensions.Options;
 using portal.Options;
 using Renci.SshNet;
+using Renci.SshNet.Common;
+using Renci.SshNet.Sftp;
 
 public class SftpFileStorageService : IFileStorageService
 {
@@ -218,8 +220,10 @@ public class SftpFileStorageService : IFileStorageService
         }
     }
 
-    public async Task<object> FolderStructureAsync(string path = "")
+    public async Task<object> FolderStructureAsync(string initPath = "")
     {
+        string basePath = "/erp/documents";
+        string path = Path.Combine(basePath, initPath).Replace('\\', '/');
         await _sync.WaitAsync();
         try
         {
@@ -267,9 +271,19 @@ public class SftpFileStorageService : IFileStorageService
     private object GetDirectoryStructure(SftpClient client, string path)
     {
         var result = new Dictionary<string, object>();
-        foreach (
-            var entry in client.ListDirectory(path).Where(e => e.Name != "." && e.Name != "..")
-        )
+        IEnumerable<SftpFile> entries;
+
+        try
+        {
+            entries = client.ListDirectory(path).Cast<SftpFile>();
+        }
+        catch (SftpPermissionDeniedException ex)
+        {
+            _logger.LogWarning("Permission denied accessing {Path}: {Message}", path, ex.Message);
+            return "[Permission Denied]";
+        }
+
+        foreach (var entry in entries.Where(e => e.Name != "." && e.Name != ".."))
         {
             if (entry.IsDirectory)
             {
@@ -280,6 +294,7 @@ public class SftpFileStorageService : IFileStorageService
                 result[entry.Name] = "file";
             }
         }
+
         return result;
     }
 
