@@ -19,6 +19,7 @@ using portal.Configurations.CAP;
 using portal.Db;
 using portal.Extensions;
 using portal.Mappings;
+using portal.Models;
 using portal.Options;
 using portal.Services;
 using Renci.SshNet;
@@ -209,20 +210,44 @@ builder
 // Other Services
 // SFTP and Local File Storage
 // Bind all three option sets
-builder
-    .Services.Configure<SftpOptions>(builder.Configuration.GetSection("Sftp"))
-    .Configure<SignatureOptions>(builder.Configuration.GetSection("Signature"))
-    .Configure<DocumentOptions>(builder.Configuration.GetSection("Document"));
+// Configuration bindings
+builder.Services.Configure<SftpOptions>(builder.Configuration.GetSection("FileStorage:Sftp"));
+builder.Services.Configure<LocalFileStorageOptions>(
+    builder.Configuration.GetSection("FileStorage:Local")
+);
+builder.Services.Configure<SignatureOptions>(builder.Configuration.GetSection("Signature"));
+builder.Services.Configure<DocumentOptions>(builder.Configuration.GetSection("Document"));
 
-// Register a single SftpClient factory
-builder.Services.AddSingleton(sp =>
+// Register a single SftpClient factory not need anymore since sftp client is in service
+// builder.Services.AddSingleton(sp =>
+// {
+//     var s = sp.GetRequiredService<IOptions<SftpOptions>>().Value;
+//     return new SftpClient(s.Host, s.Port, s.Username, s.Password);
+// });
+
+// IFileService depending on config
+builder.Services.AddSingleton<IFileStorageService>(sp =>
 {
-    var s = sp.GetRequiredService<IOptions<SftpOptions>>().Value;
-    return new SftpClient(s.Host, s.Port, s.Username, s.Password);
+    var config = sp.GetRequiredService<IConfiguration>();
+    var provider = config["FileStorage:Provider"]?.ToLower() ?? "sftp";
+
+    return provider switch
+    {
+        "local"
+            => new LocalFileStorageService(
+                config["FileStorage:Local:BasePath"] ?? "srv/uploads/ftp-service/erp/documents"
+            ),
+
+        "sftp"
+            => new SftpFileStorageService(
+                Options.Create(sp.GetRequiredService<IOptions<SftpOptions>>().Value)
+            ),
+
+        _ => throw new InvalidOperationException("Unknown FileStorage:Provider value")
+    };
 });
 
 // Always use SFTP as your IFileStorageService
-builder.Services.AddScoped<IFileStorageService, SftpFileStorageService>();
 builder.Services.AddScoped<IFileNameValidationService, FileNameValidationService>();
 
 builder.Services.AddScoped<ISignatureService, SignatureService>();
@@ -236,6 +261,8 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationCategoryService, NotificationCategoryService>();
 builder.Services.AddScoped<IGeneralProposalNodeService, GeneralProposalNodeService>();
 builder.Services.AddScoped<IGeneralProposalWorkflowService, GeneralProposalWorkflowService>();
+builder.Services.AddScoped<IGatePassNodeService, GatePassNodeService>();
+builder.Services.AddScoped<IGatePassWorkflowService, GatePassWorkflowService>();
 
 var app = builder.Build();
 

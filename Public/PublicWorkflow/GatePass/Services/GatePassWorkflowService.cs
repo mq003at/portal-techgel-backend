@@ -1,0 +1,528 @@
+namespace portal.Services;
+
+using AutoMapper;
+using DotNetCore.CAP;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using portal.Db;
+using portal.DTOs;
+using portal.Enums;
+using portal.Extensions;
+using portal.Helpers;
+using portal.Models;
+using Serilog;
+
+public class GatePassWorkflowService
+    : BaseWorkflowService<
+        GatePassWorkflow,
+        GatePassWorkflowDTO,
+        GatePassWorkflowCreateDTO,
+        GatePassWorkflowUpdateDTO,
+        GatePassNode
+    >,
+        IGatePassWorkflowService
+{
+    private readonly IFileStorageService _storage;
+    private readonly DocumentOptions _docOpts;
+    private readonly string _basePath;
+    private readonly ICapPublisher _capPublisher;
+
+    public GatePassWorkflowService(
+        ApplicationDbContext context,
+        IMapper mapper,
+        ILogger<GatePassWorkflowService> logger,
+        IOptions<DocumentOptions> docOpts,
+        IFileStorageService storage,
+        ICapPublisher capPublisher
+    )
+        : base(context, mapper, logger)
+    {
+        _docOpts = docOpts.Value;
+        _storage = storage;
+        _basePath = AppDomain.CurrentDomain.BaseDirectory;
+        _capPublisher = capPublisher;
+    }
+
+    public async Task<List<GatePassNodeDTO>> GenerateNodesAsync(
+        GatePassWorkflowCreateDTO dto,
+        GatePassWorkflow workflow
+    )
+    {
+        // Get the last node ID (handle empty table)
+        var lastId = await _context.GatePassNodes.AnyAsync()
+            ? await _context.GatePassNodes.MaxAsync(x => x.Id)
+            : 0;
+
+        Employee employee =
+            await _context
+                .Employees.Include(e => e.Supervisor)
+                .Include(e => e.DeputySupervisor)
+                .FirstOrDefaultAsync(e => e.Id == workflow.SenderId)
+            ?? throw new InvalidOperationException($"Không tìm thấy nhân viên gửi trong hệ thống.");
+
+        Employee supervisor =
+            employee.Supervisor
+            ?? throw new InvalidOperationException(
+                $"Không tìm thấy người quản lý trực tiếp của nhân viên này trong hệ thống."
+            );
+        Employee deputySupervisor =
+            employee.DeputySupervisor
+            ?? throw new InvalidOperationException(
+                $"Không tìm thấy người quản lý gián tiếp của nhân viên này trong hệ thống."
+            );
+
+        // Build up receiver IDs for workflow
+        // Compose workflow steps
+
+
+        // Initiate nodes creation: 2 nodes for now, first one has 2 participants, second one has 2 participants
+        var steps = new List<(
+            string Name,
+            GatePassStepType StepType,
+            GeneralWorkflowStatusType Status,
+            List<WorkflowNodeParticipant> nodeParticipants
+        )>
+        {
+            (
+                "Tạo tờ trình chung",
+                GatePassStepType.CreateForm,
+                GeneralWorkflowStatusType.APPROVED,
+                new List<WorkflowNodeParticipant> { }
+            ),
+            (
+                "Người duyệt ký",
+                GatePassStepType.ExecutiveApproval,
+                GeneralWorkflowStatusType.PENDING,
+                new List<WorkflowNodeParticipant> { }
+            ),
+        };
+
+        // Build and add nodes
+        var nodes = new List<GatePassNode>();
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+
+            var node = new GatePassNode
+            {
+                WorkflowId = workflow.Id,
+                StepType = step.StepType,
+                MainId = $"PRC-B{i}-{DateTime.Now:dd.MM.yyyy}",
+                Name = step.Name,
+                Status = (GeneralWorkflowStatusType)step.Status,
+                WorkflowNodeParticipants = step.nodeParticipants,
+                Description = step.Name,
+            };
+
+            nodes.Add(node);
+        }
+        _context.GatePassNodes.AddRange(nodes);
+        await _context.SaveChangesAsync();
+        _logger.LogError("Node [0] ID: {id}", nodes[0].Id);
+
+        var participants = new List<(
+            string EmpId,
+            int WorkflowNodeId,
+            GeneralProposalStepType StepType,
+            int Order,
+            DateTime? ApprovalDate,
+            DateTime? ApprovalStartDate,
+            DateTime? ApprovalDeadline,
+            bool? IsApproved,
+            ApprovalStatusType ApprovalStatus,
+            TimeSpan? TAT
+        )>
+        {
+            (
+                employee.MainId,
+                nodes[0].Id,
+                GeneralProposalStepType.CreateForm,
+                0,
+                DateTime.UtcNow,
+                DateTime.UtcNow,
+                DateTime.UtcNow,
+                true,
+                ApprovalStatusType.APPROVED,
+                TimeSpan.Zero
+            ),
+            (
+                supervisor.MainId,
+                nodes[1].Id,
+                GeneralProposalStepType.ExecutiveApproval,
+                0,
+                null,
+                DateTime.UtcNow,
+                DateTime.UtcNow.AddHours(48),
+                false,
+                ApprovalStatusType.PENDING,
+                null
+            ),
+            (
+                deputySupervisor.MainId,
+                nodes[1].Id,
+                GeneralProposalStepType.ExecutiveApproval,
+                0,
+                null,
+                DateTime.UtcNow,
+                DateTime.UtcNow.AddHours(48),
+                false,
+                ApprovalStatusType.PENDING,
+                null
+            ),
+        };
+
+        // Convert the participants above to WorkflowNodeParticipant objects
+        var WorkflowNodeParticipants = new List<WorkflowNodeParticipant>();
+        foreach (var participant in participants)
+        {
+            WorkflowNodeParticipants.Add(
+                new WorkflowNodeParticipant
+                {
+                    EmployeeId =
+                        _context.Employees.FirstOrDefault(e => e.MainId == participant.EmpId)?.Id
+                        ?? 0,
+                    Order = participant.Order,
+                    ApprovalDate = participant.ApprovalDate,
+                    ApprovalStartDate = participant.ApprovalStartDate,
+                    ApprovalDeadline = participant.ApprovalDeadline,
+                    ApprovalStatus = participant.ApprovalStatus,
+                    TAT = participant.TAT,
+                    WorkflowNodeType = "GeneralProposal",
+                    WorkflowNodeId = participant.WorkflowNodeId,
+                    WorkflowId = workflow.Id
+                }
+            );
+
+            _logger.LogError(
+                "NodeID: {NodeId}, StepType: {StepType}, Order: {Order}, EmployeeId: {EmployeeId}",
+                participant.WorkflowNodeId,
+                participant.StepType,
+                participant.Order,
+                participant.EmpId
+            );
+        }
+        _context.WorkflowNodeParticipants.AddRange(WorkflowNodeParticipants);
+
+        nodes[0].WorkflowNodeParticipants = new List<WorkflowNodeParticipant>
+        {
+            WorkflowNodeParticipants[0] // Employee who created the request
+        };
+        nodes[1].WorkflowNodeParticipants = new List<WorkflowNodeParticipant>
+        {
+            WorkflowNodeParticipants[1],
+            WorkflowNodeParticipants[2]
+        };
+        await _context.SaveChangesAsync();
+
+        return _mapper.Map<List<GatePassNodeDTO>>(nodes);
+    }
+
+    public async Task<IEnumerable<GatePassNodeDTO>> GetNodesByWorkflowIdAsync(int workflowId)
+    {
+        var nodes = await _context
+            .GatePassNodes.Where(n => n.WorkflowId == workflowId)
+            .ToListAsync();
+
+        var nodeIds = nodes.Select(n => n.Id).ToList();
+
+        var participants = await _context
+            .WorkflowNodeParticipants.Where(p => p.WorkflowNodeType == "GatePass")
+            .ToListAsync();
+
+        foreach (var node in nodes)
+        {
+            node.WorkflowNodeParticipants = participants
+                .Where(p => p.WorkflowNodeId == node.Id)
+                .ToList();
+        }
+
+        var dtos = _mapper.Map<IEnumerable<GatePassNodeDTO>>(nodes);
+        _logger.LogInformation(
+            "first node has {ParticipantCount} participants.",
+            dtos.First().WorkflowNodeParticipants.Count()
+        );
+        return dtos;
+    }
+
+    public async Task<bool> FinalizeIfCompleteAsync(int workflowId)
+    {
+        GatePassWorkflow workflow =
+            _context
+                .GatePassWorkflows.Include(wf => wf.GatePassNodes)
+                .FirstOrDefault(wf => wf.Id == workflowId)
+            ?? throw new KeyNotFoundException(
+                $"Không tìm thấy phiếu ra cổng với id: {workflowId}. Có thể đã bị xóa khỏi hệ thống."
+            );
+
+        WorkflowNodeParticipant finalApprover =
+            await _context.WorkflowNodeParticipants.FirstOrDefaultAsync(p =>
+                p.WorkflowId == workflowId
+                && p.WorkflowNodeType == "GatePass"
+                && p.ApprovalStatus == ApprovalStatusType.APPROVED
+            ) ?? throw new InvalidOperationException($"Không tìm thấy người duyệt.");
+
+        Employee approver =
+            await _context.Employees.FirstOrDefaultAsync(e => e.Id == finalApprover.EmployeeId)
+            ?? throw new InvalidOperationException(
+                $"Không tìm thấy người duyệt với ID {finalApprover.EmployeeId}."
+            );
+
+        Employee employee =
+            await _context.Employees.FirstOrDefaultAsync(employee =>
+                employee.Id == workflow.SenderId
+            )
+            ?? throw new InvalidOperationException(
+                $"Không tìm thấy người duyệt với ID {workflow.SenderId}."
+            );
+
+        var approverPosition = "";
+        if (approver.Id == employee.Supervisor?.Id)
+            approverPosition = "Supervisor";
+        else if (finalApprover.EmployeeId == employee.DeputySupervisor?.Id)
+            approverPosition = "Deputy Supervisor";
+        else
+            throw new InvalidOperationException(
+                $"Có lỗi xảy ra. Không tìm dược người phê duyệt khớp với người quản lý của nhân viên {employee.GetDisplayName()}."
+            );
+
+        var result = await GenerateGatePassFinalDocument(
+            employee,
+            approver,
+            workflow,
+            approverPosition
+        );
+
+        if (result)
+        {
+            var @event = new ApprovalEvent
+            {
+                WorkflowId = workflow.Id,
+                WorkflowType = WorkflowType.GENERAL_PROPOSAL,
+                EmployeeId = workflow.SenderId,
+                ApproverName = approver.GetDisplayName(),
+                ApprovedAt = DateTime.UtcNow,
+                TriggeredBy = approver.Id.ToString(),
+            };
+
+            await _capPublisher.PublishAsync("workflow.approved", @event);
+        }
+
+        return result;
+    }
+
+    public override async Task<GatePassWorkflowDTO> CreateAsync(GatePassWorkflowCreateDTO dto)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // Map DTO to entity
+            var entity = _mapper.Map<GatePassWorkflow>(dto);
+
+            // Save workflow first to get its Id
+            _context.GatePassWorkflows.Add(entity);
+            await _context.SaveChangesAsync();
+            entity.MainId = $"{DateTime.Now:yyyy}/{entity.Id}/PRC";
+            entity.Name = $"Phiếu ra cổng số {entity.Id}, năm {DateTime.Now:yyyy}";
+            // Generate workflow nodes with entity.Id now available
+            var nodes = await GenerateNodesAsync(dto, entity);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            // Map to DTO after commit
+            var finalDto = _mapper.Map<GatePassWorkflowDTO>(entity);
+            finalDto.GatePassNodes = _mapper.Map<List<GatePassNodeDTO>>(nodes);
+
+            return finalDto;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public override async Task<GatePassWorkflowDTO?> GetByIdAsync(int id)
+    {
+        // Step 1: Get workflow and its nodes
+        GatePassWorkflow workflow =
+            await _dbSet.Include(wf => wf.GatePassNodes).FirstOrDefaultAsync(wf => wf.Id == id)
+            ?? throw new KeyNotFoundException($"Không tìm thấy phiểu ra cổng với id: {id}.");
+
+        // Step 2: Load all participants in one query
+        var nodeIds = workflow.GatePassNodes.Select(n => n.Id).ToList();
+
+        var participants = await _context
+            .WorkflowNodeParticipants.Where(p =>
+                nodeIds.Contains(p.WorkflowNodeId) && p.WorkflowNodeType == "GatePass"
+            )
+            .Include(p => p.Employee)
+            .ToListAsync();
+
+        // Step 3: Assign participants to nodes
+        foreach (var node in workflow.GatePassNodes)
+        {
+            node.WorkflowNodeParticipants = participants
+                .Where(p => p.WorkflowNodeId == node.Id)
+                .ToList();
+        }
+
+        workflow.DocumentAssociations = await _context
+            .DocumentAssociations.Where(da =>
+                da.EntityId == workflow.Id && da.EntityType == "GeneralProposal"
+            )
+            .Include(da => da.Document) // Eager load the Document
+            .Select(da => da.Document)
+            .ToListAsync();
+
+        return _mapper.Map<GatePassWorkflowDTO>(workflow);
+    }
+
+    // Add document only at the end of the workflow. The newly created document will be attached to the workflow itself, not the nodes
+    public async Task<bool> GenerateGatePassFinalDocument(
+        Employee employee,
+        Employee approver,
+        GatePassWorkflow workflow,
+        string approverPosition
+    )
+    {
+        string className = GetType().Name;
+        string TemplateKey = className.Split(
+            new[] { "Node", "Service", "Workflow" },
+            StringSplitOptions.None
+        )[0];
+
+        _logger.LogError(
+            "Generating final document for workflow {WorkflowId} with template key {TemplateKey}",
+            workflow.Id,
+            TemplateKey
+        );
+
+        var templateDocMetadata = await _context.Documents.FirstOrDefaultAsync(d =>
+            d.TemplateKey == TemplateKey
+        );
+
+        var today = DateTime.UtcNow;
+
+        if (templateDocMetadata == null)
+            throw new InvalidOperationException("Không tìm thấy biểu mẫu tờ trình duyệt chung.");
+
+        // Get that file from the VPS, and all the related signatures
+        var newDoc = await _storage.DownloadAsync(templateDocMetadata.Url);
+
+        string employeeSignaturePath =
+            employee.Signature?.StoragePath
+            ?? throw new InvalidOperationException(
+                $"Employee {employee.Id} does not have a signature."
+            );
+        string approverSignaturePath =
+            approver.Signature?.StoragePath
+            ?? throw new InvalidOperationException(
+                $"Approver {approver.Id} does not have a signature."
+            );
+
+        MemoryStream employeeSignature = await FileHandling.ToMemoryStreamAsync(
+            await _storage.DownloadAsync(employee.Signature.StoragePath)
+        );
+
+        MemoryStream approverSignature = await FileHandling.ToMemoryStreamAsync(
+            await _storage.DownloadAsync(approver.Signature.StoragePath)
+        );
+
+        bool isImgValid = FileHandling.IsPngHeader(employeeSignature);
+        _logger.LogInformation("Employee signature is valid: {IsValid}", isImgValid);
+
+        var Division = "6_Noi_Chinh";
+        var newFileName =
+            $"{workflow.Id}-{today:yyyy-MM-dd}-{Division}-PRC-{employee.MainId}-v01{".docx"}";
+        var newTargetPath = Path.Combine(
+                "erp",
+                "documents",
+                Division,
+                "Ho_So",
+                "Phieu_Ra_Cong",
+                newFileName
+            )
+            .Replace("\\", "/");
+
+        // Filling in steps
+        var placeholders = new Dictionary<string, (string Text, bool IsBold)>
+        {
+            // English
+            ["createdAtDate"] = (workflow.CreatedAt.ToString("dd"), false),
+            ["createdAtMonth"] = (workflow.CreatedAt.ToString("MM"), false),
+            ["createdAtYear"] = (workflow.CreatedAt.ToString("yyyy"), false),
+
+            ["employeeName"] = (employee.GetDisplayName(), false),
+            ["employeePosition"] = (employee.CompanyInfo?.Position ?? "", false),
+            ["employeeDepartment"] = (employee.CompanyInfo?.Department ?? "", false),
+
+            ["gatePassDate"] = (workflow.GatePassStartTime.ToString("dd"), false),
+            ["gatePassMonth"] = (workflow.GatePassStartTime.ToString("MM"), false),
+            ["gatePassYear"] = (workflow.GatePassStartTime.ToString("yyyy"), false),
+            ["gatePassStartTime"] = (workflow.GatePassStartTime.ToString("HH:mm"), false),
+            ["gatePassEndTime"] = (workflow.GatePassEndTime.ToString("HH:mm"), false),
+
+            ["reason"] = (workflow.Reason, false),
+
+            // Sign Area
+            ["employeeSignDate"] = (workflow.CreatedAt.ToString("dd/MM/yyyy"), false),
+            ["employeeFullNameBottom"] = (employee.GetDisplayName(), false),
+
+            ["approverPosition"] = (approverPosition, true),
+            ["approverSignDate"] = (today.ToString("dd/MM/yyyy"), false),
+            ["approverFullNameBottom"] = (approver.GetDisplayName(), false),
+        };
+
+        MemoryStream newMemoryDoc = await FileHandling.ToMemoryStreamAsync(newDoc);
+
+        WordBookmarkReplacer.ReplacePlaceholders(newMemoryDoc, placeholders);
+
+        newMemoryDoc = await WordImageInserter.InsertImageAtBookmarkAsync(
+            newMemoryDoc,
+            "employeeSignature",
+            employeeSignature
+        );
+
+        newMemoryDoc = await WordImageInserter.InsertImageAtBookmarkAsync(
+            newMemoryDoc,
+            "approverSignature",
+            approverSignature
+        );
+
+        // If filling in is completed, upload and make a new record of metadata
+        var pathAfterUpload = await _storage.UploadAsync(newMemoryDoc, newTargetPath);
+        if (string.IsNullOrEmpty(pathAfterUpload))
+            throw new InvalidOperationException("Tải file lên thất bại. Server bị quá tải.");
+
+        var newMetadata = new Models.Document
+        {
+            Name = newFileName,
+            Url = pathAfterUpload,
+            TemplateKey = null,
+            Description = $"Phiếu ra cổng của {employee.GetDisplayName()}",
+            FileExtension = ".docx",
+            SizeInBytes = newDoc.Length,
+            Status = DocumentStatusEnum.APPROVED,
+            Version = "1.0",
+            Tag = templateDocMetadata.Tag,
+            Category = DocumentCategoryEnum.PROPOSAL,
+            Division = Division
+        };
+
+        _logger.LogInformation(System.Text.Json.JsonSerializer.Serialize(workflow.Id));
+
+        DocumentAssociation newDocumentAssociation = new DocumentAssociation
+        {
+            Document = newMetadata,
+            EntityType = TemplateKey,
+            EntityId = workflow.Id,
+        };
+
+        _context.Documents.Add(newMetadata);
+        _context.DocumentAssociations.Add(newDocumentAssociation);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+}
