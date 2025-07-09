@@ -46,19 +46,38 @@ public class SftpFileStorageService : IFileStorageService
         }
     }
 
-    public async Task<List<string>> UploadMultipleAsync(
-        List<(Stream fileStream, string remotePath)> files
+    public async Task<List<string>> MultipleUploadAsync(
+        IEnumerable<(Stream fileStream, string remotePath)> files
     )
     {
         var uploadedPaths = new List<string>();
-
-        foreach (var (fileStream, remotePath) in files)
+        await _sync.WaitAsync();
+        try
         {
-            var path = await UploadAsync(fileStream, remotePath);
-            uploadedPaths.Add(path);
-        }
+            using var client = CreateClient();
+            client.Connect();
 
-        return uploadedPaths;
+            foreach (var (fileStream, remotePath) in files)
+            {
+                var directory = Path.GetDirectoryName(remotePath)?.Replace("\\", "/");
+                if (!string.IsNullOrEmpty(directory) && !client.Exists(directory))
+                {
+                    client.CreateDirectory(directory);
+                }
+
+                fileStream.Position = 0;
+                client.UploadFile(fileStream, remotePath, true);
+
+                uploadedPaths.Add(remotePath);
+            }
+
+            client.Disconnect();
+            return uploadedPaths;
+        }
+        finally
+        {
+            _sync.Release();
+        }
     }
 
     public async Task<bool> DeleteAsync(IEnumerable<string> filePaths)
@@ -116,6 +135,40 @@ public class SftpFileStorageService : IFileStorageService
 
             client.Disconnect();
             return memory;
+        }
+        finally
+        {
+            _sync.Release();
+        }
+    }
+
+    public async Task<Dictionary<string, MemoryStream>> MultipleDownloadAsync(
+        IEnumerable<string> remotePaths
+    )
+    {
+        var result = new Dictionary<string, MemoryStream>();
+        await _sync.WaitAsync();
+        try
+        {
+            using var client = CreateClient();
+            client.Connect();
+
+            foreach (var path in remotePaths)
+            {
+                if (!client.Exists(path))
+                    throw new FileNotFoundException("Remote file not found: " + path);
+
+                using var sftpStream = client.OpenRead(path);
+                var memory = new MemoryStream();
+                await sftpStream.CopyToAsync(memory);
+                memory.Position = 0;
+
+                var fileName = Path.GetFileName(path);
+                result[fileName] = memory; // overrides if duplicate fileName
+            }
+
+            client.Disconnect();
+            return result;
         }
         finally
         {
@@ -321,7 +374,8 @@ public class SftpFileStorageService : IFileStorageService
             }
             else
             {
-                result[entryName] = "file";
+                var extension = Path.GetExtension(entry.Name);
+                result[entry.Name] = string.IsNullOrEmpty(extension) ? "file" : extension;
             }
         }
 

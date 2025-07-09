@@ -74,7 +74,6 @@ public class DocumentUpdateDTO : BaseModelUpdateDTO
     public List<string>? Tag { get; set; }
     public DocumentStatusEnum? Status { get; set; }
     public string? TemplateKey { get; set; }
-
 }
 
 // DTO specifically for multipart file upload
@@ -114,4 +113,3 @@ public class ReplaceDocumentPlaceholdersDTO
 
     public string? OutputFileName { get; set; }
 }
-

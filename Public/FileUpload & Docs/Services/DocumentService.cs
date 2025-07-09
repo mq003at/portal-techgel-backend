@@ -1,10 +1,12 @@
 using AutoMapper;
+using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.EntityFrameworkCore;
 using portal.Db;
 using portal.DTOs;
 using portal.Enums;
+using portal.Models;
 
 namespace portal.Services;
 
@@ -311,5 +313,129 @@ public class DocumentService : IDocumentService
             throw new InvalidDataException("Invalid Word document: Document part is missing.");
         }
         return dto.Overwrite ? doc.Url : targetFileName;
+    }
+
+    // Multiple upload/download operations
+    public async Task<Dictionary<string, Stream>> MultipleDownloadAsync(List<string> fileUrls)
+    {
+        if (fileUrls == null || !fileUrls.Any())
+            throw new ArgumentException("No file paths provided");
+
+        var existing = await _fileStorage.AreExists(fileUrls);
+        if (!existing)
+            throw new FileNotFoundException("One or more files were not found");
+
+        // Download all streams
+        var memoryStreams = await _fileStorage.MultipleDownloadAsync(fileUrls);
+        var files = memoryStreams.ToDictionary(kvp => kvp.Key, kvp => (Stream)kvp.Value);
+        return files;
+    }
+
+    public async Task<List<DocumentDTO>> MultipleUploadAsync(List<DocumentCreateDTO> dtos)
+    {
+        var uploadedDocuments = new List<portal.Models.Document>();
+        var uploadTasks = new List<Task>();
+
+        foreach (var dto in dtos)
+        {
+            var file = dto.File;
+            var fileName = Path.GetFileName(file.FileName);
+            var extension = Path.GetExtension(fileName);
+            var size = file.Length;
+
+            // Generate a unique file name or path (can use Guid or timestamp logic)
+            var storageFileName = $"{Guid.NewGuid()}{extension}";
+            var storagePath = $"erp/documents/{dto.Division}/{storageFileName}".Replace('\\', '/');
+
+            // Upload file to storage
+            using var stream = file.OpenReadStream();
+            uploadTasks.Add(_fileStorage.UploadAsync(stream, storagePath));
+
+            // Create metadata entity
+            var document = new Models.Document
+            {
+                Name = fileName,
+                FileExtension = extension,
+                SizeInBytes = size,
+                Division = dto.Division,
+                Category = dto.Category,
+                Status = dto.Status,
+                Tag = dto.Tag ?? new(),
+                Description = dto.Description,
+                Url = storagePath,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            uploadedDocuments.Add(document);
+        }
+
+        await Task.WhenAll(uploadTasks);
+
+        // Save all metadata to database
+        _context.Documents.AddRange(uploadedDocuments);
+        await _context.SaveChangesAsync();
+
+        // Convert to DTOs
+        var result = uploadedDocuments
+            .Select(d => new DocumentDTO
+            {
+                Id = d.Id,
+                Name = d.Name,
+                FileExtension = d.FileExtension,
+                SizeInBytes = d.SizeInBytes,
+                Division = d.Division,
+                Category = d.Category,
+                Status = d.Status,
+                Tag = d.Tag,
+                Description = d.Description,
+                Url = d.Url,
+                CreatedAt = d.CreatedAt,
+                UpdatedAt = d.UpdatedAt,
+                Version = d.Version ?? string.Empty,
+                TemplateKey = d.TemplateKey ?? string.Empty,
+                Signatures = new()
+            })
+            .ToList();
+
+        return result;
+    }
+
+    // --------------------------- MULTIPLE DELETE ---------------------------
+    public async Task<string> DeleteMultipleAsync(List<string> fileUrls)
+    {
+        if (fileUrls == null || !fileUrls.Any())
+            throw new ArgumentException("No file URLs provided.");
+
+        // Step 1: Check if metadata exists
+        var documents = await _context.Documents.Where(d => fileUrls.Contains(d.Url)).ToListAsync();
+
+        var missingInDb = fileUrls.Except(documents.Select(d => d.Url)).ToList();
+        if (missingInDb.Any())
+            throw new FileNotFoundException(
+                "Metadata not found for: " + string.Join(", ", missingInDb)
+            );
+
+        // Step 2: Check if files exist in storage
+        var allExist = await _fileStorage.AreExists(fileUrls);
+        if (!allExist)
+            throw new FileNotFoundException("Some files do not exist in storage.");
+
+        // Step 3: Delete physically
+        var deleted = await _fileStorage.DeleteAsync(fileUrls);
+        if (!deleted)
+            throw new IOException("Failed to delete one or more files from storage.");
+
+        // Step 4: Delete metadata
+        foreach (var doc in documents)
+        {
+            _context.Documents.Remove(doc);
+        }
+
+        await _context.SaveChangesAsync();
+
+        // Step 5: Return deleted file names
+        var fileNames = documents.Select(d => Path.GetFileName(d.Url));
+        return "Deleted files: " + string.Join(", ", fileNames);
     }
 }

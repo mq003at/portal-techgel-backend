@@ -11,6 +11,10 @@ public class DocumentController : ControllerBase
 {
     private readonly IDocumentService _documentService;
     private readonly ILogger<DocumentController> _logger;
+    private readonly List<string> _allowedExtensions =
+        new() { ".docx", ".pdf", ".xlsx", ".png", ".svg", ".jpeg", ".jpg" };
+
+    private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
 
     public DocumentController(IDocumentService documentService, ILogger<DocumentController> logger)
     {
@@ -18,11 +22,100 @@ public class DocumentController : ControllerBase
         _logger = logger;
     }
 
+    // Get the entire folder structure
     [HttpGet("folder-structure")]
     public async Task<IActionResult> GetFolderStructure()
     {
         var structure = await _documentService.GetFolderStructure();
         return Ok(structure);
+    }
+
+    // POST: upload 10 files at once, MAX 5MB each
+    [HttpPost("upload-multiple")]
+    [RequestSizeLimit(MaxFileSize * 10)] // Adjust if needed
+    public async Task<ActionResult<List<DocumentDTO>>> UploadMultiple(
+        [FromForm] List<DocumentCreateDTO> dtos
+    )
+    {
+        foreach (var dto in dtos)
+        {
+            if (dto.File == null || dto.File.Length == 0)
+                return BadRequest("One of the uploaded files is missing or empty.");
+
+            if (dto.File.Length > MaxFileSize)
+                return BadRequest($"File {dto.File.FileName} exceeds the 5MB size limit.");
+
+            var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
+            if (!_allowedExtensions.Contains(ext))
+                return BadRequest($"File {dto.File.FileName} has an invalid extension.");
+        }
+
+        var result = await _documentService.MultipleUploadAsync(dtos);
+        return Ok(result);
+    }
+
+    [HttpPost("download-multiple")]
+    public async Task<IActionResult> DownloadMultiple([FromBody] List<string> fileUrls)
+    {
+        if (fileUrls == null || !fileUrls.Any())
+            return BadRequest("No file URLs provided.");
+
+        var fileDict = await _documentService.MultipleDownloadAsync(fileUrls);
+
+        var zipStream = new MemoryStream();
+        using (
+            var archive = new System.IO.Compression.ZipArchive(
+                zipStream,
+                System.IO.Compression.ZipArchiveMode.Create,
+                true
+            )
+        )
+        {
+            foreach (var (fileName, stream) in fileDict)
+            {
+                var entry = archive.CreateEntry(
+                    fileName,
+                    System.IO.Compression.CompressionLevel.Optimal
+                );
+                using var entryStream = entry.Open();
+                stream.Position = 0;
+                await stream.CopyToAsync(entryStream);
+            }
+        }
+
+        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+        zipStream.Position = 0;
+        return File(zipStream, "application/zip", $"documents_{today}.zip");
+    }
+
+    [HttpDelete("delete-multiple")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteMultipleFiles([FromBody] List<string> fileUrls)
+    {
+        if (fileUrls == null || !fileUrls.Any())
+            return BadRequest("No file URLs provided.");
+
+        try
+        {
+            var resultMessage = await _documentService.DeleteMultipleAsync(fileUrls);
+            return Ok(new { message = resultMessage });
+        }
+        catch (FileNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (IOException ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while deleting files.");
+            return StatusCode(500, new { error = "Unexpected error occurred." });
+        }
     }
 
     // GET: api/document

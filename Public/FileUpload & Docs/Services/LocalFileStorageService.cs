@@ -69,6 +69,43 @@ public class LocalFileStorageService : IFileStorageService
         return Task.FromResult(stream);
     }
 
+    public Task<Dictionary<string, MemoryStream>> MultipleDownloadAsync(
+        IEnumerable<string> filePaths
+    )
+    {
+        return Task.Run(() =>
+        {
+            var result = new Dictionary<string, MemoryStream>();
+
+            foreach (var relativePath in filePaths)
+            {
+                var safePath = relativePath.Replace('\\', '/');
+                var fullPath = Path.Combine(_basePath, safePath);
+
+                if (!File.Exists(fullPath))
+                    throw new FileNotFoundException($"File not found: {safePath}");
+
+                var memoryStream = new MemoryStream();
+                using (
+                    var fs = new FileStream(
+                        fullPath,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.Read
+                    )
+                )
+                {
+                    fs.CopyTo(memoryStream);
+                }
+
+                memoryStream.Position = 0;
+                result[safePath] = memoryStream;
+            }
+
+            return result;
+        });
+    }
+
     public Task<bool> AreExists(List<string> paths)
     {
         foreach (var path in paths)
@@ -215,26 +252,32 @@ public class LocalFileStorageService : IFileStorageService
         });
     }
 
-    public async Task<List<string>> UploadMultipleAsync(
-        List<(Stream fileStream, string remotePath)> files
+    public Task<List<string>> MultipleUploadAsync(
+        IEnumerable<(Stream fileStream, string remotePath)> files
     )
     {
-        var uploadedFiles = new List<string>();
-
-        foreach (var (fileStream, remotePath) in files)
+        return Task.Run(async () =>
         {
-            var safeFileName = Path.GetFileName(remotePath); // removes any directory traversal
-            var fullPath = Path.Combine(_basePath, safeFileName);
+            var savedPaths = new List<string>();
 
-            Directory.CreateDirectory(_basePath); // ensure target folder exists
+            foreach (var (stream, remotePath) in files)
+            {
+                var safePath = remotePath.Replace('\\', '/');
+                var fullPath = Path.Combine(_basePath, safePath);
 
-            await using var fs = File.Create(fullPath); // overwrites if file already exists
-            await fileStream.CopyToAsync(fs);
+                var directory = Path.GetDirectoryName(fullPath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
 
-            uploadedFiles.Add(safeFileName);
-        }
+                stream.Position = 0;
+                await using var fs = File.Create(fullPath); // will overwrite
+                await stream.CopyToAsync(fs);
 
-        return uploadedFiles;
+                savedPaths.Add(safePath);
+            }
+
+            return savedPaths;
+        });
     }
 
     public Task<string> ChangeFileNameAsync(string oldFileName, string newFileName)

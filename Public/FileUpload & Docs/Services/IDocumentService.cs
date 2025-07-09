@@ -13,8 +13,17 @@ public interface IDocumentService
     Task<bool> DeleteMetaDataAsync(int id);
 
     // File operations
+    // Upload - Download operations
     Task<DocumentDTO> UploadDocumentAsync(DocumentCreateDTO dto);
     Task<DocumentDTO> UploadAndReplaceDocumentAsync(DocumentUpdateDTO dto, int id);
+
+    // Multiple Delete operations
+    Task<string> DeleteMultipleAsync(List<string> fileUrls);
+
+    // Multiple Download - Upload operations
+    Task<List<DocumentDTO>> MultipleUploadAsync(List<DocumentCreateDTO> dtos);
+    Task<Dictionary<string, Stream>> MultipleDownloadAsync(List<string> fileUrls);
+
     Task<bool> IsFileExistAsync(string category, string fileName);
     Task<bool> IsUrlAccessibleAsync(string url);
     Task<DocumentStatusEnum> CheckDocumentSignStatusAsync(int id);
