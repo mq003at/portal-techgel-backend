@@ -8,15 +8,9 @@ namespace portal_techgel_api.Migrations
     public partial class EditDocAss : Migration
     {
         /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-
-        }
+        protected override void Up(MigrationBuilder migrationBuilder) { }
 
         /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-
-        }
+        protected override void Down(MigrationBuilder migrationBuilder) { }
     }
 }

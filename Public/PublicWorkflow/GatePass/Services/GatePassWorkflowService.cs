@@ -317,6 +317,12 @@ public class GatePassWorkflowService
         {
             // Map DTO to entity
             var entity = _mapper.Map<GatePassWorkflow>(dto);
+            _logger.LogInformation(
+                "Creating GatePassWorkflow with senderId: {SenderId}, startTime: {StartTime}, endTime: {EndTime}",
+                entity.SenderId,
+                entity.GatePassStartTime,
+                entity.GatePassEndTime
+            );
 
             // Save workflow first to get its Id
             _context.GatePassWorkflows.Add(entity);

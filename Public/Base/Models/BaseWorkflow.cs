@@ -28,4 +28,7 @@ public abstract class BaseWorkflow : BaseModel
 
     [NotMapped]
     public List<Document> DocumentAssociations { get; set; } = new List<Document>();
+
+    // Cache who will participate in the workflow to check permissions
+    public List<int> ParticipantIds { get; set; } = new List<int>();
 }

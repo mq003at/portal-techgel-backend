@@ -13,8 +13,8 @@ using portal.Db;
 namespace portal_techgel_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250708085300_AddingGatePass")]
-    partial class AddingGatePass
+    [Migration("20250709034204_GatePass")]
+    partial class GatePass
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

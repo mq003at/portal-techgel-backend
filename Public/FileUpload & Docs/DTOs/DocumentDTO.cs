@@ -48,6 +48,29 @@ public class DocumentCreateDTO : BaseModelCreateDTO
     public string Description { get; set; } = null!;
 }
 
+public class DocumentUploadWrapperDTO : BaseModelCreateDTO
+{
+    public List<IFormFile> Files { get; set; } = new();
+    public List<DocumentCreateMetaDTO> Metadatas { get; set; } = new();
+}
+
+public class DocumentCreateMetaDTO
+{
+    [Required]
+    public string Name { get; set; } = null!;
+
+    [Required]
+    public DocumentCategoryEnum Category { get; set; }
+
+    public List<string>? Tag { get; set; }
+
+    [Required]
+    public string Division { get; set; } = null!;
+
+    [Required]
+    public string Description { get; set; } = null!;
+}
+
 public class DocumentTemplateCreateDTO : BaseModelCreateDTO
 {
     [Required]

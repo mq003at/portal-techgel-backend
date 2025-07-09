@@ -34,23 +34,42 @@ public class DocumentController : ControllerBase
     [HttpPost("upload-multiple")]
     [RequestSizeLimit(MaxFileSize * 10)] // Adjust if needed
     public async Task<ActionResult<List<DocumentDTO>>> UploadMultiple(
-        [FromForm] List<DocumentCreateDTO> dtos
+        [FromForm] DocumentUploadWrapperDTO dtos
     )
     {
-        foreach (var dto in dtos)
+        if (dtos.Files.Count != dtos.Metadatas.Count)
+            return BadRequest("The number of files and metadata entries must match.");
+
+        var createDTOs = new List<DocumentCreateDTO>();
+
+        for (int i = 0; i < dtos.Files.Count; i++)
         {
-            if (dto.File == null || dto.File.Length == 0)
-                return BadRequest("One of the uploaded files is missing or empty.");
+            var file = dtos.Files[i];
+            var meta = dtos.Metadatas[i];
 
-            if (dto.File.Length > MaxFileSize)
-                return BadRequest($"File {dto.File.FileName} exceeds the 5MB size limit.");
+            if (file == null || file.Length == 0)
+                return BadRequest($"File at index {i} is missing or empty.");
 
-            var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
+            if (file.Length > MaxFileSize)
+                return BadRequest($"File {file.FileName} exceeds the 5MB size limit.");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!_allowedExtensions.Contains(ext))
-                return BadRequest($"File {dto.File.FileName} has an invalid extension.");
+                return BadRequest($"File {file.FileName} has an invalid extension.");
+
+            createDTOs.Add(
+                new DocumentCreateDTO
+                {
+                    File = file,
+                    Category = meta.Category,
+                    Tag = meta.Tag,
+                    Division = meta.Division,
+                    Description = meta.Description
+                }
+            );
         }
 
-        var result = await _documentService.MultipleUploadAsync(dtos);
+        var result = await _documentService.MultipleUploadAsync(createDTOs);
         return Ok(result);
     }
 
