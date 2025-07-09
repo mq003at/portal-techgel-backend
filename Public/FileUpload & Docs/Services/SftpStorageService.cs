@@ -222,22 +222,34 @@ public class SftpFileStorageService : IFileStorageService
 
     public async Task<object> FolderStructureAsync(string initPath = "")
     {
-        string basePath = "/erp/documents";
-        string path = Path.Combine(basePath, initPath).Replace('\\', '/');
+        const string basePath = "/erp/documents";
+        var normalizedPath = Path.Combine(basePath, initPath ?? "").Replace('\\', '/').TrimEnd('/');
+
         await _sync.WaitAsync();
         try
         {
             using var client = CreateClient();
-            client.Connect();
 
-            var normalizedPath = string.IsNullOrWhiteSpace(path) ? "." : path;
-            if (!client.Exists(normalizedPath))
-                throw new DirectoryNotFoundException("Path not found: " + normalizedPath);
+            try
+            {
+                client.Connect();
 
-            var structure = GetDirectoryStructure(client, normalizedPath);
-            client.Disconnect();
+                if (!client.Exists(normalizedPath))
+                    throw new DirectoryNotFoundException($"Path not found: {normalizedPath}");
 
-            return structure;
+                var folderName =
+                    Path.GetFileName(normalizedPath)
+                    ?? normalizedPath.Split('/').LastOrDefault()
+                    ?? "root";
+
+                var structure = GetDirectoryStructure(client, normalizedPath);
+                return new Dictionary<string, object> { [folderName] = structure };
+            }
+            finally
+            {
+                if (client.IsConnected)
+                    client.Disconnect();
+            }
         }
         finally
         {
@@ -271,11 +283,11 @@ public class SftpFileStorageService : IFileStorageService
     private object GetDirectoryStructure(SftpClient client, string path)
     {
         var result = new Dictionary<string, object>();
-        IEnumerable<SftpFile> entries;
 
+        IEnumerable<ISftpFile> entries;
         try
         {
-            entries = client.ListDirectory(path).Cast<SftpFile>();
+            entries = client.ListDirectory(path);
         }
         catch (SftpPermissionDeniedException ex)
         {
@@ -283,15 +295,33 @@ public class SftpFileStorageService : IFileStorageService
             return "[Permission Denied]";
         }
 
-        foreach (var entry in entries.Where(e => e.Name != "." && e.Name != ".."))
+        foreach (var entry in entries)
         {
+            if (entry.Name is "." or "..")
+                continue;
+
+            var fullPath = entry.FullName;
+            var entryName = entry.Name;
+
             if (entry.IsDirectory)
             {
-                result[entry.Name] = GetDirectoryStructure(client, entry.FullName);
+                try
+                {
+                    result[entryName] = GetDirectoryStructure(client, fullPath);
+                }
+                catch (SftpPermissionDeniedException ex)
+                {
+                    _logger.LogWarning(
+                        "Permission denied accessing {Path}: {Message}",
+                        fullPath,
+                        ex.Message
+                    );
+                    result[entryName] = "[Permission Denied]";
+                }
             }
             else
             {
-                result[entry.Name] = "file";
+                result[entryName] = "file";
             }
         }
 

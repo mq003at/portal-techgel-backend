@@ -128,11 +128,11 @@ public class DocumentService : IDocumentService
     {
         var structure = await _fileStorage.FolderStructureAsync();
 
-        // Ensure it's returned as a list (consistent with method signature)
-        if (structure is Dictionary<string, object> dict)
-            return dict.Select(kv => (object)new { Name = kv.Key, Content = kv.Value }).ToList();
-
-        return new List<object> { structure };
+        return structure switch
+        {
+            Dictionary<string, object> dict => dict.Values.ToList(),
+            _ => new List<object> { structure }
+        };
     }
 
     public async Task<DocumentStatusEnum> CheckDocumentSignStatusAsync(int id)
