@@ -18,6 +18,16 @@ public abstract class BaseWorkflowConfiguration<TWorkflow> : BaseModelConfigurat
         builder.Property(w => w.Status).IsRequired().HasConversion<string>();
 
         builder.Property(w => w.RejectReason).HasMaxLength(1000).IsRequired(false);
+        builder.Property(w => w.Comment).HasMaxLength(1000).IsRequired(false);
+        builder.Property(w => w.SenderId).IsRequired();
+        builder
+            .Property(w => w.ParticipantIds)
+            .HasConversion(
+                v => string.Join(",", v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
+            )
+            .Metadata.SetValueComparer(GlobalValueComparers.IntListComparer);
+
         builder
             .HasOne(l => l.Sender) // navigation property on LeaveRequestWorkflow
             .WithMany() // no reverse navigation on Employee

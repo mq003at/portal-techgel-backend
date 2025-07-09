@@ -636,13 +636,13 @@ public class LeaveRequestWorkflowService
         bool isImgValid = FileHandling.IsPngHeader(employeeSignature);
         _logger.LogInformation("Employee signature is valid: {IsValid}", isImgValid);
 
-        var Division = "6_Noi_Chinh";
+        var Location = "6_Noi_Chinh";
         var newFileName =
-            $"{workflow.Id}-{today:yyyy-MM-dd}-{Division}-DN-{employee.MainId}-v01{".docx"}";
+            $"{workflow.Id}-{today:yyyy-MM-dd}-{Location}-DN-{employee.MainId}-v01{".docx"}";
         var newTargetPath = Path.Combine(
                 "erp",
                 "documents",
-                Division,
+                Location,
                 "Ho_So",
                 "Nghi_Phep",
                 newFileName
@@ -765,7 +765,7 @@ public class LeaveRequestWorkflowService
             Version = "1.0",
             Tag = templateDocMetadata.Tag,
             Category = DocumentCategoryEnum.FORM,
-            Division = Division
+            Location = Location
         };
 
         _logger.LogInformation(System.Text.Json.JsonSerializer.Serialize(workflow.Id));

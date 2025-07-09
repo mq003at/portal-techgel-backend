@@ -52,7 +52,8 @@ public class SurveyQuestionConfiguration : BaseModelWithOnlyIdConfiguration<Surv
             .HasConversion(
                 v => string.Join(";;", v ?? new List<string>()),
                 v => v.Split(";;", StringSplitOptions.None).ToList()
-            );
+            )
+            .Metadata.SetValueComparer(GlobalValueComparers.StringListComparer); // Use global comparer for string lists
 
         builder
             .HasMany(q => q.SurveyResponses)
@@ -75,7 +76,8 @@ public class SurveyResponseConfiguration : BaseModelWithOnlyIdConfiguration<Surv
             .HasConversion(
                 v => string.Join(";;", v),
                 v => v.Split(";;", StringSplitOptions.None).ToList()
-            );
+            )
+            .Metadata.SetValueComparer(GlobalValueComparers.StringListComparer);
 
         builder
             .HasOne(r => r.SurveyQuestion)

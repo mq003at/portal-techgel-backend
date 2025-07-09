@@ -394,13 +394,13 @@ public class GeneralProposalWorkflowService
         bool isImgValid = FileHandling.IsPngHeader(employeeSignature);
         _logger.LogInformation("Employee signature is valid: {IsValid}", isImgValid);
 
-        var Division = "2_Chung";
+        var Location = "2_Chung";
         var newFileName =
-            $"{workflow.Id}-{today:yyyy-MM-dd}-{Division}-TTC-{employee.MainId}-v01{".docx"}";
+            $"{workflow.Id}-{today:yyyy-MM-dd}-{Location}-TTC-{employee.MainId}-v01{".docx"}";
         var newTargetPath = Path.Combine(
                 "erp",
                 "documents",
-                Division,
+                Location,
                 "Ho_So",
                 "To_Trinh_Chung",
                 newFileName
@@ -463,7 +463,7 @@ public class GeneralProposalWorkflowService
             Version = "1.0",
             Tag = templateDocMetadata.Tag,
             Category = DocumentCategoryEnum.PROPOSAL,
-            Division = Division
+            Location = Location
         };
 
         _logger.LogInformation(System.Text.Json.JsonSerializer.Serialize(workflow.Id));

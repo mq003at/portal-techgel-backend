@@ -1,8 +1,10 @@
+using System.Text.Json;
 using AutoMapper;
 using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using portal.Db;
 using portal.DTOs;
 using portal.Enums;
@@ -16,16 +18,19 @@ public class DocumentService : IDocumentService
     private readonly IFileStorageService _fileStorage;
     private readonly IMapper _mapper;
     private readonly string _basePath;
+    private readonly ILogger<DocumentService> _logger;
 
     public DocumentService(
         ApplicationDbContext context,
         IFileStorageService fileStorage,
-        IMapper mapper
+        IMapper mapper,
+        ILogger<DocumentService> logger
     )
     {
         _context = context;
         _fileStorage = fileStorage;
         _mapper = mapper;
+        _logger = logger;
         _basePath = AppDomain.CurrentDomain.BaseDirectory; // Or set this to your desired base path
     }
 
@@ -175,8 +180,8 @@ public class DocumentService : IDocumentService
         // Generate filename + path
         var documentPath = Path.Combine("erp", "documents").Replace("\\", "/");
         var fileName =
-            $"{today:yyyy-MM-dd}-{dto.Division}-BM-v01{Path.GetExtension(dto.File.FileName)}";
-        var directoryPath = Path.Combine(documentPath, dto.Division, "Bieu_Mau").Replace("\\", "/");
+            $"{today:yyyy-MM-dd}-{dto.Location}-BM-v01{Path.GetExtension(dto.File.FileName)}";
+        var directoryPath = Path.Combine(documentPath, dto.Location, "Bieu_Mau").Replace("\\", "/");
         var targetPath = Path.Combine(directoryPath, fileName).Replace("\\", "/");
         var fullPath = Path.Combine(_basePath, targetPath);
 
@@ -344,8 +349,8 @@ public class DocumentService : IDocumentService
             var size = file.Length;
 
             // Generate a unique file name or path (can use Guid or timestamp logic)
-            var storageFileName = $"{Guid.NewGuid()}{extension}";
-            var storagePath = $"erp/documents/{dto.Division}/{storageFileName}".Replace('\\', '/');
+            var storageFileName = $"{fileName}";
+            var storagePath = $"erp/documents/{dto.Location}/{storageFileName}".Replace('\\', '/');
 
             // Upload file to storage
             using var stream = file.OpenReadStream();
@@ -357,7 +362,7 @@ public class DocumentService : IDocumentService
                 Name = fileName,
                 FileExtension = extension,
                 SizeInBytes = size,
-                Division = dto.Division,
+                Location = dto.Location,
                 Category = dto.Category,
                 Status = dto.Status,
                 Tag = dto.Tag ?? new(),
@@ -366,6 +371,8 @@ public class DocumentService : IDocumentService
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
+
+            _logger.LogInformation("Document metadata: {meta}", JsonSerializer.Serialize(document));
 
             uploadedDocuments.Add(document);
         }
@@ -384,7 +391,7 @@ public class DocumentService : IDocumentService
                 Name = d.Name,
                 FileExtension = d.FileExtension,
                 SizeInBytes = d.SizeInBytes,
-                Division = d.Division,
+                Location = d.Location,
                 Category = d.Category,
                 Status = d.Status,
                 Tag = d.Tag,

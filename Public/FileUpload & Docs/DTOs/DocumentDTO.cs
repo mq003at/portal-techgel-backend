@@ -23,12 +23,14 @@ public class DocumentDTO : BaseModelDTO
     public DocumentStatusEnum Status { get; set; }
     public string FileExtension { get; set; } = string.Empty;
     public long SizeInBytes { get; set; }
-    public string Division { get; set; } = null!;
+    public string Location { get; set; } = null!;
     public string TemplateKey { get; set; } = string.Empty;
     public List<string> Tag { get; set; } = new();
     public string Description { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
+    public long DownloadCount { get; set; }
+    public List<int> RestrictedEmployeeIds { get; set; } = new();
     public List<SignaturesInDocumentDTO> Signatures { get; set; } = new();
 }
 
@@ -40,7 +42,7 @@ public class DocumentCreateDTO : BaseModelCreateDTO
     public DocumentCategoryEnum Category { get; set; }
     public List<string>? Tag { get; set; }
 
-    public string Division { get; set; } = null!;
+    public string Location { get; set; } = null!;
 
     public DocumentStatusEnum Status { get; set; } = DocumentStatusEnum.UNKNOWN;
 
@@ -51,7 +53,7 @@ public class DocumentCreateDTO : BaseModelCreateDTO
 public class DocumentUploadWrapperDTO : BaseModelCreateDTO
 {
     public List<IFormFile> Files { get; set; } = new();
-    public List<DocumentCreateMetaDTO> Metadatas { get; set; } = new();
+    public string Metadatas { get; set; } = string.Empty;
 }
 
 public class DocumentCreateMetaDTO
@@ -65,7 +67,7 @@ public class DocumentCreateMetaDTO
     public List<string>? Tag { get; set; }
 
     [Required]
-    public string Division { get; set; } = null!;
+    public string Location { get; set; } = null!;
 
     [Required]
     public string Description { get; set; } = null!;
@@ -83,7 +85,7 @@ public class DocumentTemplateCreateDTO : BaseModelCreateDTO
     public DocumentCategoryEnum Category { get; set; }
 
     [Required]
-    public string Division { get; set; } = null!;
+    public string Location { get; set; } = null!;
 
     [Required]
     public string Description { get; set; } = null!;

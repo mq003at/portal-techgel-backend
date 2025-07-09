@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using portal.Enums;
 using portal.Models;
@@ -24,11 +25,19 @@ public class DocumentConfiguration : BaseModelConfiguration<Document>
 
         builder.Property(d => d.Description).IsRequired().HasMaxLength(1000);
 
-        builder.Property(d => d.Division).IsRequired().HasMaxLength(100);
+        builder.Property(d => d.Location).IsRequired().HasMaxLength(100);
 
         builder.Property(d => d.Url).IsRequired().HasMaxLength(500);
 
         builder.Property(d => d.Version).IsRequired().HasMaxLength(100);
+        builder.Property(d => d.DownloadCount).IsRequired().HasDefaultValue(0);
+        builder
+            .Property(d => d.RestrictedEmployeeIds)
+            .HasConversion(
+                v => string.Join(",", v), // Convert list to comma-separated string
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList() // Convert back to list of integers
+            )
+            .Metadata.SetValueComparer(GlobalValueComparers.IntListComparer);
 
         // Tags: stored as a delimited string, you may customize the separator
         builder
@@ -36,6 +45,7 @@ public class DocumentConfiguration : BaseModelConfiguration<Document>
             .HasConversion(
                 v => string.Join(";", v),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList()
-            );
+            )
+            .Metadata.SetValueComparer(GlobalValueComparers.StringListComparer);
     }
 }

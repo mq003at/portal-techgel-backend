@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using portal.DTOs;
 using portal.Services;
@@ -37,15 +39,42 @@ public class DocumentController : ControllerBase
         [FromForm] DocumentUploadWrapperDTO dtos
     )
     {
-        if (dtos.Files.Count != dtos.Metadatas.Count)
-            return BadRequest("The number of files and metadata entries must match.");
+        _logger.LogInformation(
+            "Received multiple file upload request with {FileCount} files and raw metadata: {MetadataRaw}",
+            dtos.Files.Count,
+            dtos.Metadatas
+        );
+
+        List<DocumentCreateMetaDTO>? metaList;
+        try
+        {
+            metaList = JsonSerializer.Deserialize<List<DocumentCreateMetaDTO>>(
+                dtos.Metadatas,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter() }
+                }
+            );
+            _logger.LogInformation(
+                "Parsed metadata: {Metadata}",
+                JsonSerializer.Serialize(metaList)
+            );
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Invalid metadata format. " + ex.Message);
+        }
+
+        if (metaList == null || dtos.Files.Count != metaList.Count)
+            return BadRequest("Mismatch between number of files and metadata entries.");
 
         var createDTOs = new List<DocumentCreateDTO>();
 
         for (int i = 0; i < dtos.Files.Count; i++)
         {
             var file = dtos.Files[i];
-            var meta = dtos.Metadatas[i];
+            var meta = metaList[i];
 
             if (file == null || file.Length == 0)
                 return BadRequest($"File at index {i} is missing or empty.");
@@ -57,13 +86,19 @@ public class DocumentController : ControllerBase
             if (!_allowedExtensions.Contains(ext))
                 return BadRequest($"File {file.FileName} has an invalid extension.");
 
+            _logger.LogInformation(
+                "Processing file {FileName} with metadata: {Metadata}",
+                file.FileName,
+                JsonSerializer.Serialize(meta)
+            );
+
             createDTOs.Add(
                 new DocumentCreateDTO
                 {
                     File = file,
                     Category = meta.Category,
                     Tag = meta.Tag,
-                    Division = meta.Division,
+                    Location = meta.Location,
                     Description = meta.Description
                 }
             );
