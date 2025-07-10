@@ -1,8 +1,10 @@
 using AutoMapper;
+using DotNetCore.CAP;
 using Microsoft.EntityFrameworkCore;
 using portal.Db;
 using portal.DTOs;
 using portal.Enums;
+using portal.Extensions;
 using portal.Models;
 
 namespace portal.Services;
@@ -21,17 +23,20 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
     protected new readonly ILogger<
         BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TWorkflowModel>
     > _logger;
+    protected readonly ICapPublisher _capPublisher;
 
     public BaseNodeService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TWorkflowModel>> logger
+        ILogger<BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TWorkflowModel>> logger,
+        ICapPublisher capPublisher
     )
         : base(context, mapper, logger)
     {
         _context = context;
         _mapper = mapper;
         _logger = logger;
+        _capPublisher = capPublisher;
     }
 
     public async Task<bool> ApproveAsync(int nodeId, ApproveWithCommentDTO dto)
@@ -62,14 +67,11 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
             TemplateKey
         );
 
-        // var templateDocMetadata = await _context.Documents.FirstOrDefaultAsync(d =>
-        //     d.TemplateKey == TemplateKey
-        // );
-
         // Fetch participants based on Template
         List<WorkflowNodeParticipant> participants = _context
             .Set<WorkflowNodeParticipant>()
             .Where(p => p.WorkflowNodeId == node.Id && p.WorkflowNodeType == TemplateKey)
+            .Include(p => p.Employee)
             .ToList();
 
         _logger.LogError(
@@ -143,6 +145,19 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
             }
         }
 
+        string vietnameseDisplayName = WorkflowResolver.GetDisplayName(TemplateKey);
+        var @event = new ApprovalEvent
+        {
+            WorkflowId = workflow.MainId.ToString(),
+            WorkflowType = vietnameseDisplayName,
+            EmployeeId = workflow.SenderId,
+            ApproverName = participant.Employee.GetDisplayName(),
+            ApprovedAt = DateTime.UtcNow,
+            TriggeredBy = participant.Employee.MainId.ToString(),
+        };
+
+        await _capPublisher.PublishAsync("workflow.approved", @event);
+
         await _context.SaveChangesAsync();
         return true;
     }
@@ -177,6 +192,18 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
             throw new InvalidOperationException(
                 "Bạn không thể từ chối bước này trước thời gian bắt đầu phê duyệt."
             );
+        // Get the Template Key
+        string className = GetType().Name;
+        string TemplateKey = className.Split(
+            ["Node", "Service", "Workflow"],
+            StringSplitOptions.None
+        )[0];
+
+        _logger.LogError(
+            "Generating final document for workflow {WorkflowId} with template key {TemplateKey}",
+            workflow.Id,
+            TemplateKey
+        );
 
         // Update participant status
         participant.ApprovalStatus = ApprovalStatusType.REJECTED;
@@ -194,6 +221,20 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
 
         workflow.Status = GeneralWorkflowStatusType.REJECTED;
         workflow.RejectReason = dto.RejectReason;
+
+        string vietnameseDisplayName = WorkflowResolver.GetDisplayName(TemplateKey);
+        var @event = new RejectEvent
+        {
+            WorkflowId = workflow.MainId.ToString(),
+            WorkflowType = vietnameseDisplayName,
+            EmployeeId = workflow.SenderId,
+            ApproverName = participant.Employee.GetDisplayName(),
+            RejectedAt = DateTime.UtcNow,
+            TriggeredBy = participant.Employee.MainId.ToString(),
+            Reason = dto.RejectReason,
+        };
+
+        await _capPublisher.PublishAsync("workflow.rejected", @event);
 
         await _context.SaveChangesAsync();
 

@@ -30,6 +30,10 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
 
     public async Task ProcessEventAsync<TEvent>(TEvent evt, string triggerEvent)
     {
+        _logger.LogInformation(
+            $"🔍 Processing event: {triggerEvent} for data {JsonSerializer.Serialize(evt)}"
+        );
+
         var json = JsonSerializer.Serialize(evt);
         var matchedCategories = await _context
             .NotificationCategories.Where(c => c.TriggerEvent == triggerEvent)
@@ -139,6 +143,12 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
             UrgencyLevel = category.IsUrgentByDefault ? UrgencyLevel.HIGH : UrgencyLevel.MEDIUM,
             CreatedAt = DateTime.UtcNow
         };
+
+        _logger.LogError(
+            "Creating notification for Employee {EmployeeId} (Category: {CategoryName})",
+            employeeId,
+            category.Name
+        );
 
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();

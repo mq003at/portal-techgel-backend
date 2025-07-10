@@ -277,21 +277,6 @@ public class GeneralProposalWorkflowService
         );
         var result = await GenerateGeneralProposalFinalDocument(employee, approver, workflow);
 
-        if (result)
-        {
-            var @event = new ApprovalEvent
-            {
-                WorkflowId = workflow.Id,
-                WorkflowType = WorkflowType.GENERAL_PROPOSAL,
-                EmployeeId = workflow.SenderId,
-                ApproverName = approver.GetDisplayName(),
-                ApprovedAt = DateTime.UtcNow,
-                TriggeredBy = approver.Id.ToString(),
-            };
-
-            await _capPublisher.PublishAsync("workflow.approved", @event);
-        }
-
         return result;
     }
 
