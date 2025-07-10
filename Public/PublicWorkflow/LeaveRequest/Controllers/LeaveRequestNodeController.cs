@@ -16,14 +16,6 @@ public class LeaveRequestNodeController
         LeaveRequestWorkflow
     >
 {
-    public LeaveRequestNodeController(
-        IBaseNodeService<
-            LeaveRequestNode,
-            LeaveRequestNodeDTO,
-            LeaveRequestNodeCreateDTO,
-            LeaveRequestNodeUpdateDTO,
-            LeaveRequestWorkflow
-        > nodeService
-    )
+    public LeaveRequestNodeController(ILeaveRequestNodeService nodeService)
         : base(nodeService) { }
 }

@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using DotNetCore.CAP.Dashboard;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -159,6 +160,9 @@ builder.Services.AddCors(options =>
 
 // LevinMQ
 var rabbitMQSettings = builder.Configuration.GetSection("Cap:RabbitMQ").Get<RabbitMQSettings>()!;
+builder.Services.AddSingleton<IHostedService, CapSubscribeHostedService>();
+builder.Services.AddScoped<INotificationCategoryResolver, NotificationCategoryResolver>();
+builder.Services.AddTransient<WorkflowEventHandler>();
 
 builder.Services.AddCap(options =>
 {
@@ -189,6 +193,7 @@ builder.Services.AddCap(options =>
             };
         }
     });
+    options.UseDashboard();
 });
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());

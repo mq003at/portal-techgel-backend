@@ -16,14 +16,6 @@ public class GeneralProposalNodeController
         GeneralProposalWorkflow
     >
 {
-    public GeneralProposalNodeController(
-        IBaseNodeService<
-            GeneralProposalNode,
-            GeneralProposalNodeDTO,
-            GeneralProposalNodeCreateDTO,
-            GeneralProposalNodeUpdateDTO,
-            GeneralProposalWorkflow
-        > nodeService
-    )
+    public GeneralProposalNodeController(IGeneralProposalNodeService nodeService)
         : base(nodeService) { }
 }

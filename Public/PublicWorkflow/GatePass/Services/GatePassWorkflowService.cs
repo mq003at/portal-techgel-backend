@@ -300,21 +300,6 @@ public class GatePassWorkflowService
             approverPosition
         );
 
-        if (result)
-        {
-            var @event = new ApprovalEvent
-            {
-                WorkflowId = workflow.Id,
-                WorkflowType = WorkflowType.GATE_PASS,
-                EmployeeId = workflow.SenderId,
-                ApproverName = approver.GetDisplayName(),
-                ApprovedAt = DateTime.UtcNow,
-                TriggeredBy = approver.Id.ToString(),
-            };
-
-            await _capPublisher.PublishAsync("workflow.approved", @event);
-        }
-
         return result;
     }
 

@@ -1,6 +1,7 @@
 namespace portal.Services;
 
 using AutoMapper;
+using DotNetCore.CAP;
 using Microsoft.Extensions.Logging;
 using portal.Db;
 using portal.DTOs;
@@ -19,15 +20,8 @@ public class GeneralProposalNodeService
     public GeneralProposalNodeService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<
-            BaseNodeService<
-                GeneralProposalNode,
-                GeneralProposalNodeDTO,
-                GeneralProposalNodeCreateDTO,
-                GeneralProposalNodeUpdateDTO,
-                GeneralProposalWorkflow
-            >
-        > logger
+        ILogger<GeneralProposalNodeService> logger,
+        ICapPublisher capPublisher
     )
-        : base(context, mapper, logger) { }
+        : base(context, mapper, logger, capPublisher) { }
 }

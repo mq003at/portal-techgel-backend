@@ -1,10 +1,9 @@
 namespace portal.Services;
 
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+using DotNetCore.CAP;
 using portal.Db;
 using portal.DTOs;
-using portal.Enums;
 using portal.Models;
 
 public class LeaveRequestNodeService
@@ -20,15 +19,8 @@ public class LeaveRequestNodeService
     public LeaveRequestNodeService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<
-            BaseNodeService<
-                LeaveRequestNode,
-                LeaveRequestNodeDTO,
-                LeaveRequestNodeCreateDTO,
-                LeaveRequestNodeUpdateDTO,
-                LeaveRequestWorkflow
-            >
-        > logger
+        ILogger<LeaveRequestNodeService> logger,
+        ICapPublisher capPublisher
     )
-        : base(context, mapper, logger) { }
+        : base(context, mapper, logger, capPublisher) { }
 }

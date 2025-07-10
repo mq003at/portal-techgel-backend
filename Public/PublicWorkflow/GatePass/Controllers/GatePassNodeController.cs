@@ -16,14 +16,6 @@ public class GatePassNodeController
         GatePassWorkflow
     >
 {
-    public GatePassNodeController(
-        IBaseNodeService<
-            GatePassNode,
-            GatePassNodeDTO,
-            GatePassNodeCreateDTO,
-            GatePassNodeUpdateDTO,
-            GatePassWorkflow
-        > nodeService
-    )
+    public GatePassNodeController(IGatePassNodeService nodeService)
         : base(nodeService) { }
 }

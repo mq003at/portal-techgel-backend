@@ -395,21 +395,6 @@ public class LeaveRequestWorkflowService
 
         var result = await GenerateLeaveRequestFinalDocument(employee, approver, workflow);
 
-        if (result)
-        {
-            var @event = new ApprovalEvent
-            {
-                WorkflowId = workflow.Id,
-                WorkflowType = WorkflowType.LEAVE_REQUEST,
-                EmployeeId = workflow.EmployeeId,
-                ApproverName = approver.GetDisplayName(),
-                ApprovedAt = DateTime.UtcNow,
-                TriggeredBy = approver.Id.ToString(),
-            };
-
-            await _capPublisher.PublishAsync("workflow.approved", @event);
-        }
-
         return result;
     }
 
