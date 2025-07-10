@@ -4,13 +4,10 @@ using portal.DTOs;
 using portal.Models;
 
 public interface ILeaveRequestNodeService
-    : IBaseService<
+    : IBaseNodeService<
         LeaveRequestNode,
         LeaveRequestNodeDTO,
         LeaveRequestNodeCreateDTO,
-        LeaveRequestNodeUpdateDTO
-    >
-{
-    Task<string> ApproveAsync(int nodeId, int approverId);
-    Task<string> RejectAsync(int nodeId, int approverId, string rejectReason);
-}
+        LeaveRequestNodeUpdateDTO,
+        LeaveRequestWorkflow
+    > { }

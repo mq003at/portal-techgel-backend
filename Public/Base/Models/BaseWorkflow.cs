@@ -31,4 +31,5 @@ public abstract class BaseWorkflow : BaseModel
 
     // Cache who will participate in the workflow to check permissions
     public List<int> ParticipantIds { get; set; } = new List<int>();
+    public bool IsDocumentGenerated { get; set; } = false;
 }

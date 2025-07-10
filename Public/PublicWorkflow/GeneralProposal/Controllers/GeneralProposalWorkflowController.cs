@@ -84,4 +84,18 @@ public class GeneralProposalWorkflowController
             return workflows;
         }
     }
+
+    [HttpPost("{id}/generate-documents")]
+    [Authorize]
+    public async Task<IActionResult> GenerateDocuments(int id)
+    {
+        if (id < 0)
+            return BadRequest("Invalid workflow ID.");
+
+        var result = await _workflowService.FinalizeIfCompleteAsync(id);
+        if (result == false)
+            return NotFound("No documents generated for the provided workflow ID.");
+
+        return Ok(true);
+    }
 }

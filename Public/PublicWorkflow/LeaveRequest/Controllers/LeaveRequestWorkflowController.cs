@@ -90,4 +90,20 @@ public class LeaveRequestWorkflowController
             return workflows;
         }
     }
+
+    [HttpPost("{id}/generate-documents")]
+    [Authorize]
+    public async Task<IActionResult> GenerateDocuments(int id)
+    {
+        if (id < 0)
+            return BadRequest("Lỗi ID.");
+
+        var result = await _workflowService.FinalizeIfCompleteAsync(id);
+        if (result == false)
+            return NotFound(
+                "Không có tài liệu nào được tạo cho ID quy trình làm việc đã cung cấp."
+            );
+
+        return Ok(true);
+    }
 }

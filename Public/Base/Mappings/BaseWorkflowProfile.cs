@@ -1,5 +1,6 @@
 using portal.DTOs;
 using portal.Enums;
+using portal.Extensions;
 using portal.Models;
 
 namespace portal.Mappings;
@@ -34,6 +35,14 @@ public abstract class BaseWorkflowProfile<
         // Entity <-> DTO (for main DTOs, including navigations)
         CreateMap<TWorkflow, TWorkflowDto>()
             .IncludeBase<TModel, TModelDto>()
+            .ForMember(
+                dest => dest.SenderName,
+                opt => opt.MapFrom(src => src.Sender.GetDisplayName())
+            )
+            .ForMember(
+                dest => dest.IsDocumentGenerated,
+                opt => opt.MapFrom(src => src.IsDocumentGenerated)
+            )
             .ReverseMap();
 
         // Create DTO -> Entity (client -> server)

@@ -18,17 +18,12 @@ public interface IGeneralProposalWorkflowService
     );
     Task<IEnumerable<GeneralProposalNodeDTO>> GetNodesByWorkflowIdAsync(int workflowId);
 
-    Task<bool> FinalizeIfCompleteAsync(
-        GeneralProposalWorkflow workflow,
-        int approvalId,
-        int nodeId
-    );
+    Task<bool> FinalizeIfCompleteAsync(int workflowId);
 
     Task<bool> GenerateGeneralProposalFinalDocument(
         Employee employee,
         Employee approver,
-        GeneralProposalWorkflow workflow,
-        int nodeId
+        GeneralProposalWorkflow workflow
     );
     Task<List<GeneralProposalWorkflowDTO>> GetAllByEmployeeIdAsync(int id);
 }

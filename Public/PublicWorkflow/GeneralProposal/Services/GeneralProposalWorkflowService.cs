@@ -191,6 +191,11 @@ public class GeneralProposalWorkflowService
         {
             WorkflowNodeParticipants[1]
         };
+        workflow.ParticipantIds = new List<int>
+        {
+            WorkflowNodeParticipants[0].EmployeeId,
+            WorkflowNodeParticipants[1].EmployeeId,
+        };
         await _context.SaveChangesAsync();
 
         return _mapper.Map<List<GeneralProposalNodeDTO>>(nodes);
@@ -223,12 +228,21 @@ public class GeneralProposalWorkflowService
         return dtos;
     }
 
-    public async Task<bool> FinalizeIfCompleteAsync(
-        GeneralProposalWorkflow workflow,
-        int approverId,
-        int nodeId
-    )
+    public async Task<bool> FinalizeIfCompleteAsync(int workflowId)
     {
+        GeneralProposalWorkflow workflow =
+            await _dbSet
+                .Include(wf => wf.GeneralProposalNodes)
+                .FirstOrDefaultAsync(wf => wf.Id == workflowId)
+            ?? throw new KeyNotFoundException($"Không tìm thấy tờ trình với id: {workflowId}.");
+
+        if (workflow.IsDocumentGenerated)
+        {
+            throw new InvalidOperationException(
+                "Quy trình đã có tài liệu đính kèm, không cần phải lấy bản vật lý lại."
+            );
+        }
+
         Employee employee =
             await _context
                 .Employees.Include(e => e.CompanyInfo)
@@ -236,19 +250,32 @@ public class GeneralProposalWorkflowService
                 .FirstOrDefaultAsync(e => e.Id == workflow.SenderId)
             ?? throw new InvalidOperationException($"Employee {workflow.SenderId} not found.");
 
+        WorkflowNodeParticipant finalParticipant =
+            _context
+                .Set<WorkflowNodeParticipant>()
+                .Where(p =>
+                    p.WorkflowId == workflowId
+                    && p.WorkflowNodeType == "GeneralProposal"
+                    && p.ApprovalStatus == ApprovalStatusType.APPROVED
+                )
+                .OrderByDescending(p => p.Id)
+                .FirstOrDefault()
+            ?? throw new InvalidOperationException(
+                "Quy trình chưa được phê duyệt hoàn tất, không thể lấy bản vật lý."
+            );
+
         Employee approver =
             await _context
                 .Employees.Include(e => e.CompanyInfo)
                 .Include(e => e.Signature)
-                .FirstOrDefaultAsync(e => e.Id == approverId)
-            ?? throw new InvalidOperationException($"Employee {approverId} not found.");
-
-        var result = await GenerateGeneralProposalFinalDocument(
-            employee,
-            approver,
-            workflow,
-            nodeId
+                .FirstOrDefaultAsync(e => e.Id == finalParticipant.EmployeeId)
+            ?? throw new InvalidOperationException($"Không tìm ra người ký cuối trong hệ thống.");
+        _logger.LogError(
+            "Approver found: {ApproverName} (ID: {ApproverId})",
+            approver.GetDisplayName(),
+            approver.Id
         );
+        var result = await GenerateGeneralProposalFinalDocument(employee, approver, workflow);
 
         if (result)
         {
@@ -344,8 +371,7 @@ public class GeneralProposalWorkflowService
     public async Task<bool> GenerateGeneralProposalFinalDocument(
         Employee employee,
         Employee approver,
-        GeneralProposalWorkflow workflow,
-        int nodeId
+        GeneralProposalWorkflow workflow
     )
     {
         string className = GetType().Name;

@@ -163,8 +163,8 @@ public class GatePassWorkflowService
                 GeneralProposalStepType.ExecutiveApproval,
                 0,
                 null,
-                DateTime.UtcNow,
                 DateTime.UtcNow.AddHours(48),
+                DateTime.UtcNow.AddHours(96),
                 false,
                 ApprovalStatusType.PENDING,
                 null
@@ -187,7 +187,7 @@ public class GatePassWorkflowService
                     ApprovalDeadline = participant.ApprovalDeadline,
                     ApprovalStatus = participant.ApprovalStatus,
                     TAT = participant.TAT,
-                    WorkflowNodeType = "GeneralProposal",
+                    WorkflowNodeType = "GatePass",
                     WorkflowNodeId = participant.WorkflowNodeId,
                     WorkflowId = workflow.Id
                 }
@@ -212,6 +212,14 @@ public class GatePassWorkflowService
             WorkflowNodeParticipants[1],
             WorkflowNodeParticipants[2]
         };
+
+        workflow.ParticipantIds = new List<int>
+        {
+            WorkflowNodeParticipants[0].EmployeeId,
+            WorkflowNodeParticipants[1].EmployeeId,
+            WorkflowNodeParticipants[2].EmployeeId
+        };
+
         await _context.SaveChangesAsync();
 
         return _mapper.Map<List<GatePassNodeDTO>>(nodes);
@@ -297,7 +305,7 @@ public class GatePassWorkflowService
             var @event = new ApprovalEvent
             {
                 WorkflowId = workflow.Id,
-                WorkflowType = WorkflowType.GENERAL_PROPOSAL,
+                WorkflowType = WorkflowType.GATE_PASS,
                 EmployeeId = workflow.SenderId,
                 ApproverName = approver.GetDisplayName(),
                 ApprovedAt = DateTime.UtcNow,

@@ -67,9 +67,17 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
         // );
 
         // Fetch participants based on Template
-        List<WorkflowNodeParticipant> participants =
-            node.WorkflowNodeParticipants
-            ?? throw new InvalidOperationException("Bước này không có người tham gia.");
+        List<WorkflowNodeParticipant> participants = _context
+            .Set<WorkflowNodeParticipant>()
+            .Where(p => p.WorkflowNodeId == node.Id && p.WorkflowNodeType == TemplateKey)
+            .ToList();
+
+        _logger.LogError(
+            "Found {ParticipantCount} participants for node {NodeId} in workflow {WorkflowId}",
+            participants.Count,
+            node.Id,
+            workflow.Id
+        );
 
         WorkflowNodeParticipant participant =
             participants.FirstOrDefault(p => p.EmployeeId == approverId)

@@ -310,6 +310,13 @@ public class LeaveRequestWorkflowService
             WorkflowNodeParticipants[1],
             WorkflowNodeParticipants[2]
         };
+
+        workflow.ParticipantIds = new List<int>
+        {
+            WorkflowNodeParticipants[0].EmployeeId,
+            WorkflowNodeParticipants[1].EmployeeId,
+            WorkflowNodeParticipants[2].EmployeeId
+        };
         await _context.SaveChangesAsync();
 
         return _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
@@ -342,12 +349,34 @@ public class LeaveRequestWorkflowService
         return dtos;
     }
 
-    public async Task<bool> FinalizeIfCompleteAsync(
-        LeaveRequestWorkflow workflow,
-        int approverId,
-        int nodeId
-    )
+    public async Task<bool> FinalizeIfCompleteAsync(int workflowId)
     {
+        LeaveRequestWorkflow workflow =
+            await _context
+                .LeaveRequestWorkflows.Include(w => w.LeaveRequestNodes)
+                .FirstOrDefaultAsync(w => w.Id == workflowId)
+            ?? throw new InvalidOperationException($"Không tìm thấy đơn.");
+
+        if (workflow.IsDocumentGenerated)
+        {
+            throw new InvalidOperationException(
+                "Quy trình đã có tài liệu đính kèm, không cần phải lấy bản vật lý lại."
+            );
+        }
+        WorkflowNodeParticipant finalParticipant =
+            _context
+                .Set<WorkflowNodeParticipant>()
+                .Where(p =>
+                    p.WorkflowId == workflowId
+                    && p.WorkflowNodeType == "LeaveRequest"
+                    && p.ApprovalStatus == ApprovalStatusType.APPROVED
+                )
+                .OrderByDescending(p => p.Id)
+                .FirstOrDefault()
+            ?? throw new InvalidOperationException(
+                "Quy trình chưa được phê duyệt hoàn tất, không thể lấy bản vật lý."
+            );
+
         Employee employee =
             await _context
                 .Employees.Include(e => e.CompanyInfo)
@@ -359,10 +388,12 @@ public class LeaveRequestWorkflowService
             await _context
                 .Employees.Include(e => e.CompanyInfo)
                 .Include(e => e.Signature)
-                .FirstOrDefaultAsync(e => e.Id == approverId)
-            ?? throw new InvalidOperationException($"Employee {approverId} not found.");
+                .FirstOrDefaultAsync(e => e.Id == finalParticipant.EmployeeId)
+            ?? throw new InvalidOperationException(
+                $"Employee {finalParticipant.EmployeeId} not found."
+            );
 
-        var result = await GenerateLeaveRequestFinalDocument(employee, approver, workflow, nodeId);
+        var result = await GenerateLeaveRequestFinalDocument(employee, approver, workflow);
 
         if (result)
         {
@@ -598,8 +629,7 @@ public class LeaveRequestWorkflowService
     public async Task<bool> GenerateLeaveRequestFinalDocument(
         Employee employee,
         Employee approver,
-        LeaveRequestWorkflow workflow,
-        int nodeId
+        LeaveRequestWorkflow workflow
     )
     {
         var templateDocMetadata = await _context.Documents.FirstOrDefaultAsync(d =>

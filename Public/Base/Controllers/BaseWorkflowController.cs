@@ -9,18 +9,25 @@ namespace portal.Controllers;
 [ApiController]
 [Route("api/[controller]s")]
 [Authorize]
-public abstract class BaseWorkflowController<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
+public abstract class BaseWorkflowController<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TNodeModel>
     : ControllerBase
     where TModel : BaseWorkflow
-    where TReadDTO : BaseModelDTO
-    where TCreateDTO : BaseModelCreateDTO
-    where TUpdateDTO : BaseModelUpdateDTO
+    where TReadDTO : BaseWorkflowDTO
+    where TCreateDTO : BaseWorkflowCreateDTO
+    where TUpdateDTO : BaseWorkflowUpdateDTO
+    where TNodeModel : BaseWorkflowNode
 {
-    protected readonly IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO> _service;
+    protected readonly IBaseWorkflowService<
+        TModel,
+        TReadDTO,
+        TCreateDTO,
+        TUpdateDTO,
+        TNodeModel
+    > _service;
     protected readonly IHttpContextAccessor _httpContextAccessor;
 
     protected BaseWorkflowController(
-        IBaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO> service,
+        IBaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TNodeModel> service,
         IHttpContextAccessor httpContextAccessor
     )
     {

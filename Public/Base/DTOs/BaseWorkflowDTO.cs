@@ -12,6 +12,7 @@ public class BaseWorkflowDTO : BaseModelDTO
 
     public List<WorkflowNodeParticipantDTO> WorkflowNodeParticipants { get; set; } = new();
     public List<DocumentDTO> DocumentAssociations { get; set; } = new();
+    public bool IsDocumentGenerated { get; set; }
 }
 
 // Input the sender information
