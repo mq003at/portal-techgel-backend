@@ -486,6 +486,8 @@ public class GeneralProposalWorkflowService
             EntityId = workflow.Id,
         };
 
+        workflow.IsDocumentGenerated = true;
+        _context.Entry(workflow).State = EntityState.Modified;
         _context.Documents.Add(newMetadata);
         _context.DocumentAssociations.Add(newDocumentAssociation);
         await _context.SaveChangesAsync();

@@ -33,6 +33,7 @@ public class EmployeeService
     {
         List<Employee> employees = await _context
             .Employees.Include(e => e.PersonalInfo)
+            .Include(e => e.CompanyInfo)
             .ToListAsync();
 
         return _mapper.Map<IEnumerable<EmployeeDTO>>(employees);

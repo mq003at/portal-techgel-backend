@@ -58,6 +58,7 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<EmergencyContactInfo> EmergencyContactInfos { get; set; }
     public DbSet<ScheduleInfo> ScheduleInfos { get; set; }
     public DbSet<Signature> Signatures { get; set; }
+    public DbSet<AnnualLeaveTransaction> AnnualLeaveTransactions { get; set; }
 
     // Ending Employee Setup
     // Join table Emp - OrganizationEntity

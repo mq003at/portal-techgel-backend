@@ -12,6 +12,9 @@
 		<PackageReference Include="DotNetCore.CAP.Dashboard" Version="8.3.5" />
 		<PackageReference Include="DotNetCore.CAP.PostgreSql" Version="8.3.5" />
 		<PackageReference Include="DotNetCore.CAP.RabbitMQ" Version="8.3.5" />
+		<PackageReference Include="Hangfire" Version="1.8.20" />
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.20" />
+		<PackageReference Include="Hangfire.PostgreSql" Version="1.20.12" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.6" />

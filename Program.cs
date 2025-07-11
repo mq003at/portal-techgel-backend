@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using DotNetCore.CAP.Dashboard;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -196,6 +198,11 @@ builder.Services.AddCap(options =>
     options.UseDashboard();
 });
 
+builder.Services.AddHangfire(config =>
+    config.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
+builder.Services.AddHangfireServer();
+
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 builder
@@ -292,5 +299,6 @@ app.UseAuthorization();
 // Endpoints
 app.MapControllers();
 app.MapHubs();
+app.UseHangfireDashboard("/hangfire");
 
 app.Run();

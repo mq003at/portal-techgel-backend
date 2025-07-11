@@ -15,8 +15,7 @@ public class CompanyInfo : BaseModelWithOnlyId
     public DateTime? EndDate { get; set; }
     public DateTime? ProbationStartDate { get; set; }
     public DateTime? ProbationEndDate { get; set; }
-    public bool IsOnProbation { get; set; } 
-    public double CompensatoryLeaveTotalDays { get; set; } 
+    public bool IsOnProbation { get; set; }
+    public double CompensatoryLeaveTotalDays { get; set; }
     public double AnnualLeaveTotalDays { get; set; }
 }
-
