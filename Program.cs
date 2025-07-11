@@ -152,7 +152,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:5173", "https://portal.quan-ng.uk") // <-- chính xác origin
+                .WithOrigins("http://localhost:5173", "https://portal.quan-ng.uk", "http://localhost:5000") // <-- chính xác origin
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); // <-- nếu dùng cookie

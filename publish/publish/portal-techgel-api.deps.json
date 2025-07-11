@@ -11,6 +11,9 @@
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "DocX": "4.0.25105.5786",
           "DocumentFormat.OpenXml": "3.3.0",
+          "DotNetCore.CAP": "8.3.5",
+          "DotNetCore.CAP.PostgreSql": "8.3.5",
+          "DotNetCore.CAP.RabbitMQ": "8.3.5",
           "Microsoft.AspNetCore.Authentication.Cookies": "2.3.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "9.0.6",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "9.0.6",
@@ -24,7 +27,8 @@
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.4",
           "SSH.NET": "2025.0.0",
           "Serilog.AspNetCore": "9.0.0",
-          "Swashbuckle.AspNetCore": "9.0.1"
+          "Swashbuckle.AspNetCore": "9.0.1",
+          "System.Linq.Dynamic.Core": "1.6.6"
         },
         "runtime": {
           "portal-techgel-api.dll": {}
@@ -100,6 +104,44 @@
           "lib/net5.0/Xceed.Words.NET.dll": {
             "assemblyVersion": "4.0.0.0",
             "fileVersion": "4.0.0.0"
+          }
+        }
+      },
+      "DotNetCore.CAP/8.3.5": {
+        "dependencies": {
+          "Microsoft.Extensions.Hosting.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.6",
+          "Microsoft.Extensions.Options": "9.0.6"
+        },
+        "runtime": {
+          "lib/net8.0/DotNetCore.CAP.dll": {
+            "assemblyVersion": "8.3.5.0",
+            "fileVersion": "8.3.5.0"
+          }
+        }
+      },
+      "DotNetCore.CAP.PostgreSql/8.3.5": {
+        "dependencies": {
+          "DotNetCore.CAP": "8.3.5",
+          "Microsoft.EntityFrameworkCore.Relational": "9.0.6",
+          "Npgsql": "9.0.3"
+        },
+        "runtime": {
+          "lib/net6.0/DotNetCore.CAP.PostgreSql.dll": {
+            "assemblyVersion": "8.3.5.0",
+            "fileVersion": "8.3.5.0"
+          }
+        }
+      },
+      "DotNetCore.CAP.RabbitMQ/8.3.5": {
+        "dependencies": {
+          "DotNetCore.CAP": "8.3.5",
+          "RabbitMQ.Client": "7.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/DotNetCore.CAP.RabbitMQ.dll": {
+            "assemblyVersion": "8.3.5.0",
+            "fileVersion": "8.3.5.0"
           }
         }
       },
@@ -1079,6 +1121,18 @@
           }
         }
       },
+      "RabbitMQ.Client/7.0.0": {
+        "dependencies": {
+          "System.IO.Pipelines": "8.0.0",
+          "System.Threading.RateLimiting": "8.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/RabbitMQ.Client.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.0.0"
+          }
+        }
+      },
       "Serilog/4.2.0": {
         "runtime": {
           "lib/net9.0/Serilog.dll": {
@@ -1369,6 +1423,14 @@
         }
       },
       "System.IO.Pipelines/8.0.0": {},
+      "System.Linq.Dynamic.Core/1.6.6": {
+        "runtime": {
+          "lib/net9.0/System.Linq.Dynamic.Core.dll": {
+            "assemblyVersion": "1.6.6.0",
+            "fileVersion": "1.6.6.0"
+          }
+        }
+      },
       "System.Net.WebSockets.WebSocketProtocol/5.1.0": {
         "runtime": {
           "lib/net6.0/System.Net.WebSockets.WebSocketProtocol.dll": {
@@ -1406,7 +1468,8 @@
           }
         }
       },
-      "System.Threading.Channels/8.0.0": {}
+      "System.Threading.Channels/8.0.0": {},
+      "System.Threading.RateLimiting/8.0.0": {}
     }
   },
   "libraries": {
@@ -1456,6 +1519,27 @@
       "sha512": "sha512-yfzSWXFh3/sgcWyykjfvedFlwIPIbJUNbHgg9auTA2NjuvYvmY4B2AmD4lBJ4bvC2+9GmJNk6e8KeHOuSFPgNA==",
       "path": "docx/4.0.25105.5786",
       "hashPath": "docx.4.0.25105.5786.nupkg.sha512"
+    },
+    "DotNetCore.CAP/8.3.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JIZEJYFRj9/siQLPODh4YN69oUPdXYEYjulqdv62s8DswN5yLWTdnq9g4xfxEkOSrpvUJ87LkZVY7lNNxFm/cQ==",
+      "path": "dotnetcore.cap/8.3.5",
+      "hashPath": "dotnetcore.cap.8.3.5.nupkg.sha512"
+    },
+    "DotNetCore.CAP.PostgreSql/8.3.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-O58q3+lnkUauur6xfgQtxcSNJ17E7E4kDocVP+21QH5uOWN4cafqaABhSY2geJBgdOIVFFaeu1kYbRWR8n8WGQ==",
+      "path": "dotnetcore.cap.postgresql/8.3.5",
+      "hashPath": "dotnetcore.cap.postgresql.8.3.5.nupkg.sha512"
+    },
+    "DotNetCore.CAP.RabbitMQ/8.3.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-bbkZ9RaNcxHQSfjGj9iziTWv4pG1hbL/9TD1TbdEaH5K8qKbr3ssMx8eUjaNuR5Ixtvb3+kNEyrrWS54sZlHVA==",
+      "path": "dotnetcore.cap.rabbitmq/8.3.5",
+      "hashPath": "dotnetcore.cap.rabbitmq.8.3.5.nupkg.sha512"
     },
     "Humanizer.Core/2.14.1": {
       "type": "package",
@@ -2052,6 +2136,13 @@
       "path": "npgsql.entityframeworkcore.postgresql/9.0.4",
       "hashPath": "npgsql.entityframeworkcore.postgresql.9.0.4.nupkg.sha512"
     },
+    "RabbitMQ.Client/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8YJz22mOSMtkbIVuVSz2HbJwbpKwRoXQ1uqbczDUt1w1Ds8dxFs6dkV/oZ8AlTmkErZjtQelHv+oBu52ud00WA==",
+      "path": "rabbitmq.client/7.0.0",
+      "hashPath": "rabbitmq.client.7.0.0.nupkg.sha512"
+    },
     "Serilog/4.2.0": {
       "type": "package",
       "serviceable": true,
@@ -2255,6 +2346,13 @@
       "path": "system.io.pipelines/8.0.0",
       "hashPath": "system.io.pipelines.8.0.0.nupkg.sha512"
     },
+    "System.Linq.Dynamic.Core/1.6.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DalpBR6IiZsT61Z9h3ujGxhOALmJUE6hrbeWjRUL24AxDIvhxzhxftSrRrF1G8vNggpadDfRiej6ImrpYS8sJA==",
+      "path": "system.linq.dynamic.core/1.6.6",
+      "hashPath": "system.linq.dynamic.core.1.6.6.nupkg.sha512"
+    },
     "System.Net.WebSockets.WebSocketProtocol/5.1.0": {
       "type": "package",
       "serviceable": true,
@@ -2331,6 +2429,13 @@
       "sha512": "sha512-CMaFr7v+57RW7uZfZkPExsPB6ljwzhjACWW1gfU35Y56rk72B/Wu+sTqxVmGSk4SFUlPc3cjeKND0zktziyjBA==",
       "path": "system.threading.channels/8.0.0",
       "hashPath": "system.threading.channels.8.0.0.nupkg.sha512"
+    },
+    "System.Threading.RateLimiting/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7mu9v0QDv66ar3DpGSZHg9NuNcxDaaAcnMULuZlaTpP9+hwXhrxNGsF5GmLkSHxFdb5bBc1TzeujsRgTrPWi+Q==",
+      "path": "system.threading.ratelimiting/8.0.0",
+      "hashPath": "system.threading.ratelimiting.8.0.0.nupkg.sha512"
     }
   }
 }
