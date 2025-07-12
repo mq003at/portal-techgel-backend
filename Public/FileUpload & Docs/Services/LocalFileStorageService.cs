@@ -3,12 +3,29 @@ namespace portal.Services;
 public class LocalFileStorageService : IFileStorageService
 {
     private readonly string _basePath;
+    private readonly ILogger<LocalFileStorageService> _logger;
 
-    public LocalFileStorageService(string basePath) => _basePath = basePath;
+    public LocalFileStorageService(string basePath, ILogger<LocalFileStorageService> logger)
+    {
+        // Normalize to absolute path
+        _basePath = Path.IsPathRooted(basePath)
+            ? basePath
+            : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, basePath));
+
+        _logger = logger;
+
+        _logger.LogWarning("Resolved file storage path: {ResolvedPath}", _basePath);
+    }
 
     public async Task<string> UploadAsync(Stream fileStream, string fileName)
     {
+        _logger.LogInformation(
+            "Uploading file: {FileName} to base path: {BasePath}",
+            fileName,
+            _basePath
+        );
         Directory.CreateDirectory(_basePath);
+
         var safe = Path.GetFileName(fileName);
         var full = Path.Combine(_basePath, safe);
 

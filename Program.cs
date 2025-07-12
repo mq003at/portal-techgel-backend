@@ -152,7 +152,11 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:5173", "https://portal.quan-ng.uk", "http://localhost:5000") // <-- chính xác origin
+                .WithOrigins(
+                    "http://localhost:5173",
+                    "https://portal.quan-ng.uk",
+                    "http://localhost:5000"
+                ) // <-- chính xác origin
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); // <-- nếu dùng cookie
@@ -245,18 +249,33 @@ builder.Services.AddSingleton<IFileStorageService>(sp =>
 
     return provider switch
     {
-        "local"
-            => new LocalFileStorageService(
-                config["FileStorage:Local:BasePath"] ?? "srv/uploads/ftp-service/erp/documents"
-            ),
-
+        "local" => CreateLocalFileStorageService(sp, config),
         "sftp"
             => new SftpFileStorageService(
                 Options.Create(sp.GetRequiredService<IOptions<SftpOptions>>().Value)
             ),
-
         _ => throw new InvalidOperationException("Unknown FileStorage:Provider value")
     };
+
+    static IFileStorageService CreateLocalFileStorageService(
+        IServiceProvider sp,
+        IConfiguration config
+    )
+    {
+        var rawPath =
+            config["FileStorage:Local:BasePath"] ?? "srv/uploads/ftp-service/erp/documents";
+
+        var logger = sp.GetRequiredService<ILogger<LocalFileStorageService>>();
+
+        // Convert to absolute if needed
+        var resolvedPath = Path.IsPathRooted(rawPath)
+            ? rawPath
+            : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, rawPath));
+
+        logger.LogInformation("Resolved LocalFileStorageService base path: {Path}", resolvedPath);
+
+        return new LocalFileStorageService(resolvedPath, logger);
+    }
 });
 
 // Always use SFTP as your IFileStorageService
