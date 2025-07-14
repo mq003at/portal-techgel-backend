@@ -3,6 +3,7 @@ namespace portal.Services;
 public class LocalFileStorageService : IFileStorageService
 {
     private readonly string _basePath;
+    private readonly string _erpSubPath = "erp/documents";
     private readonly ILogger<LocalFileStorageService> _logger;
 
     public LocalFileStorageService(string basePath, ILogger<LocalFileStorageService> logger)
@@ -17,56 +18,46 @@ public class LocalFileStorageService : IFileStorageService
         _logger.LogWarning("Resolved file storage path: {ResolvedPath}", _basePath);
     }
 
+    private string GetFullPath(string relativePath)
+    {
+        var safePath = relativePath.Replace('\\', '/');
+        return Path.Combine(_basePath, _erpSubPath, safePath);
+    }
+
     public async Task<string> UploadAsync(Stream fileStream, string fileName)
     {
-        _logger.LogInformation(
-            "Uploading file: {FileName} to base path: {BasePath}",
-            fileName,
-            _basePath
-        );
-        Directory.CreateDirectory(_basePath);
-
-        var safe = Path.GetFileName(fileName);
-        var full = Path.Combine(_basePath, safe);
+        var full = GetFullPath(fileName);
+        var dir = Path.GetDirectoryName(full);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
 
         await using var fs = File.Create(full);
         await fileStream.CopyToAsync(fs);
-        return safe;
+        return fileName.Replace('\\', '/');
     }
 
     public Task<bool> DeleteAsync(IEnumerable<string> filePaths)
     {
         return Task.Run(() =>
         {
-            var missingPaths = new List<string>();
-
-            foreach (var relativePath in filePaths)
+            var missing = new List<string>();
+            foreach (var rel in filePaths)
             {
-                var fullPath = Path.Combine(_basePath, relativePath);
-
-                if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
-                {
-                    missingPaths.Add(relativePath);
-                }
+                var full = GetFullPath(rel);
+                if (!File.Exists(full) && !Directory.Exists(full))
+                    missing.Add(rel);
             }
 
-            if (missingPaths.Any())
-                throw new FileNotFoundException(
-                    "Không tìm thấy các tệp hoặc thư mục: " + string.Join(", ", missingPaths)
-                );
+            if (missing.Any())
+                throw new FileNotFoundException("Không tìm thấy: " + string.Join(", ", missing));
 
-            foreach (var relativePath in filePaths)
+            foreach (var rel in filePaths)
             {
-                var fullPath = Path.Combine(_basePath, relativePath);
-
-                if (File.Exists(fullPath))
-                {
-                    File.Delete(fullPath);
-                }
-                else if (Directory.Exists(fullPath))
-                {
-                    Directory.Delete(fullPath, recursive: true); // deletes contents too
-                }
+                var full = GetFullPath(rel);
+                if (File.Exists(full))
+                    File.Delete(full);
+                else if (Directory.Exists(full))
+                    Directory.Delete(full, recursive: true);
             }
 
             return true;
@@ -75,50 +66,31 @@ public class LocalFileStorageService : IFileStorageService
 
     public Task<Stream> DownloadAsync(string fileName)
     {
-        var fileOnly = Path.GetFileName(fileName); // removes directory traversal risk
-        var fullPath = Path.Combine(_basePath, fileOnly);
-
+        var fullPath = GetFullPath(fileName);
         if (!File.Exists(fullPath))
-            throw new FileNotFoundException($"File not found: {fileOnly}");
+            throw new FileNotFoundException($"File not found: {fileName}");
 
         Stream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-
         return Task.FromResult(stream);
     }
 
-    public Task<Dictionary<string, MemoryStream>> MultipleDownloadAsync(
-        IEnumerable<string> filePaths
-    )
+    public Task<Dictionary<string, MemoryStream>> MultipleDownloadAsync(IEnumerable<string> paths)
     {
         return Task.Run(() =>
         {
             var result = new Dictionary<string, MemoryStream>();
-
-            foreach (var relativePath in filePaths)
+            foreach (var rel in paths)
             {
-                var safePath = relativePath.Replace('\\', '/');
-                var fullPath = Path.Combine(_basePath, safePath);
+                var full = GetFullPath(rel);
+                if (!File.Exists(full))
+                    throw new FileNotFoundException($"File not found: {rel}");
 
-                if (!File.Exists(fullPath))
-                    throw new FileNotFoundException($"File not found: {safePath}");
-
-                var memoryStream = new MemoryStream();
-                using (
-                    var fs = new FileStream(
-                        fullPath,
-                        FileMode.Open,
-                        FileAccess.Read,
-                        FileShare.Read
-                    )
-                )
-                {
-                    fs.CopyTo(memoryStream);
-                }
-
-                memoryStream.Position = 0;
-                result[safePath] = memoryStream;
+                var ms = new MemoryStream();
+                using var fs = new FileStream(full, FileMode.Open, FileAccess.Read);
+                fs.CopyTo(ms);
+                ms.Position = 0;
+                result[rel.Replace('\\', '/')] = ms;
             }
-
             return result;
         });
     }
@@ -127,13 +99,10 @@ public class LocalFileStorageService : IFileStorageService
     {
         foreach (var path in paths)
         {
-            var fullPath = Path.Combine(_basePath, path);
-            if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
-            {
+            var full = GetFullPath(path);
+            if (!File.Exists(full) && !Directory.Exists(full))
                 return Task.FromResult(false);
-            }
         }
-
         return Task.FromResult(true);
     }
 
@@ -352,38 +321,30 @@ public class LocalFileStorageService : IFileStorageService
 
     public Task<object> FolderStructureAsync(string path = "")
     {
-        var combinedPath = string.IsNullOrWhiteSpace(path)
-            ? _basePath
-            : Path.GetFullPath(Path.Combine(_basePath, path));
+        var combined = Path.GetFullPath(Path.Combine(_basePath, _erpSubPath, path ?? ""));
 
-        if (!combinedPath.StartsWith(_basePath))
-            throw new UnauthorizedAccessException("Access to this path is not allowed.");
+        if (!combined.StartsWith(Path.Combine(_basePath, _erpSubPath)))
+            throw new UnauthorizedAccessException("Access denied");
 
-        if (!Directory.Exists(combinedPath))
-            throw new DirectoryNotFoundException($"Directory not found: {combinedPath}");
+        if (!Directory.Exists(combined))
+            throw new DirectoryNotFoundException($"Not found: {combined}");
 
-        var structure = GetDirectoryStructure(combinedPath);
-        return Task.FromResult((object)structure); // can replace object with typed model
+        var structure = GetDirectoryStructure(combined);
+        return Task.FromResult((object)structure);
     }
 
     private object GetDirectoryStructure(string currentPath)
     {
         var result = new Dictionary<string, object>();
-
-        var directories = Directory.GetDirectories(currentPath);
-        foreach (var dir in directories)
+        foreach (var dir in Directory.GetDirectories(currentPath))
         {
             var name = Path.GetFileName(dir);
             result[name] = GetDirectoryStructure(dir);
         }
-
-        var files = Directory.GetFiles(currentPath);
-        foreach (var file in files)
+        foreach (var file in Directory.GetFiles(currentPath))
         {
-            var name = Path.GetFileName(file);
-            result[name] = "file";
+            result[Path.GetFileName(file)] = "file";
         }
-
         return result;
     }
 }

@@ -27,6 +27,7 @@ public class GatePassWorkflowProfile
             .IncludeBase<BaseWorkflow, BaseWorkflowDTO>()
             .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
             .ForMember(dest => dest.GatePassNodes, opt => opt.MapFrom(src => src.GatePassNodes))
+            .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
             .ReverseMap();
 
         // GatePassWorkflowCreateDTO <-> GatePassWorkflow (for creating workflows)

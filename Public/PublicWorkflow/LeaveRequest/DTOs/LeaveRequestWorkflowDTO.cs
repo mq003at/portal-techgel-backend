@@ -23,9 +23,9 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO
     public double FinalEmployeeCompensatoryLeaveTotalDays { get; set; }
 
     public string? RejectReason { get; set; }
+    public string? Comment { get; set; }
     public string? Notes { get; set; }
     public string AssigneeDetails { get; set; } = string.Empty;
-
     public List<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new();
 }
 
