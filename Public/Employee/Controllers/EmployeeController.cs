@@ -175,18 +175,11 @@ public class EmployeeController
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var result = await _employeeService.UpdateEmployeeDetailsAsync(employeeId, dto);
-            if (result == null)
-                return NotFound($"Employee with ID {employeeId} not found.");
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating employee details for ID={EmployeeId}", employeeId);
-            return StatusCode(500, "An error occurred while updating employee details.");
-        }
+        var result = await _employeeService.UpdateEmployeeDetailsAsync(employeeId, dto);
+        if (result == null)
+            return NotFound($"Employee with ID {employeeId} not found.");
+
+        return Ok(result);
     }
 }
