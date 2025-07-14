@@ -4,6 +4,7 @@ public enum ApprovalStatusType
     APPROVED = 1,
     REJECTED = 2,
     EXPIRED = 3,
+    NOT_APPLICABLE = 4,
 }
 
 public enum WorkflowType

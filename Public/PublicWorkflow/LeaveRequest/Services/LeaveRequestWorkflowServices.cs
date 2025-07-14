@@ -30,6 +30,7 @@ public class LeaveRequestWorkflowService
     private readonly DocumentOptions _docOpts;
     private readonly string _basePath;
     private readonly ICapPublisher _capPublisher;
+    private readonly IEmployeeService _employeeService;
 
     public LeaveRequestWorkflowService(
         ApplicationDbContext context,
@@ -37,7 +38,8 @@ public class LeaveRequestWorkflowService
         ILogger<LeaveRequestWorkflowService> logger,
         IOptions<DocumentOptions> docOpts,
         IFileStorageService storage,
-        ICapPublisher capPublisher
+        ICapPublisher capPublisher,
+        IEmployeeService employeeService
     )
         : base(context, mapper, logger)
     {
@@ -45,6 +47,7 @@ public class LeaveRequestWorkflowService
         _storage = storage;
         _basePath = AppDomain.CurrentDomain.BaseDirectory;
         _capPublisher = capPublisher;
+        _employeeService = employeeService;
     }
 
     public new async Task<List<LeaveRequestWorkflowDTO>> GetAllByEmployeeIdAsync(int id)
@@ -55,6 +58,17 @@ public class LeaveRequestWorkflowService
             .ToListAsync();
 
         var workflowDtos = _mapper.Map<List<LeaveRequestWorkflowDTO>>(workflows);
+
+        var allAssigneeIds = workflowDtos.SelectMany(wf => wf.AssigneeDetails).Distinct().ToList();
+
+        var nameMap = await _employeeService.GetEmployeeNamesByIdsAsync(allAssigneeIds);
+
+        foreach (var wf in workflowDtos)
+        {
+            wf.AssigneeNames = wf
+                .AssigneeDetails.Select(id => nameMap.GetValueOrDefault(id) ?? string.Empty)
+                .ToList();
+        }
 
         return workflowDtos;
     }
@@ -84,6 +98,7 @@ public class LeaveRequestWorkflowService
 
         var employeeId = dto.EmployeeId;
         var senderId = dto.SenderId;
+        var assigneeDetails = dto.AssigneeDetails;
         Employee employee =
             await _context
                 .Employees.Include(e => e.CompanyInfo)
@@ -106,7 +121,9 @@ public class LeaveRequestWorkflowService
             );
         Employee? deputySupervisor = employee.DeputySupervisor;
         // ScheduleInfo scheduleInfo = employee.ScheduleInfo ?? throw new InvalidOperationException($"ScheduleInfo for employee {dto.EmployeeId} not found.");
-
+        List<Employee> assignees = await _context
+            .Employees.Where(e => assigneeDetails.Contains(e.Id))
+            .ToListAsync();
 
         // IF isOnProbation, DO NOT reduce AnnualLeave or CompensatoryLeave
         var isOnProbation = companyInfo.IsOnProbation;
@@ -217,6 +234,7 @@ public class LeaveRequestWorkflowService
         var participants = new List<(
             string EmpId,
             int WorkflowNodeId,
+            WorkflowParticipantRoleType RaciRole,
             LeaveApprovalStepType StepType,
             int Order,
             DateTime? ApprovalDate,
@@ -230,6 +248,7 @@ public class LeaveRequestWorkflowService
             (
                 employee.MainId,
                 nodes[0].Id,
+                WorkflowParticipantRoleType.RESPONSIBLE,
                 LeaveApprovalStepType.CreateForm,
                 0,
                 DateTime.UtcNow,
@@ -242,6 +261,7 @@ public class LeaveRequestWorkflowService
             (
                 supervisor.MainId,
                 nodes[1].Id,
+                WorkflowParticipantRoleType.ACCOUNTABLE,
                 LeaveApprovalStepType.ExecutiveApproval,
                 0,
                 null,
@@ -259,16 +279,39 @@ public class LeaveRequestWorkflowService
                 (
                     deputySupervisor.MainId,
                     nodes[1].Id,
+                    WorkflowParticipantRoleType.ACCOUNTABLE,
                     LeaveApprovalStepType.ExecutiveApproval,
                     1,
                     null,
                     DateTime.UtcNow.AddHours(48),
                     DateTime.UtcNow.AddHours(96),
                     false,
+                    ApprovalStatusType.NOT_APPLICABLE,
+                    null
+                )
+            );
+        }
+
+        // foreach assignees in here
+        int index = 0;
+        foreach (var assignee in assignees)
+        {
+            participants.Add(
+                (
+                    assignee.MainId,
+                    nodes[0].Id,
+                    WorkflowParticipantRoleType.INFORMED,
+                    LeaveApprovalStepType.CreateForm,
+                    index + 1,
+                    null,
+                    null,
+                    null,
+                    false,
                     ApprovalStatusType.PENDING,
                     null
                 )
             );
+            index++;
         }
 
         // Convert the participants above to WorkflowNodeParticipant objects
@@ -282,6 +325,7 @@ public class LeaveRequestWorkflowService
                         _context.Employees.FirstOrDefault(e => e.MainId == participant.EmpId)?.Id
                         ?? 0,
                     Order = participant.Order,
+                    RaciRole = participant.RaciRole,
                     ApprovalDate = participant.ApprovalDate,
                     ApprovalStartDate = participant.ApprovalStartDate,
                     ApprovalDeadline = participant.ApprovalDeadline,
@@ -307,19 +351,42 @@ public class LeaveRequestWorkflowService
         {
             WorkflowNodeParticipants[0] // Employee who created the request
         };
-        nodes[1].WorkflowNodeParticipants = new List<WorkflowNodeParticipant>
+
+        foreach (var participant in WorkflowNodeParticipants)
         {
-            WorkflowNodeParticipants[1],
-            WorkflowNodeParticipants[2]
+            if (participant.WorkflowNodeId == nodes[1].Id)
+            {
+                nodes[1].WorkflowNodeParticipants.Add(participant);
+            }
+            else if (participant.WorkflowNodeId == nodes[0].Id)
+            {
+                nodes[0].WorkflowNodeParticipants.Add(participant);
+            }
+        }
+
+        workflow.ParticipantIds = new List<int> { employee.Id, supervisor.Id };
+        if (deputySupervisor != null)
+        {
+            workflow.ParticipantIds.Add(deputySupervisor.Id);
+        }
+        await _context.SaveChangesAsync();
+
+        // Create notification
+        var @event = new CreateEvent
+        {
+            WorkflowId = workflow.MainId.ToString(),
+            WorkflowType = "Nghỉ phép",
+            EmployeeId = workflow.SenderId,
+            ApproverName = supervisor.GetDisplayName(),
+            TriggeredBy = employee.GetDisplayName(),
+            CreatedAt = DateTime.UtcNow,
+            Status = "CREATED",
+            EmployeeName = employee.GetDisplayName(),
+            AssigneeDetails = string.Join(", ", assignees.Select(a => a.GetDisplayName()))
         };
 
-        workflow.ParticipantIds = new List<int>
-        {
-            WorkflowNodeParticipants[0].EmployeeId,
-            WorkflowNodeParticipants[1].EmployeeId,
-            WorkflowNodeParticipants[2].EmployeeId
-        };
-        await _context.SaveChangesAsync();
+        _logger.LogInformation("Publishing event for workflow creation: {@Event}", @event);
+        await _capPublisher.PublishAsync("leaverequest.workflow.created", @event);
 
         return _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
     }
@@ -478,6 +545,30 @@ public class LeaveRequestWorkflowService
             entity.Description =
                 $"Hồ sơ nghỉ phép nhân viên {employee.GetDisplayName()} từ {dto.StartDate:dd/MM/yyyy} đến {dto.EndDate:dd/MM/yyyy}. Người ký: {employee.Supervisor?.GetDisplayName()} và {employee.DeputySupervisor?.GetDisplayName()}";
 
+            // Check assignee details if employeeID exists
+            if (dto.AssigneeDetails == null || dto.AssigneeDetails.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "Không có người được chỉ định cho đơn nghỉ phép này. Vui lòng thêm người được chỉ định."
+                );
+            }
+
+            var existingIds = await _context
+                .Employees.Where(e => dto.AssigneeDetails.Contains(e.Id))
+                .Select(e => e.Id)
+                .ToListAsync();
+
+            // Step 3: Compare and find invalid IDs
+            var missingIds = dto.AssigneeDetails.Except(existingIds).ToList();
+
+            if (missingIds.Any())
+            {
+                var missingStr = string.Join(", ", missingIds);
+                throw new InvalidOperationException(
+                    $"Người được chỉ định không hợp lệ (ID: {missingStr}). Vui lòng kiểm tra lại."
+                );
+            }
+
             // Save workflow first to get its Id
             _context.LeaveRequestWorkflows.Add(entity);
             await _context.SaveChangesAsync();
@@ -619,6 +710,20 @@ public class LeaveRequestWorkflowService
         LeaveRequestWorkflow workflow
     )
     {
+        var assignees = await _context
+            .Employees.Where(e => workflow.AssigneeDetails.Contains(e.Id))
+            .Select(e => new
+            {
+                Employee = e,
+                Name = (e.LastName + " " + e.MiddleName + " " + e.FirstName).Trim()
+            })
+            .ToListAsync();
+
+        List<Employee> assigneeList = assignees.Select(a => a.Employee).ToList();
+        List<string> assigneeNames = assignees.Select(a => a.Name).ToList();
+        string assigneeNameToStrings =
+            assigneeNames.Count > 0 ? string.Join(", ", assigneeNames) : "Không có người nhận";
+
         var templateDocMetadata = await _context.Documents.FirstOrDefaultAsync(d =>
             d.TemplateKey == "LeaveRequest"
         );
@@ -700,7 +805,7 @@ public class LeaveRequestWorkflowService
             ),
             ["employeeId"] = (employee.Id.ToString(), false),
             ["employeeSignDate"] = (today.ToString("dd/MM/yyyy"), false),
-            ["assigneeDetails"] = (workflow.AssigneeDetails, false),
+            ["assigneeDetails"] = (assigneeNameToStrings, false),
             ["notes"] = (workflow.Notes ?? "", false),
 
             ["empAnnualTotal"] = (

@@ -26,3 +26,11 @@ public class CompleteEvent : BaseWorkflowEvent
     public DateTime CompletedAt { get; set; }
     public string Status { get; set; } = "COMPLETED";
 }
+
+public class CreateEvent : BaseWorkflowEvent
+{
+    public DateTime CreatedAt { get; set; }
+    public string Status { get; set; } = "CREATED";
+    public string EmployeeName { get; set; } = null!;
+    public string AssigneeDetails { get; set; } = null!;
+}

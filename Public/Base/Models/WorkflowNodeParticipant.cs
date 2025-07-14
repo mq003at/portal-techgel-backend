@@ -23,8 +23,8 @@ public class WorkflowNodeParticipant : BaseModelWithOnlyId
     // Order in the nodes
     public int Order { get; set; }
 
-    // [Required]
-    // public required WorkflowRole WorkflowRole { get; set; }
+    [Required]
+    public WorkflowParticipantRoleType RaciRole { get; set; }
 
     // Workflow's step type -> moved to node
     // public int WorkflowNodeStepType { get; set; }

@@ -30,4 +30,11 @@ public class WorkflowEventHandler : ICapSubscribe
     {
         await _resolver.ProcessEventAsync(evt, "workflow.rejected");
     }
+
+    [CapSubscribe("leaverequest.workflow.created")]
+    public async Task HandleCreation(CreateEvent evt)
+    {
+        _logger.LogInformation("➡ Received leaverequest.workflow.created");
+        await _resolver.ProcessEventAsync(evt, "leaverequest.workflow.created");
+    }
 }

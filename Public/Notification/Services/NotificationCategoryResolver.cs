@@ -228,6 +228,7 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
         {
             "workflow.approved" => typeof(ApprovalEvent),
             "workflow.rejected" => typeof(RejectEvent),
+            "leaverequest.workflow.created" => typeof(CreateEvent),
             // Add more here
             _ => null
         };

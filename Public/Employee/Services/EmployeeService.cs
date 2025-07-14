@@ -39,6 +39,23 @@ public class EmployeeService
         return _mapper.Map<IEnumerable<EmployeeDTO>>(employees);
     }
 
+    public async Task<Dictionary<int, string>> GetEmployeeNamesByIdsAsync(List<int> ids)
+    {
+        if (ids == null || ids.Count == 0)
+            return new Dictionary<int, string>();
+
+        var employees = await _context
+            .Employees.Where(e => ids.Contains(e.Id))
+            .Select(e => new
+            {
+                e.Id,
+                FullName = e.LastName + " " + e.MiddleName + " " + e.FirstName
+            })
+            .ToListAsync();
+
+        return employees.ToDictionary(e => e.Id, e => e.FullName.Trim());
+    }
+
     public override async Task<IEnumerable<EmployeeDTO>> GetAllAsync()
     {
         // 1) Get the base list of DTOs (no RoleInfo lists yet)

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace portal.Models;
 
@@ -33,5 +34,8 @@ public class LeaveRequestWorkflow : BaseWorkflow
     public virtual List<LeaveRequestNode> LeaveRequestNodes { get; set; } =
         new List<LeaveRequestNode>();
     public string? Notes { get; set; }
-    public string AssigneeDetails { get; set; } = null!;
+    public List<int> AssigneeDetails { get; set; } = new List<int>();
+
+    [NotMapped]
+    public List<string>? AssigneeNames { get; set; } = new List<string>();
 }

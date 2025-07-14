@@ -36,11 +36,14 @@ public class LeaveRequestWorkflowProfile
                 opt => opt.MapFrom(src => src.LeaveRequestNodes)
             )
             .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
+            .ForMember(dest => dest.AssigneeDetails, opt => opt.MapFrom(src => src.AssigneeDetails))
             .ReverseMap();
 
         CreateMap<LeaveRequestWorkflowCreateDTO, LeaveRequestWorkflow>()
             .IncludeBase<BaseModelCreateDTO, BaseModel>()
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => "Nghỉ phép nhân viên"))
+            .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
+            .ForMember(dest => dest.AssigneeDetails, opt => opt.MapFrom(src => src.AssigneeDetails))
             .ForMember(
                 dest => dest.Status,
                 opt => opt.MapFrom(src => GeneralWorkflowStatusType.DRAFT)

@@ -97,6 +97,11 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
                 "Bạn không thể phê duyệt bước này trước ngày bắt đầu phê duyệt."
             );
 
+        if (participant.RaciRole == WorkflowParticipantRoleType.INFORMED)
+            throw new InvalidOperationException(
+                "Bạn không có quyền phê duyệt bước này vì bạn chỉ là người được thông báo."
+            );
+
         // If approving is successful, update the wf to pending so that it cannot be changed or delete anymore
         workflow.Status = GeneralWorkflowStatusType.PENDING;
 

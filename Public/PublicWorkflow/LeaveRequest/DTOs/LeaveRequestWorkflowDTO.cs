@@ -25,7 +25,8 @@ public class LeaveRequestWorkflowDTO : BaseWorkflowDTO
     public string? RejectReason { get; set; }
     public string? Comment { get; set; }
     public string? Notes { get; set; }
-    public string AssigneeDetails { get; set; } = string.Empty;
+    public List<int> AssigneeDetails { get; set; } = new List<int>();
+    public List<string>? AssigneeNames { get; set; } = new List<string>();
     public List<LeaveRequestNodeDTO> LeaveRequestNodes { get; set; } = new();
 }
 
@@ -53,10 +54,10 @@ public class LeaveRequestWorkflowCreateDTO : BaseWorkflowCreateDTO
     [Required]
     public int EmployeeId { get; set; }
 
-    [Required]
-    public string AssigneeDetails { get; set; } = null!;
-
     public string? Notes { get; set; }
+
+    [Required]
+    public List<int> AssigneeDetails { get; set; } = new List<int>();
 }
 
 // Update Workflow (only usable when workflow is in draft status)
@@ -64,7 +65,6 @@ public class LeaveRequestWorkflowUpdateDTO : BaseWorkflowUpdateDTO
 {
     public string? Reason { get; set; }
 
-    public string? AssigneeDetails { get; set; }
     public string? Notes { get; set; }
     public DateTime? StartDate { get; set; }
 
@@ -74,4 +74,5 @@ public class LeaveRequestWorkflowUpdateDTO : BaseWorkflowUpdateDTO
 
     public DayNightEnum? EndDateDayNightType { get; set; }
     public int EmployeeId { get; set; }
+    public List<int>? AssigneeDetails { get; set; } = new List<int>();
 }
