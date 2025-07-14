@@ -24,7 +24,6 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         builder.Property(l => l.FinalEmployeeAnnualLeaveTotalDays).IsRequired();
         builder.Property(l => l.EmployeeCompensatoryLeaveTotalDays).IsRequired();
         builder.Property(l => l.FinalEmployeeCompensatoryLeaveTotalDays).IsRequired();
-        builder.Property(l => l.AssigneeDetails).IsRequired();
 
         builder.Property(l => l.Notes).HasMaxLength(1000);
         builder.Property(l => l.RejectReason).HasMaxLength(1000);
@@ -38,5 +37,6 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         builder.Property(l => l.EndDateDayNightType).HasConversion<int>().IsRequired();
 
         builder.Property(l => l.LeaveApprovalCategory).HasConversion<int>().IsRequired();
+        builder.Property(l => l.AssigneeDetails).HasColumnType("integer[]");
     }
 }
