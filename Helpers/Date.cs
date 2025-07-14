@@ -20,9 +20,13 @@ public static class DateHelper
         return date.HasValue && date.Value > DateTime.Now;
     }
 
-    public static double CalculateLeaveDays(DateTime startDate, int startDayNightType, DateTime endDate, int endDayNightType)
+    public static double CalculateLeaveDays(
+        DateTime startDate,
+        int startDayNightType,
+        DateTime endDate,
+        int endDayNightType
+    )
     {
-        // Ensure startDate <= endDate
         if (startDate > endDate)
             throw new ArgumentException("Start date must be before or equal to end date");
 
@@ -34,31 +38,36 @@ public static class DateHelper
             if (date.DayOfWeek == DayOfWeek.Sunday)
                 continue;
 
-            // Saturday: half day
+            // Saturday: half day by default
             double dayValue = date.DayOfWeek == DayOfWeek.Saturday ? 0.5 : 1.0;
 
-            // If first day
-            if (date == startDate.Date)
+            bool isStart = date == startDate.Date;
+            bool isEnd = date == endDate.Date;
+
+            // Special case: same day
+            if (isStart && isEnd)
             {
-                if (startDayNightType == 1) // night
-                    dayValue -= 0.5; // Only half day if starting at night
+                if (startDayNightType == 1 && endDayNightType == 1)
+                    dayValue = 1.0; // Full day leave: morning to evening
+                else if (startDayNightType == 1 && endDayNightType == 0)
+                    dayValue = 0.5; // Morning only
+                else if (startDayNightType == 0 && endDayNightType == 0)
+                    dayValue = 0.5; // Morning only
+                else if (startDayNightType == 0 && endDayNightType == 1)
+                    dayValue = 1.0; // Morning to evening
+            }
+            else
+            {
+                if (isStart && startDayNightType == 1)
+                    dayValue -= 0.5;
+
+                if (isEnd && endDayNightType == 0)
+                    dayValue -= 0.5;
             }
 
-            // If last day
-            if (date == endDate.Date)
-            {
-                if (endDayNightType == 1) // night
-                    dayValue -= 0.5; // Only half day if ending at night
-            }
-
-            // If both start and end are night and same day: only 0.5
-            if (startDate.Date == endDate.Date && startDayNightType == 1 && endDayNightType == 1)
-                dayValue = 0.5;
-
-            // Don't double subtract if same day
             totalDays += Math.Max(dayValue, 0);
         }
 
-        return (double)totalDays;
+        return totalDays;
     }
 }

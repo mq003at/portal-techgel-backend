@@ -21,6 +21,10 @@ public class LocalFileStorageService : IFileStorageService
     private string GetFullPath(string relativePath)
     {
         var safePath = relativePath.Replace('\\', '/');
+        _logger.LogInformation(
+            "Getting full path for: {SafePath}",
+            Path.Combine(_basePath, _erpSubPath, safePath)
+        );
         return Path.Combine(_basePath, _erpSubPath, safePath);
     }
 

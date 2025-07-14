@@ -262,19 +262,9 @@ builder.Services.AddSingleton<IFileStorageService>(sp =>
         IConfiguration config
     )
     {
-        var rawPath =
-            config["FileStorage:Local:BasePath"] ?? "srv/uploads/ftp-service/erp/documents";
-
+        var rawPath = config["FileStorage:Local:BasePath"] ?? "srv/uploads/ftp-service/";
         var logger = sp.GetRequiredService<ILogger<LocalFileStorageService>>();
-
-        // Convert to absolute if needed
-        var resolvedPath = Path.IsPathRooted(rawPath)
-            ? rawPath
-            : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, rawPath));
-
-        logger.LogInformation("Resolved LocalFileStorageService base path: {Path}", resolvedPath);
-
-        return new LocalFileStorageService(resolvedPath, logger);
+        return new LocalFileStorageService(rawPath, logger); // 👈 pass raw
     }
 });
 
