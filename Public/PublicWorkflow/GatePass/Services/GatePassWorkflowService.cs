@@ -65,11 +65,7 @@ public class GatePassWorkflowService
             ?? throw new InvalidOperationException(
                 $"Không tìm thấy người quản lý trực tiếp của nhân viên này trong hệ thống."
             );
-        Employee deputySupervisor =
-            employee.DeputySupervisor
-            ?? throw new InvalidOperationException(
-                $"Không tìm thấy người quản lý gián tiếp của nhân viên này trong hệ thống."
-            );
+        Employee? deputySupervisor = employee.DeputySupervisor;
 
         // Build up receiver IDs for workflow
         // Compose workflow steps
@@ -156,20 +152,25 @@ public class GatePassWorkflowService
                 false,
                 ApprovalStatusType.PENDING,
                 null
-            ),
-            (
-                deputySupervisor.MainId,
-                nodes[1].Id,
-                GeneralProposalStepType.ExecutiveApproval,
-                0,
-                null,
-                DateTime.UtcNow.AddHours(48),
-                DateTime.UtcNow.AddHours(96),
-                false,
-                ApprovalStatusType.PENDING,
-                null
-            ),
+            )
         };
+        if (deputySupervisor != null)
+        {
+            participants.Add(
+                (
+                    deputySupervisor.MainId,
+                    nodes[1].Id,
+                    GeneralProposalStepType.ExecutiveApproval,
+                    1,
+                    null,
+                    DateTime.UtcNow.AddHours(48),
+                    DateTime.UtcNow.AddHours(96),
+                    false,
+                    ApprovalStatusType.PENDING,
+                    null
+                )
+            );
+        }
 
         // Convert the participants above to WorkflowNodeParticipant objects
         var WorkflowNodeParticipants = new List<WorkflowNodeParticipant>();

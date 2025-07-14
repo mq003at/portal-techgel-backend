@@ -104,11 +104,7 @@ public class LeaveRequestWorkflowService
             ?? throw new InvalidOperationException(
                 $"Không tìm thấy Quản lý trực thuộc cho nhân viên này. Xin vui lòng liên hệ bộ phận HR."
             );
-        Employee deputySupervisor =
-            employee.DeputySupervisor
-            ?? throw new InvalidOperationException(
-                $"Không tìm thấy Quản lý Gián tiếp cho nhân viên này. Xin vui lòng liên hệ bộ phận HR."
-            );
+        Employee? deputySupervisor = employee.DeputySupervisor;
         // ScheduleInfo scheduleInfo = employee.ScheduleInfo ?? throw new InvalidOperationException($"ScheduleInfo for employee {dto.EmployeeId} not found.");
 
 
@@ -254,20 +250,26 @@ public class LeaveRequestWorkflowService
                 false,
                 ApprovalStatusType.PENDING,
                 null
-            ),
-            (
-                deputySupervisor.MainId,
-                nodes[1].Id,
-                LeaveApprovalStepType.ExecutiveApproval,
-                1,
-                null,
-                DateTime.UtcNow.AddHours(48),
-                DateTime.UtcNow.AddHours(96),
-                false,
-                ApprovalStatusType.PENDING,
-                null
-            ),
+            )
         };
+
+        if (deputySupervisor != null)
+        {
+            participants.Add(
+                (
+                    deputySupervisor.MainId,
+                    nodes[1].Id,
+                    LeaveApprovalStepType.ExecutiveApproval,
+                    1,
+                    null,
+                    DateTime.UtcNow.AddHours(48),
+                    DateTime.UtcNow.AddHours(96),
+                    false,
+                    ApprovalStatusType.PENDING,
+                    null
+                )
+            );
+        }
 
         // Convert the participants above to WorkflowNodeParticipant objects
         var WorkflowNodeParticipants = new List<WorkflowNodeParticipant>();
@@ -654,6 +656,7 @@ public class LeaveRequestWorkflowService
         var Location = "6_Noi_Chinh";
         var newFileName =
             $"{workflow.Id}-{today:yyyy-MM-dd}-{Location}-DN-{employee.MainId}-v01{".docx"}";
+
         var newTargetPath = Path.Combine(
                 "erp",
                 "documents",
