@@ -165,6 +165,13 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
 
     public async Task<bool> RejectAsync(int nodeId, RejectDTO dto)
     {
+        // Get the Template Key
+        string className = GetType().Name;
+        string TemplateKey = className.Split(
+            ["Node", "Service", "Workflow"],
+            StringSplitOptions.None
+        )[0];
+
         TModel node =
             await _context.Set<TModel>().FirstOrDefaultAsync(n => n.Id == nodeId)
             ?? throw new InvalidOperationException("Không tìm thấy bước quy trình.");
@@ -173,9 +180,12 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
             await _context.Set<TWorkflowModel>().FirstOrDefaultAsync(wf => wf.Id == node.WorkflowId)
             ?? throw new InvalidOperationException("Không tìm thấy quy trình.");
 
-        List<WorkflowNodeParticipant> participants =
-            node.WorkflowNodeParticipants
-            ?? throw new InvalidOperationException("Bước này không có người tham gia.");
+        List<WorkflowNodeParticipant> participants = _context
+            .Set<WorkflowNodeParticipant>()
+            .Where(p => p.WorkflowNodeId == node.Id && p.WorkflowNodeType == TemplateKey)
+            .Include(p => p.Employee)
+            .ToList();
+
         WorkflowNodeParticipant participant =
             participants.FirstOrDefault(p => p.EmployeeId == dto.ApproverId)
             ?? throw new InvalidOperationException("Không tìm thấy người tham gia.");
@@ -200,12 +210,6 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
             throw new InvalidOperationException(
                 "Bạn không thể từ chối bước này trước thời gian bắt đầu phê duyệt."
             );
-        // Get the Template Key
-        string className = GetType().Name;
-        string TemplateKey = className.Split(
-            ["Node", "Service", "Workflow"],
-            StringSplitOptions.None
-        )[0];
 
         _logger.LogError(
             "Generating final document for workflow {WorkflowId} with template key {TemplateKey}",
