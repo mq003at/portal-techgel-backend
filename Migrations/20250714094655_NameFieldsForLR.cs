@@ -14,15 +14,14 @@ namespace portal_techgel_api.Migrations
                 name: "AssigneeNames",
                 table: "LeaveRequestWorkflows",
                 type: "text",
-                nullable: true);
+                nullable: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "AssigneeNames",
-                table: "LeaveRequestWorkflows");
+            migrationBuilder.DropColumn(name: "AssigneeNames", table: "LeaveRequestWorkflows");
         }
     }
 }

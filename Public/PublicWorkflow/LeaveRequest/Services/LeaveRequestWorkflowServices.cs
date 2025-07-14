@@ -313,7 +313,7 @@ public class LeaveRequestWorkflowService
                     null,
                     null,
                     false,
-                    ApprovalStatusType.PENDING,
+                    ApprovalStatusType.NOT_APPLICABLE,
                     null
                 )
             );
