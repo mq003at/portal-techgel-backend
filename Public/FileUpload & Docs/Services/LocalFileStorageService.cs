@@ -20,12 +20,12 @@ public class LocalFileStorageService : IFileStorageService
 
     private string GetFullPath(string relativePath)
     {
-        var safePath = relativePath.Replace('\\', '/');
+        var safePath = relativePath.Replace('\\', '/').TrimStart('/');
         _logger.LogInformation(
             "Getting full path for: {SafePath}",
-            Path.Combine(_basePath, _erpSubPath, safePath)
+            Path.Combine(_basePath, safePath)
         );
-        return Path.Combine(_basePath, _erpSubPath, safePath);
+        return Path.Combine(_basePath, safePath);
     }
 
     public async Task<string> UploadAsync(Stream fileStream, string fileName)
@@ -71,6 +71,7 @@ public class LocalFileStorageService : IFileStorageService
     public Task<Stream> DownloadAsync(string fileName)
     {
         var fullPath = GetFullPath(fileName);
+        _logger.LogInformation("Downloading file: {FileName} from {FullPath}", fileName, fullPath);
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"File not found: {fileName}");
 
