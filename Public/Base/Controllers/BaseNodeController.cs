@@ -34,6 +34,13 @@ public abstract class BaseNodeController<
     [HttpPut("{id}/approve")]
     public virtual async Task<IActionResult> Approve(int id, [FromBody] ApproveWithCommentDTO dto)
     {
+        string idClaim =
+            User.FindFirst("Id")?.Value
+            ?? throw new UnauthorizedAccessException(
+                "Không thấy ID trong cookie. Vui lòng đăng nhập lại."
+            );
+        int approverId = int.Parse(idClaim);
+        dto.ApproverId = approverId;
         var success = await _nodeService.ApproveAsync(id, dto);
         return Ok(success);
     }
@@ -42,6 +49,13 @@ public abstract class BaseNodeController<
     [HttpPut("{id}/reject")]
     public virtual async Task<IActionResult> Reject(int id, [FromBody] RejectDTO dto)
     {
+        string idClaim =
+            User.FindFirst("Id")?.Value
+            ?? throw new UnauthorizedAccessException(
+                "Không thấy ID trong cookie. Vui lòng đăng nhập lại."
+            );
+        int approverId = int.Parse(idClaim);
+        dto.ApproverId = approverId;
         var success = await _nodeService.RejectAsync(id, dto);
         return Ok(success);
     }

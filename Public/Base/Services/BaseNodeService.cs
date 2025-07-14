@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using DotNetCore.CAP;
 using Microsoft.EntityFrameworkCore;
@@ -178,6 +179,13 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
         WorkflowNodeParticipant participant =
             participants.FirstOrDefault(p => p.EmployeeId == dto.ApproverId)
             ?? throw new InvalidOperationException("Không tìm thấy người tham gia.");
+
+        _logger.LogError(
+            "Rejecting node {NodeId} in workflow {WorkflowId} by approver {ApproverId}",
+            node.Id,
+            workflow.Id,
+            JsonSerializer.Serialize(participants)
+        );
 
         if (dto.ApproverId != participant.EmployeeId)
             throw new InvalidOperationException("Bạn không có quyền từ chối bước này.");

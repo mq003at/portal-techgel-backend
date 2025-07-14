@@ -41,8 +41,7 @@ public class ApproveWithCommentDTO : ApproverDTO
     public string? Comment { get; set; } = null!;
 }
 
-public class RejectDTO
+public class RejectDTO : ApproverDTO
 {
-    public int ApproverId { get; set; }
     public string RejectReason { get; set; } = null!;
 }
