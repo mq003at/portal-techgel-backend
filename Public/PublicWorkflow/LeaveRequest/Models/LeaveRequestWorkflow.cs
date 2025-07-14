@@ -35,7 +35,5 @@ public class LeaveRequestWorkflow : BaseWorkflow
         new List<LeaveRequestNode>();
     public string? Notes { get; set; }
     public List<int> AssigneeDetails { get; set; } = new List<int>();
-
-    [NotMapped]
     public List<string>? AssigneeNames { get; set; } = new List<string>();
 }

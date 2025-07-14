@@ -125,6 +125,10 @@ public class LeaveRequestWorkflowService
             .Employees.Where(e => assigneeDetails.Contains(e.Id))
             .ToListAsync();
 
+        List<string> assigneeNames = (
+            await _employeeService.GetEmployeeNamesByIdsAsync(assigneeDetails)
+        ).Values.ToList();
+
         // IF isOnProbation, DO NOT reduce AnnualLeave or CompensatoryLeave
         var isOnProbation = companyInfo.IsOnProbation;
         if (
@@ -181,6 +185,8 @@ public class LeaveRequestWorkflowService
         workflow.Reason = dto.Reason;
         workflow.LeaveApprovalCategory = dto.LeaveApprovalCategory;
         workflow.Employee = employee;
+        workflow.AssigneeDetails = assigneeDetails;
+        workflow.AssigneeNames = assigneeNames;
 
         // Build up receiver IDs for workflow
         // Compose workflow steps

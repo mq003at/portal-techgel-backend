@@ -10,7 +10,6 @@ public class WorkflowNodeParticipantProfile : Profile
     {
         // Entity ➜ Read DTO
         CreateMap<WorkflowNodeParticipant, WorkflowNodeParticipantDTO>()
-            .IncludeBase<BaseModelWithOnlyId, BaseModelWithOnlyIdDTO>()
             .ForMember(dest => dest.RaciRole, opt => opt.MapFrom(src => src.RaciRole))
             .ForMember(
                 dest => dest.EmployeeName,

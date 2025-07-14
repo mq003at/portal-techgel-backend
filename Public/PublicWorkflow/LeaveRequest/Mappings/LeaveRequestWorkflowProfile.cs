@@ -37,6 +37,7 @@ public class LeaveRequestWorkflowProfile
             )
             .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
             .ForMember(dest => dest.AssigneeDetails, opt => opt.MapFrom(src => src.AssigneeDetails))
+            .ForMember(dest => dest.AssigneeNames, opt => opt.MapFrom(src => src.AssigneeNames))
             .ReverseMap();
 
         CreateMap<LeaveRequestWorkflowCreateDTO, LeaveRequestWorkflow>()

@@ -38,5 +38,12 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
 
         builder.Property(l => l.LeaveApprovalCategory).HasConversion<int>().IsRequired();
         builder.Property(l => l.AssigneeDetails).HasColumnType("integer[]");
+        builder
+            .Property(l => l.AssigneeNames)
+            .HasConversion(
+                v => string.Join(",", v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+            )
+            .Metadata.SetValueComparer(GlobalValueComparers.StringListComparer);
     }
 }
