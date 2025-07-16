@@ -375,7 +375,6 @@ public class LeaveRequestWorkflowService
         {
             workflow.ParticipantIds.Add(deputySupervisor.Id);
         }
-        await _context.SaveChangesAsync();
 
         // Create notification
         var @event = new CreateEvent
@@ -392,7 +391,10 @@ public class LeaveRequestWorkflowService
         };
 
         _logger.LogInformation("Publishing event for workflow creation: {@Event}", @event);
+
         await _capPublisher.PublishAsync("leaverequest.workflow.created", @event);
+
+        await _context.SaveChangesAsync();
 
         return _mapper.Map<List<LeaveRequestNodeDTO>>(nodes);
     }

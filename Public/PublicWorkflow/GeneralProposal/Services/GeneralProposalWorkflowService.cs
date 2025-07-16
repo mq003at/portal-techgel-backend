@@ -196,6 +196,9 @@ public class GeneralProposalWorkflowService
             WorkflowNodeParticipants[0].EmployeeId,
             WorkflowNodeParticipants[1].EmployeeId,
         };
+
+        
+
         await _context.SaveChangesAsync();
 
         return _mapper.Map<List<GeneralProposalNodeDTO>>(nodes);
