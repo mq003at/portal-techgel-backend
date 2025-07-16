@@ -15,8 +15,8 @@ public class StockController : BaseController<Stock, StockDTO, StockCreateDTO, S
     [HttpGet("material/{materialId}")]
     public async Task<IActionResult> GetByMaterial(int materialId)
     {
-        var stocks = await _service.GetByMaterialAsync(materialId);
+        // var stocks = await _service.GetByMaterialAsync(materialId);
 
-        return Ok(stocks);
+        return Ok();
     }
 }

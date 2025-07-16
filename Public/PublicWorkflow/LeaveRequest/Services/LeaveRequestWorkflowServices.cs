@@ -377,6 +377,7 @@ public class LeaveRequestWorkflowService
         }
 
         // Create notification
+        // Notification for the Employee only!
         var @event = new CreateEvent
         {
             WorkflowId = workflow.MainId.ToString(),

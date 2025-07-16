@@ -15,7 +15,7 @@ public class StockConfiguration : BaseModelConfiguration<Stock>
         builder.HasIndex(s => new { s.MaterialId, s.WarehouseId }).IsUnique();
 
         builder.Property(s => s.TotalQuantity).IsRequired();
-        builder.Property(s => s.ReservedQuantity).HasDefaultValue(0);
+        builder.Property(s => s.ReservedQuantity);
 
         builder
             .HasOne(s => s.Material)
