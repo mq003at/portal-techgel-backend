@@ -14,8 +14,8 @@ public class MaterialProfile
 
         // Map create/update DTOs → model
         CreateMap<CreateMaterialDTO, Material>()
-            .IncludeBase<BaseModelCreateDTO, Material>();
+            .IncludeBase<BaseModelCreateDTO, BaseModel>();
 
-        CreateMap<UpdateMaterialDTO, Material>().IncludeBase<BaseModelUpdateDTO, Material>();
+        CreateMap<UpdateMaterialDTO, Material>().IncludeBase<BaseModelUpdateDTO, BaseModel>();
     }
 }

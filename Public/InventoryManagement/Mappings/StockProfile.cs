@@ -23,9 +23,9 @@ public class StockProfile : BaseModelProfile<Stock, StockDTO, StockCreateDTO, St
 
         // StockCreateDTO → Stock (flattened)
         CreateMap<StockCreateDTO, Stock>()
-            .IncludeBase<BaseModelCreateDTO, Stock>();
+            .IncludeBase<BaseModelCreateDTO, BaseModel>();
 
-        CreateMap<StockUpdateDTO, Stock>().IncludeBase<BaseModelUpdateDTO, Stock>();
+        CreateMap<StockUpdateDTO, Stock>().IncludeBase<BaseModelUpdateDTO, BaseModel>();
 
         // StockLocationCreateDTO → StockLocation
         CreateMap<StockLocationCreateDTO, StockLocation>();

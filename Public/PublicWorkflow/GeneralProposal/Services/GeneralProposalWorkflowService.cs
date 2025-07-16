@@ -197,7 +197,35 @@ public class GeneralProposalWorkflowService
             WorkflowNodeParticipants[1].EmployeeId,
         };
 
-        
+        // Create notification events for all participants
+        var employeeIdsToNotify = new List<int> { employee.Id, approver.Id };
+        employeeIdsToNotify = employeeIdsToNotify.Distinct().ToList();
+
+        _logger.LogError("Employee IDs to notify: {Ids}", string.Join(", ", employeeIdsToNotify));
+
+        var events = new List<CreateEvent>();
+        employeeIdsToNotify.ForEach(id =>
+        {
+            events.Add(
+                new CreateEvent
+                {
+                    WorkflowId = workflow.MainId.ToString(),
+                    WorkflowType = "Tờ trình chung",
+                    EmployeeId = id,
+                    ApproverName = approver.GetDisplayName(),
+                    TriggeredBy = employee.GetDisplayName(),
+                    CreatedAt = DateTime.UtcNow,
+                    Status = "CREATED",
+                    EmployeeName = employee.GetDisplayName(),
+                    AssigneeDetails = ""
+                }
+            );
+        });
+
+        foreach (var @event in events)
+        {
+            await _capPublisher.PublishAsync("gatepass.workflow.created", @event);
+        }
 
         await _context.SaveChangesAsync();
 

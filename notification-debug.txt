@@ -1,0 +1,103 @@
+[16/07/2025 4:40:24 AM] ApplicationDbContext CREATED
+[16/07/2025 4:40:24 AM] ApplicationDbContext CREATED
+[16/07/2025 4:40:25 AM] ApplicationDbContext CREATED
+[16/07/2025 4:45:45 AM] ApplicationDbContext CREATED
+[16/07/2025 4:45:46 AM] ApplicationDbContext CREATED
+[16/07/2025 4:45:46 AM] ApplicationDbContext CREATED
+[16/07/2025 4:47:09 AM] ApplicationDbContext CREATED
+[16/07/2025 4:47:09 AM] ApplicationDbContext CREATED
+[16/07/2025 4:47:10 AM] ApplicationDbContext CREATED
+[16/07/2025 4:47:15 AM] ApplicationDbContext CREATED
+[16/07/2025 4:52:27 AM] ApplicationDbContext CREATED
+[16/07/2025 4:52:27 AM] ApplicationDbContext CREATED
+[16/07/2025 4:52:28 AM] ApplicationDbContext CREATED
+[16/07/2025 4:52:37 AM] ApplicationDbContext CREATED
+[16/07/2025 4:53:19 AM] ApplicationDbContext CREATED
+[16/07/2025 4:57:45 AM] ApplicationDbContext CREATED
+[16/07/2025 4:57:45 AM] ApplicationDbContext CREATED
+[16/07/2025 4:57:46 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:29 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:29 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:30 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:40 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:43 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:43 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 30, Category: 3
+
+[16/07/2025 4:59:44 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:44 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 41, Category: 3
+
+[16/07/2025 4:59:44 AM] ApplicationDbContext CREATED
+[16/07/2025 4:59:44 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 24, Category: 3
+
+[16/07/2025 5:04:42 AM] ApplicationDbContext CREATED
+[16/07/2025 5:04:42 AM] ApplicationDbContext CREATED
+[16/07/2025 5:04:43 AM] ApplicationDbContext CREATED
+[16/07/2025 5:05:21 AM] ApplicationDbContext CREATED
+[16/07/2025 5:05:24 AM] ApplicationDbContext CREATED
+[16/07/2025 5:05:24 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 30, Category: 3
+
+[16/07/2025 5:05:24 AM] ApplicationDbContext CREATED
+[16/07/2025 5:05:25 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 41, Category: 3
+
+[16/07/2025 5:05:25 AM] ApplicationDbContext CREATED
+[16/07/2025 5:05:25 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 24, Category: 3
+
+[16/07/2025 5:06:28 AM] ApplicationDbContext CREATED
+[16/07/2025 5:06:28 AM] ApplicationDbContext CREATED
+[16/07/2025 5:06:29 AM] ApplicationDbContext CREATED
+[16/07/2025 5:06:38 AM] ApplicationDbContext CREATED
+[16/07/2025 5:07:13 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:30 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:30 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:31 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:34 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:35 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 30, Category: 3
+
+[16/07/2025 5:08:35 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:35 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 41, Category: 3
+
+[16/07/2025 5:08:35 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:35 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 24, Category: 3
+
+[16/07/2025 5:08:35 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:35 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 30, Category: 3
+
+[16/07/2025 5:08:35 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:35 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 41, Category: 3
+
+[16/07/2025 5:08:35 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:35 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 24, Category: 3
+
+[16/07/2025 5:08:46 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:48 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:48 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 30, Category: 3
+
+[16/07/2025 5:08:48 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:48 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 41, Category: 3
+
+[16/07/2025 5:08:48 AM] ApplicationDbContext CREATED
+[16/07/2025 5:08:49 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00030-03.06-15.06 đã được tạo., EmpId: 24, Category: 3
+
+[16/07/2025 6:39:32 AM] ApplicationDbContext CREATED
+[16/07/2025 6:39:32 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Nghỉ phép #ĐN-TG00024-15.07-16.07 đã được tạo., EmpId: 24, Category: 3
+
+[16/07/2025 6:40:02 AM] ApplicationDbContext CREATED
+[16/07/2025 6:40:02 AM] 🚨 SaveChangesAsync triggered Notification INSERT:
+- Title: [CAP] Đơn nghỉ #ĐN-TG00024-15.07-16.07 đã được duyệt, EmpId: 24, Category: 1
+

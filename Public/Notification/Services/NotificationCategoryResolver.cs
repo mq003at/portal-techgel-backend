@@ -137,7 +137,7 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
         {
             EmployeeId = employeeId,
             NotificationCategoryId = category.Id,
-            Title = title,
+            Title = "[CAP] " + title,
             Message = message,
             Url = null,
             UrgencyLevel = category.IsUrgentByDefault ? UrgencyLevel.HIGH : UrgencyLevel.MEDIUM,

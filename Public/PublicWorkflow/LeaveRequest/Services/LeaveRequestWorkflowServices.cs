@@ -1,5 +1,6 @@
 namespace portal.Services;
 
+using System.Text.Json;
 using AutoMapper;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.EMMA;
@@ -376,24 +377,40 @@ public class LeaveRequestWorkflowService
             workflow.ParticipantIds.Add(deputySupervisor.Id);
         }
 
-        // Create notification
-        // Notification for the Employee only!
-        var @event = new CreateEvent
+        // Create notification events for all participants
+        var employeeIdsToNotify = new List<int> { employee.Id, supervisor.Id };
+        employeeIdsToNotify.AddRange(assigneeDetails);
+        employeeIdsToNotify = employeeIdsToNotify.Distinct().ToList();
+
+        _logger.LogError("Employee IDs to notify: {Ids}", string.Join(", ", employeeIdsToNotify));
+
+        var events = new List<CreateEvent>();
+        employeeIdsToNotify.ForEach(id =>
         {
-            WorkflowId = workflow.MainId.ToString(),
-            WorkflowType = "Nghỉ phép",
-            EmployeeId = workflow.SenderId,
-            ApproverName = supervisor.GetDisplayName(),
-            TriggeredBy = employee.GetDisplayName(),
-            CreatedAt = DateTime.UtcNow,
-            Status = "CREATED",
-            EmployeeName = employee.GetDisplayName(),
-            AssigneeDetails = string.Join(", ", assignees.Select(a => a.GetDisplayName()))
-        };
+            events.Add(
+                new CreateEvent
+                {
+                    WorkflowId = workflow.MainId.ToString(),
+                    WorkflowType = "Nghỉ phép",
+                    EmployeeId = id,
+                    ApproverName = supervisor.GetDisplayName(),
+                    TriggeredBy = employee.GetDisplayName(),
+                    CreatedAt = DateTime.UtcNow,
+                    Status = "CREATED",
+                    EmployeeName = employee.GetDisplayName(),
+                    AssigneeDetails = string.Join(", ", assignees.Select(a => a.GetDisplayName()))
+                }
+            );
+        });
 
-        _logger.LogInformation("Publishing event for workflow creation: {@Event}", @event);
-
-        await _capPublisher.PublishAsync("leaverequest.workflow.created", @event);
+        foreach (var @event in events)
+        {
+            _logger.LogError(
+                "Publishing event for workflow creation: {@Event}",
+                JsonSerializer.Serialize(@event)
+            );
+            await _capPublisher.PublishAsync("leaverequest.workflow.created", @event);
+        }
 
         await _context.SaveChangesAsync();
 

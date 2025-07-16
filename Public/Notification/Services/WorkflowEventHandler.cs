@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DotNetCore.CAP;
 using Microsoft.Extensions.Logging;
 using portal.Models;
@@ -14,27 +15,30 @@ public class WorkflowEventHandler : ICapSubscribe
     {
         _resolver = resolver;
         _logger = logger;
-        _logger.LogInformation("WorkflowEventHandler CREATED");
-        _logger.LogInformation("✅ WorkflowEventHandler constructed");
+        _logger.LogError("WorkflowEventHandler CREATED");
+        _logger.LogError("✅ WorkflowEventHandler constructed");
+        Console.WriteLine("✅ WorkflowEventHandler constructed. Console logging enabled.");
     }
 
     [CapSubscribe("workflow.approved")]
     public async Task HandleApproval(ApprovalEvent evt)
     {
-        _logger.LogInformation("➡ Received workflow.approved");
+        _logger.LogError("➡ Received workflow.approved");
         await _resolver.ProcessEventAsync(evt, "workflow.approved");
     }
 
     [CapSubscribe("workflow.rejected")]
     public async Task HandleRejection(RejectEvent evt)
     {
+        _logger.LogError("➡ Received workflow.rejected");
         await _resolver.ProcessEventAsync(evt, "workflow.rejected");
     }
 
     [CapSubscribe("leaverequest.workflow.created")]
     public async Task HandleCreation(CreateEvent evt)
     {
-        _logger.LogInformation("➡ Received leaverequest.workflow.created");
+        Console.WriteLine("Handling workflow creation event: " + JsonSerializer.Serialize(evt));
+        _logger.LogError("➡ Received leaverequest.workflow.created");
         await _resolver.ProcessEventAsync(evt, "leaverequest.workflow.created");
     }
 }

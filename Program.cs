@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using DotNetCore.CAP;
 using DotNetCore.CAP.Dashboard;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -173,12 +174,16 @@ builder.Services.AddTransient<WorkflowEventHandler>();
 builder.Services.AddCap(options =>
 {
     options.UseEntityFramework<ApplicationDbContext>();
+
     var capConnectionString =
         builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException(
             "CAP PostgreSQL connection string is not configured."
         );
     options.UsePostgreSql(capConnectionString);
+
+    // ✅ Explicitly set the default CAP group
+    options.DefaultGroupName = "cap.queue.portal-techgel-api.v1";
 
     options.UseRabbitMQ(cfg =>
     {
@@ -190,6 +195,7 @@ builder.Services.AddCap(options =>
         cfg.Port = int.Parse(builder.Configuration["Cap:RabbitMQ:Port"] ?? "5672");
         cfg.VirtualHost = builder.Configuration["Cap:RabbitMQ:VirtualHost"] ?? "/";
 
+        // Optional SSL config
         if (rabbitMQSettings.UseSsl)
         {
             cfg.ConnectionFactoryOptions = opts =>
@@ -199,6 +205,7 @@ builder.Services.AddCap(options =>
             };
         }
     });
+
     options.UseDashboard();
 });
 
@@ -291,6 +298,40 @@ builder.Services.AddScoped<IWarehouseLocationService, WarehouseLocationService>(
 builder.Services.AddScoped<IStockService, StockService>();
 
 var app = builder.Build();
+
+void LogCapSubscribers(IServiceProvider serviceProvider)
+{
+    var capSubscriberInterface = typeof(ICapSubscribe);
+
+    var types = AppDomain
+        .CurrentDomain.GetAssemblies()
+        .SelectMany(a => a.GetTypes())
+        .Where(t => t.IsClass && !t.IsAbstract && capSubscriberInterface.IsAssignableFrom(t))
+        .ToList();
+
+    Console.WriteLine("🔍 Listing CAP subscribers:");
+
+    foreach (var type in types)
+    {
+        var methods = type.GetMethods(
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+        );
+        foreach (var method in methods)
+        {
+            var attr = method.GetCustomAttribute<CapSubscribeAttribute>();
+            if (attr != null)
+            {
+                Console.WriteLine(
+                    $"➡ Found subscriber: {type.FullName}.{method.Name} → [{attr.Name}] (Group: {attr.Group ?? "default"})"
+                );
+            }
+        }
+    }
+
+    Console.WriteLine("✅ CAP subscriber listing complete.");
+}
+
+LogCapSubscribers(app.Services);
 
 // Swagger
 app.UseSwagger();

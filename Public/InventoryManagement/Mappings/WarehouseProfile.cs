@@ -17,8 +17,8 @@ public class WarehouseProfile
                 opt => opt.MapFrom(src => src.Manager.GetDisplayName())
             ); // assuming navigation property
 
-        CreateMap<CreateWarehouseDTO, Warehouse>().IncludeBase<BaseModelCreateDTO, Warehouse>();
+        CreateMap<CreateWarehouseDTO, Warehouse>().IncludeBase<BaseModelCreateDTO, BaseModel>();
 
-        CreateMap<UpdateWarehouseDTO, Warehouse>().IncludeBase<BaseModelUpdateDTO, Warehouse>();
+        CreateMap<UpdateWarehouseDTO, Warehouse>().IncludeBase<BaseModelUpdateDTO, BaseModel>();
     }
 }

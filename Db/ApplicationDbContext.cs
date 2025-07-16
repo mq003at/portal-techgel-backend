@@ -8,14 +8,22 @@ using portal.Models;
 public class ApplicationDbContext : IdentityDbContext
 {
     private readonly AppDbContextSaveChangesInterceptor _saveChangesInterceptor;
+    private readonly ILogger<ApplicationDbContext> _logger;
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        AppDbContextSaveChangesInterceptor saveChangesInterceptor
+        AppDbContextSaveChangesInterceptor saveChangesInterceptor,
+        ILogger<ApplicationDbContext> logger
     )
         : base(options)
     {
         _saveChangesInterceptor = saveChangesInterceptor;
+        _logger = logger;
+        _logger.LogError("ApplicationDbContext CREATED");
+        File.AppendAllText(
+            "notification-debug.txt",
+            $"[{DateTime.UtcNow}] ApplicationDbContext CREATED\n"
+        );
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,6 +51,36 @@ public class ApplicationDbContext : IdentityDbContext
     {
         ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        DebugCheck("SaveChangesAsync");
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void DebugCheck(string source)
+    {
+        var notifications = ChangeTracker
+            .Entries<Notification>()
+            .Where(e => e.State == EntityState.Added)
+            .Select(e => e.Entity)
+            .ToList();
+
+        if (notifications.Any())
+        {
+            File.AppendAllText(
+                "notification-debug.txt",
+                $"[{DateTime.UtcNow}] 🚨 {source} triggered Notification INSERT:\n"
+                    + string.Join(
+                        "\n",
+                        notifications.Select(n =>
+                            $"- Title: {n.Title}, EmpId: {n.EmployeeId}, Category: {n.NotificationCategoryId}"
+                        )
+                    )
+                    + "\n\n"
+            );
+        }
     }
 
     public DbSet<OrganizationEntity> OrganizationEntities { get; set; }
