@@ -284,6 +284,11 @@ builder.Services.AddScoped<IGeneralProposalNodeService, GeneralProposalNodeServi
 builder.Services.AddScoped<IGeneralProposalWorkflowService, GeneralProposalWorkflowService>();
 builder.Services.AddScoped<IGatePassNodeService, GatePassNodeService>();
 builder.Services.AddScoped<IGatePassWorkflowService, GatePassWorkflowService>();
+builder.Services.AddScoped<IMaterialService, MaterialService>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
+builder.Services.AddScoped<IStockService, StockService>();
+builder.Services.AddScoped<IWarehouseLocationService, WarehouseLocationService>();
+builder.Services.AddScoped<IStockService, StockService>();
 
 var app = builder.Build();
 

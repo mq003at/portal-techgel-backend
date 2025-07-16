@@ -88,4 +88,16 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<Survey> Surveys { get; set; }
     public DbSet<SurveyQuestion> SurveyQuestions { get; set; }
     public DbSet<SurveyResponse> SurveyResponses { get; set; }
+
+    // Inventory Management Setup
+    public DbSet<Material> Materials { get; set; }
+    public DbSet<Warehouse> Warehouses { get; set; }
+    public DbSet<Stock> Stocks { get; set; }
+    public DbSet<WarehouseLocation> WarehouseLocations { get; set; }
+    public DbSet<StockLocation> StockLocations { get; set; }
+
+    // public DbSet<GoodsReceiptNote> GoodsReceiptNotes { get; set; }
+    // public DbSet<GoodsReceiptItem> GoodsReceiptItems { get; set; }
+    // public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+    // public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
 }
