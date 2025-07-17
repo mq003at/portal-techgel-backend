@@ -127,7 +127,8 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
     private async Task CreateNotificationNow<T>(
         NotificationCategory category,
         int employeeId,
-        T evt
+        T evt,
+        UrgencyLevel? urgency = null
     )
     {
         var title = RenderTemplate(category.TitleTemplate, evt);
@@ -137,10 +138,10 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
         {
             EmployeeId = employeeId,
             NotificationCategoryId = category.Id,
-            Title = "[CAP] " + title,
+            Title = title,
             Message = message,
             Url = null,
-            UrgencyLevel = category.IsUrgentByDefault ? UrgencyLevel.HIGH : UrgencyLevel.MEDIUM,
+            UrgencyLevel = urgency ?? category.DefaultUrgencyLevel,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -156,6 +157,8 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
         // Deliver via SignalR if required
         if (category.DeliveryChannels.HasFlag(DeliveryChannel.SignalR))
         {
+            _logger.LogInformation($"Delivering notification to Employee {employeeId} via SignalR");
+
             await _hubContext
                 .Clients.User(employeeId.ToString())
                 .SendAsync(

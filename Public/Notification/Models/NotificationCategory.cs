@@ -5,7 +5,7 @@ public class NotificationCategory : BaseModelWithOnlyId
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
 
-    public bool IsUrgentByDefault { get; set; } = false;
+    public UrgencyLevel DefaultUrgencyLevel { get; set; }
     public List<Notification> Notifications { get; set; } = new List<Notification>();
     public List<OnlyForOrganizationEntity> OnlyForOrganizationEntities { get; set; } =
         new List<OnlyForOrganizationEntity>();
