@@ -20,10 +20,10 @@ public class ApplicationDbContext : IdentityDbContext
         _saveChangesInterceptor = saveChangesInterceptor;
         _logger = logger;
         _logger.LogError("ApplicationDbContext CREATED");
-        File.AppendAllText(
-            "notification-debug.txt",
-            $"[{DateTime.UtcNow}] ApplicationDbContext CREATED\n"
-        );
+        // File.AppendAllText(
+        //     "notification-debug.txt",
+        //     $"[{DateTime.UtcNow}] ApplicationDbContext CREATED\n"
+        // );
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,16 +69,26 @@ public class ApplicationDbContext : IdentityDbContext
 
         if (notifications.Any())
         {
-            File.AppendAllText(
-                "notification-debug.txt",
-                $"[{DateTime.UtcNow}] 🚨 {source} triggered Notification INSERT:\n"
-                    + string.Join(
-                        "\n",
-                        notifications.Select(n =>
-                            $"- Title: {n.Title}, EmpId: {n.EmployeeId}, Category: {n.NotificationCategoryId}"
-                        )
+            // File.AppendAllText(
+            //     "notification-debug.txt",
+            //     $"[{DateTime.UtcNow}] 🚨 {source} triggered Notification INSERT:\n"
+            //         + string.Join(
+            //             "\n",
+            //             notifications.Select(n =>
+            //                 $"- Title: {n.Title}, EmpId: {n.EmployeeId}, Category: {n.NotificationCategoryId}"
+            //             )
+            //         )
+            //         + "\n\n"
+            // );
+            _logger.LogError(
+                "🚨 {Source} triggered Notification INSERT: {Notifications}",
+                source,
+                string.Join(
+                    ", ",
+                    notifications.Select(n =>
+                        $"Title: {n.Title}, EmpId: {n.EmployeeId}, Category: {n.NotificationCategoryId}"
                     )
-                    + "\n\n"
+                )
             );
         }
     }

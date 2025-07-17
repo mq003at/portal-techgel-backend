@@ -410,3 +410,38 @@
 [16/07/2025 11:36:31 PM] 🚨 SaveChangesAsync triggered Notification INSERT:
 - Title: Có Đơn nghỉ phép mới từ Nguyễn Hoàng Minh Quân, EmpId: 24, Category: 3
 
+[17/07/2025 1:11:46 AM] ApplicationDbContext CREATED
+[17/07/2025 1:11:46 AM] ApplicationDbContext CREATED
+[17/07/2025 1:11:47 AM] ApplicationDbContext CREATED
+[17/07/2025 1:12:07 AM] ApplicationDbContext CREATED
+[17/07/2025 1:12:07 AM] ApplicationDbContext CREATED
+[17/07/2025 1:12:09 AM] ApplicationDbContext CREATED
+[17/07/2025 1:12:09 AM] ApplicationDbContext CREATED
+[17/07/2025 1:12:10 AM] ApplicationDbContext CREATED
+[17/07/2025 1:12:47 AM] ApplicationDbContext CREATED
+[17/07/2025 1:12:57 AM] ApplicationDbContext CREATED
+[17/07/2025 1:13:03 AM] ApplicationDbContext CREATED
+[17/07/2025 1:13:03 AM] ApplicationDbContext CREATED
+[17/07/2025 1:13:04 AM] ApplicationDbContext CREATED
+[17/07/2025 1:13:35 AM] ApplicationDbContext CREATED
+[17/07/2025 1:13:38 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:03 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:08 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:08 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:08 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:11 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:14 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:21 AM] ApplicationDbContext CREATED
+[17/07/2025 1:14:25 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:02 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:03 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:05 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:09 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:09 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:09 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:09 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:17 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:44 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:49 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:49 AM] ApplicationDbContext CREATED
+[17/07/2025 1:15:50 AM] ApplicationDbContext CREATED
