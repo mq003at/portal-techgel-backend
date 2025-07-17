@@ -19,8 +19,7 @@ public class GatePassNodeService
     public GatePassNodeService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<GatePassNodeService> logger,
-        ICapPublisher capPublisher
+        ILogger<GatePassNodeService> logger
     )
-        : base(context, mapper, logger, capPublisher) { }
+        : base(context, mapper, logger) { }
 }

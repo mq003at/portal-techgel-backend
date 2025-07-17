@@ -9,19 +9,15 @@ using portal.Services;
 [ApiController]
 public class MockEventController : ControllerBase
 {
-    private readonly ICapPublisher _capPublisher;
     private readonly ILogger<MockEventController> _logger;
 
-    public MockEventController(ICapPublisher capPublisher, ILogger<MockEventController> logger)
+    public MockEventController(ILogger<MockEventController> logger)
     {
-        _capPublisher = capPublisher;
         _logger = logger;
     }
 
     [HttpPost("workflow-approved")]
-    public async Task<IActionResult> SimulateWorkflowApproved(
-        [FromBody] MockWorkflowApprovedEvent mock
-    )
+    public IActionResult SimulateWorkflowApproved([FromBody] MockWorkflowApprovedEvent mock)
     {
         const string topic = "workflow.approved";
 

@@ -12,19 +12,16 @@ using portal.Models;
 public class NotificationCategoryResolver : INotificationCategoryResolver
 {
     private readonly ApplicationDbContext _context;
-    private readonly ICapPublisher _capPublisher;
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly ILogger<NotificationCategoryResolver> _logger;
 
     public NotificationCategoryResolver(
         ApplicationDbContext context,
-        ICapPublisher capPublisher,
         IHubContext<NotificationHub> hubContext,
         ILogger<NotificationCategoryResolver> logger
     )
     {
         _context = context;
-        _capPublisher = capPublisher;
         _hubContext = hubContext;
         _logger = logger;
     }

@@ -32,7 +32,6 @@ public class LeaveRequestWorkflowService
     private readonly IFileStorageService _storage;
     private readonly DocumentOptions _docOpts;
     private readonly string _basePath;
-    private readonly ICapPublisher _capPublisher;
     private readonly IEmployeeService _employeeService;
 
     public LeaveRequestWorkflowService(
@@ -41,7 +40,6 @@ public class LeaveRequestWorkflowService
         ILogger<LeaveRequestWorkflowService> logger,
         IOptions<DocumentOptions> docOpts,
         IFileStorageService storage,
-        ICapPublisher capPublisher,
         IEmployeeService employeeService
     )
         : base(context, mapper, logger)
@@ -49,7 +47,6 @@ public class LeaveRequestWorkflowService
         _docOpts = docOpts.Value;
         _storage = storage;
         _basePath = AppDomain.CurrentDomain.BaseDirectory;
-        _capPublisher = capPublisher;
         _employeeService = employeeService;
     }
 

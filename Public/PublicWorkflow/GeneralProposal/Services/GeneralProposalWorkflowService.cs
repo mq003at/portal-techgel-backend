@@ -26,22 +26,19 @@ public class GeneralProposalWorkflowService
     private readonly IFileStorageService _storage;
     private readonly DocumentOptions _docOpts;
     private readonly string _basePath;
-    private readonly ICapPublisher _capPublisher;
 
     public GeneralProposalWorkflowService(
         ApplicationDbContext context,
         IMapper mapper,
         ILogger<GeneralProposalWorkflowService> logger,
         IOptions<DocumentOptions> docOpts,
-        IFileStorageService storage,
-        ICapPublisher capPublisher
+        IFileStorageService storage
     )
         : base(context, mapper, logger)
     {
         _docOpts = docOpts.Value;
         _storage = storage;
         _basePath = AppDomain.CurrentDomain.BaseDirectory;
-        _capPublisher = capPublisher;
     }
 
     public async Task<List<GeneralProposalNodeDTO>> GenerateNodesAsync(

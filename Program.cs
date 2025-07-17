@@ -1,32 +1,16 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
-using DotNetCore.CAP;
-using DotNetCore.CAP.Dashboard;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using portal.Configurations.CAP;
 using portal.Db;
 using portal.Extensions;
-using portal.Mappings;
-using portal.Models;
 using portal.Options;
 using portal.Services;
-using Renci.SshNet;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,6 +114,18 @@ builder
     );
 
 builder.Services.AddAuthorization();
+builder
+    .Services.AddSignalR()
+    .AddStackExchangeRedis(options =>
+    {
+        var redisConnectionString =
+            builder.Configuration.GetConnectionString("Redis")
+            ?? throw new InvalidOperationException("Redis connection string is missing.");
+
+        options.Configuration = StackExchange.Redis.ConfigurationOptions.Parse(
+            redisConnectionString
+        );
+    });
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
@@ -166,48 +162,14 @@ builder.Services.AddCors(options =>
 });
 
 // LevinMQ
-var rabbitMQSettings = builder.Configuration.GetSection("Cap:RabbitMQ").Get<RabbitMQSettings>()!;
-builder.Services.AddSingleton<IHostedService, CapSubscribeHostedService>();
 builder.Services.AddScoped<INotificationCategoryResolver, NotificationCategoryResolver>();
 builder.Services.AddTransient<WorkflowEventHandler>();
 
-builder.Services.AddCap(options =>
-{
-    options.UseEntityFramework<ApplicationDbContext>();
-
-    var capConnectionString =
-        builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? throw new InvalidOperationException(
-            "CAP PostgreSQL connection string is not configured."
-        );
-    options.UsePostgreSql(capConnectionString);
-    options.UseRabbitMQ(cfg =>
-    {
-        cfg.HostName =
-            builder.Configuration["Cap:RabbitMQ:HostName"]
-            ?? throw new InvalidOperationException("RabbitMQ HostName not configured");
-        cfg.UserName = builder.Configuration["Cap:RabbitMQ:UserName"] ?? "";
-        cfg.Password = builder.Configuration["Cap:RabbitMQ:Password"] ?? "";
-        cfg.Port = int.Parse(builder.Configuration["Cap:RabbitMQ:Port"] ?? "8883 ");
-        cfg.VirtualHost = builder.Configuration["Cap:RabbitMQ:VirtualHost"] ?? "/";
-
-        // Optional SSL config
-        if (rabbitMQSettings.UseSsl)
-        {
-            cfg.ConnectionFactoryOptions = opts =>
-            {
-                opts.Ssl.Enabled = true;
-                opts.Ssl.ServerName = rabbitMQSettings.HostName;
-            };
-        }
-    });
-
-    options.UseDashboard();
-});
-
+#pragma warning disable CS0618 // Type or member is obsolete
 builder.Services.AddHangfire(config =>
     config.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
+#pragma warning restore CS0618 // Type or member is obsolete
 builder.Services.AddHangfireServer();
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
@@ -294,40 +256,6 @@ builder.Services.AddScoped<IWarehouseLocationService, WarehouseLocationService>(
 builder.Services.AddScoped<IStockService, StockService>();
 
 var app = builder.Build();
-
-void LogCapSubscribers(IServiceProvider serviceProvider)
-{
-    var capSubscriberInterface = typeof(ICapSubscribe);
-
-    var types = AppDomain
-        .CurrentDomain.GetAssemblies()
-        .SelectMany(a => a.GetTypes())
-        .Where(t => t.IsClass && !t.IsAbstract && capSubscriberInterface.IsAssignableFrom(t))
-        .ToList();
-
-    Console.WriteLine("🔍 Listing CAP subscribers:");
-
-    foreach (var type in types)
-    {
-        var methods = type.GetMethods(
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-        );
-        foreach (var method in methods)
-        {
-            var attr = method.GetCustomAttribute<CapSubscribeAttribute>();
-            if (attr != null)
-            {
-                Console.WriteLine(
-                    $"➡ Found subscriber: {type.FullName}.{method.Name} → [{attr.Name}] (Group: {attr.Group ?? "default"})"
-                );
-            }
-        }
-    }
-
-    Console.WriteLine("✅ CAP subscriber listing complete.");
-}
-
-LogCapSubscribers(app.Services);
 
 // Swagger
 app.UseSwagger();

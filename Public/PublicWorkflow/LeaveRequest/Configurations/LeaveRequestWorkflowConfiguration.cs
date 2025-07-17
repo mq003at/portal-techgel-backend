@@ -41,7 +41,7 @@ public class LeaveRequestWorkflowConfiguration : BaseWorkflowConfiguration<Leave
         builder
             .Property(l => l.AssigneeNames)
             .HasConversion(
-                v => string.Join(",", v),
+                v => string.Join(",", v ?? new List<string>()),
                 v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
             )
             .Metadata.SetValueComparer(GlobalValueComparers.StringListComparer);

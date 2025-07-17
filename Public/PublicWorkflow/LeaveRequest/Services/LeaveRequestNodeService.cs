@@ -19,8 +19,7 @@ public class LeaveRequestNodeService
     public LeaveRequestNodeService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<LeaveRequestNodeService> logger,
-        ICapPublisher capPublisher
+        ILogger<LeaveRequestNodeService> logger
     )
-        : base(context, mapper, logger, capPublisher) { }
+        : base(context, mapper, logger) { }
 }

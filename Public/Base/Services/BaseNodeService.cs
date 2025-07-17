@@ -1,6 +1,5 @@
 using System.Text.Json;
 using AutoMapper;
-using DotNetCore.CAP;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using portal.Db;
@@ -25,20 +24,17 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
     protected new readonly ILogger<
         BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TWorkflowModel>
     > _logger;
-    protected readonly ICapPublisher _capPublisher;
 
     public BaseNodeService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TWorkflowModel>> logger,
-        ICapPublisher capPublisher
+        ILogger<BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, TWorkflowModel>> logger
     )
         : base(context, mapper, logger)
     {
         _context = context;
         _mapper = mapper;
         _logger = logger;
-        _capPublisher = capPublisher;
     }
 
     public async Task<bool> ApproveAsync(int nodeId, ApproveWithCommentDTO dto)
