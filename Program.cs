@@ -144,7 +144,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new() { Title = "Techgel ERP API", Version = "v1" });
+    options.SwaggerDoc("v2", new() { Title = "Techgel ERP API" });
 });
 builder.Services.AddCors(options =>
 {
@@ -181,10 +181,8 @@ builder.Services.AddCap(options =>
             "CAP PostgreSQL connection string is not configured."
         );
     options.UsePostgreSql(capConnectionString);
-
-    // ✅ Explicitly set the default CAP group
-    options.DefaultGroupName = "cap.queue.portal-techgel-api.v1";
-
+    options.DefaultGroupName = "cap.queue.portal-techgel-api";
+    options.Version = string.Empty;
     options.UseRabbitMQ(cfg =>
     {
         cfg.HostName =
@@ -192,7 +190,7 @@ builder.Services.AddCap(options =>
             ?? throw new InvalidOperationException("RabbitMQ HostName not configured");
         cfg.UserName = builder.Configuration["Cap:RabbitMQ:UserName"] ?? "";
         cfg.Password = builder.Configuration["Cap:RabbitMQ:Password"] ?? "";
-        cfg.Port = int.Parse(builder.Configuration["Cap:RabbitMQ:Port"] ?? "5672");
+        cfg.Port = int.Parse(builder.Configuration["Cap:RabbitMQ:Port"] ?? "8883 ");
         cfg.VirtualHost = builder.Configuration["Cap:RabbitMQ:VirtualHost"] ?? "/";
 
         // Optional SSL config
@@ -337,7 +335,7 @@ LogCapSubscribers(app.Services);
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Techgel ERP API v1");
+    c.SwaggerEndpoint("/swagger/v2/swagger.json", "Techgel ERP API v2");
     c.RoutePrefix = string.Empty;
 });
 app.MapOpenApi();

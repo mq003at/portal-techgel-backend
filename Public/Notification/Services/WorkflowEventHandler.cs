@@ -20,21 +20,21 @@ public class WorkflowEventHandler : ICapSubscribe
         Console.WriteLine("✅ WorkflowEventHandler constructed. Console logging enabled.");
     }
 
-    [CapSubscribe("workflow.approved", Group = "cap.queue.portal-techgel-api.v1")]
+    [CapSubscribe("workflow.approved")]
     public async Task HandleApproval(ApprovalEvent evt)
     {
         _logger.LogError("➡ Received workflow.approved");
         await _resolver.ProcessEventAsync(evt, "workflow.approved");
     }
 
-    [CapSubscribe("workflow.rejected", Group = "cap.queue.portal-techgel-api.v1")]
+    [CapSubscribe("workflow.rejected")]
     public async Task HandleRejection(RejectEvent evt)
     {
         _logger.LogError("➡ Received workflow.rejected");
         await _resolver.ProcessEventAsync(evt, "workflow.rejected");
     }
 
-    [CapSubscribe("leaverequest.workflow.created", Group = "cap.queue.portal-techgel-api.v1")]
+    [CapSubscribe("leaverequest.workflow.created")]
     public async Task HandleCreation(CreateEvent evt)
     {
         Console.WriteLine("Handling workflow creation event: " + JsonSerializer.Serialize(evt));
