@@ -1,4 +1,5 @@
 using DotNetCore.CAP;
+using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 using portal.DTOs;
 using portal.Models;
@@ -30,8 +31,17 @@ public class MockEventController : ControllerBase
             mock
         );
 
-        await _capPublisher.PublishAsync(topic, mock);
+        var approvalEvent = new CreateEvent
+        {
+            WorkflowId = "1",
+            EmployeeId = mock.EmployeeId,
+            ApproverName = mock.ApproverName,
+            Status = mock.Status,
+        };
 
+        BackgroundJob.Enqueue<WorkflowEventHandler>(handler =>
+            handler.HandleCreation(approvalEvent)
+        );
         return Ok(new { message = $"Event '{topic}' published", data = mock });
     }
 }

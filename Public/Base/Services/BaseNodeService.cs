@@ -1,6 +1,7 @@
 using System.Text.Json;
 using AutoMapper;
 using DotNetCore.CAP;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using portal.Db;
 using portal.DTOs;
@@ -162,7 +163,7 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
             TriggeredBy = participant.Employee.MainId.ToString(),
         };
 
-        await _capPublisher.PublishAsync("workflow.approved", @event);
+        BackgroundJob.Enqueue<WorkflowEventHandler>(handler => handler.HandleApproval(@event));
 
         await _context.SaveChangesAsync();
         return true;
@@ -251,7 +252,7 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
             Reason = dto.RejectReason,
         };
 
-        await _capPublisher.PublishAsync("workflow.rejected", @event);
+        BackgroundJob.Enqueue<WorkflowEventHandler>(handler => handler.HandleRejection(@event));
 
         await _context.SaveChangesAsync();
 

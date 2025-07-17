@@ -181,8 +181,6 @@ builder.Services.AddCap(options =>
             "CAP PostgreSQL connection string is not configured."
         );
     options.UsePostgreSql(capConnectionString);
-    options.DefaultGroupName = "cap.queue.portal-techgel-api";
-    options.Version = string.Empty;
     options.UseRabbitMQ(cfg =>
     {
         cfg.HostName =

@@ -2,6 +2,7 @@ namespace portal.Services;
 
 using AutoMapper;
 using DotNetCore.CAP;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using portal.Db;
@@ -247,7 +248,12 @@ public class GatePassWorkflowService
 
         foreach (var @event in events)
         {
-            await _capPublisher.PublishAsync("gatepass.workflow.created", @event);
+            _logger.LogError(
+                "Publishing event for employee {EmployeeId}: {@Event}",
+                @event.EmployeeId,
+                @event
+            );
+            BackgroundJob.Enqueue<WorkflowEventHandler>(handler => handler.HandleCreation(@event));
         }
 
         await _context.SaveChangesAsync();

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json;
 using AutoMapper;
 using DotNetCore.CAP;
+using Hangfire;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using portal.Db;
@@ -236,17 +237,45 @@ public class NotificationCategoryResolver : INotificationCategoryResolver
             _ => null
         };
 
-    public async Task PublishDelayedNotificationAsync<T>(
-        string topic,
-        T data,
-        int delayInMilliseconds
-    )
+    public Task PublishDelayedNotificationAsync(string topic, object data, int delayInMilliseconds)
     {
-        var headers = new Dictionary<string, string?>
-        {
-            ["x-delay"] = delayInMilliseconds.ToString()
-        };
+        TimeSpan delay = TimeSpan.FromMilliseconds(delayInMilliseconds);
 
-        await _capPublisher.PublishAsync(name: topic, contentObj: data, headers: headers);
+        switch (topic)
+        {
+            case "workflow.approved":
+                if (data is not ApprovalEvent approval)
+                    throw new ArgumentException("Expected ApprovalEvent for workflow.approved");
+                BackgroundJob.Schedule<WorkflowEventHandler>(
+                    handler => handler.HandleApproval(approval),
+                    delay
+                );
+                break;
+
+            case "workflow.rejected":
+                if (data is not RejectEvent rejection)
+                    throw new ArgumentException("Expected RejectEvent for workflow.rejected");
+                BackgroundJob.Schedule<WorkflowEventHandler>(
+                    handler => handler.HandleRejection(rejection),
+                    delay
+                );
+                break;
+
+            case "leaverequest.workflow.created":
+                if (data is not CreateEvent creation)
+                    throw new ArgumentException(
+                        "Expected CreateEvent for leaverequest.workflow.created"
+                    );
+                BackgroundJob.Schedule<WorkflowEventHandler>(
+                    handler => handler.HandleCreation(creation),
+                    delay
+                );
+                break;
+
+            default:
+                throw new NotSupportedException($"Unsupported topic: {topic}");
+        }
+
+        return Task.CompletedTask;
     }
 }

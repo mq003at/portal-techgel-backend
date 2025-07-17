@@ -3,10 +3,12 @@ namespace portal.Services;
 using System.Text.Json;
 using AutoMapper;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DotNetCore.CAP;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using portal.Db;
@@ -409,7 +411,7 @@ public class LeaveRequestWorkflowService
                 "Publishing event for workflow creation: {@Event}",
                 JsonSerializer.Serialize(@event)
             );
-            await _capPublisher.PublishAsync("leaverequest.workflow.created", @event);
+            BackgroundJob.Enqueue<WorkflowEventHandler>(handler => handler.HandleCreation(@event));
         }
 
         await _context.SaveChangesAsync();
