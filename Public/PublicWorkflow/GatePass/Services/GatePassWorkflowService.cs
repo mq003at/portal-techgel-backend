@@ -401,7 +401,7 @@ public class GatePassWorkflowService
 
         workflow.DocumentAssociations = await _context
             .DocumentAssociations.Where(da =>
-                da.EntityId == workflow.Id && da.EntityType == "GeneralProposal"
+                da.EntityId == workflow.Id && da.EntityType == "GatePass"
             )
             .Include(da => da.Document) // Eager load the Document
             .Select(da => da.Document)
