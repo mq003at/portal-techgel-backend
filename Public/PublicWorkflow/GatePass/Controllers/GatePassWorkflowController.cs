@@ -24,6 +24,8 @@ public class GatePassWorkflowController
         _workflowService = workflowService;
     }
 
+    [HttpPost("{id}/generate-documents")]
+    [Authorize]
     public async Task<IActionResult> GenerateDocuments(int id)
     {
         var result = await _workflowService.FinalizeIfCompleteAsync(id);

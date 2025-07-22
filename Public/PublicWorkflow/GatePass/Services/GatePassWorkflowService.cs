@@ -295,31 +295,38 @@ public class GatePassWorkflowService
                 $"Không tìm thấy phiếu ra cổng với id: {workflowId}. Có thể đã bị xóa khỏi hệ thống."
             );
 
-        WorkflowNodeParticipant finalApprover =
-            await _context.WorkflowNodeParticipants.FirstOrDefaultAsync(p =>
-                p.WorkflowId == workflowId
-                && p.WorkflowNodeType == "GatePass"
-                && p.ApprovalStatus == ApprovalStatusType.APPROVED
-            ) ?? throw new InvalidOperationException($"Không tìm thấy người duyệt.");
+        WorkflowNodeParticipant finalParticipant =
+            _context
+                .Set<WorkflowNodeParticipant>()
+                .Where(p =>
+                    p.WorkflowId == workflowId
+                    && p.WorkflowNodeType == "GatePass"
+                    && p.ApprovalStatus == ApprovalStatusType.APPROVED
+                )
+                .OrderByDescending(p => p.Id)
+                .FirstOrDefault()
+            ?? throw new InvalidOperationException(
+                "Quy trình chưa được phê duyệt hoàn tất, không thể lấy bản vật lý."
+            );
 
         Employee approver =
-            await _context.Employees.FirstOrDefaultAsync(e => e.Id == finalApprover.EmployeeId)
+            await _context.Employees.Include(e => e.Signature).FirstOrDefaultAsync(e => e.Id == finalParticipant.EmployeeId)
             ?? throw new InvalidOperationException(
-                $"Không tìm thấy người duyệt với ID {finalApprover.EmployeeId}."
+                $"Không tìm thấy người duyệt với ID {finalParticipant.EmployeeId}."
             );
 
         Employee employee =
-            await _context.Employees.FirstOrDefaultAsync(employee =>
+            await _context.Employees.Include(e => e.Signature).FirstOrDefaultAsync(employee =>
                 employee.Id == workflow.SenderId
             )
             ?? throw new InvalidOperationException(
                 $"Không tìm thấy người duyệt với ID {workflow.SenderId}."
             );
-
+            
         var approverPosition = "";
-        if (approver.Id == employee.Supervisor?.Id)
+        if (finalParticipant.EmployeeId == employee.Supervisor?.Id)
             approverPosition = "Supervisor";
-        else if (finalApprover.EmployeeId == employee.DeputySupervisor?.Id)
+        else if (finalParticipant.EmployeeId == employee.DeputySupervisor?.Id)
             approverPosition = "Deputy Supervisor";
         else
             throw new InvalidOperationException(

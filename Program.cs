@@ -150,6 +150,8 @@ builder.Services.AddCors(options =>
         {
             policy
                 .WithOrigins(
+                    "capacitor://localhost",
+                    "https://localhost",
                     "http://localhost:5173",
                     "https://portal.quan-ng.uk",
                     "http://localhost:5000"
@@ -277,7 +279,10 @@ app.UseAuthorization();
 
 // Endpoints
 app.MapControllers();
-app.MapHubs();
+
 app.UseHangfireDashboard("/hangfire");
+
+app.MapHub<NotificationHub>("/hubs/notification")
+    .RequireCors("AllowFrontend");
 
 app.Run();

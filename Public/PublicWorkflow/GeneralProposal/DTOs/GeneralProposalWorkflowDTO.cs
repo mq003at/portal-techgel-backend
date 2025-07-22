@@ -40,6 +40,8 @@ public class GeneralProposalWorkflowCreateDTO : BaseWorkflowCreateDTO
 
     [Required]
     public int ApproverId { get; set; }
+
+    public List<DocumentDTO>? DocumentAssociations { get; set; } = new();
 }
 
 public class GeneralProposalWorkflowUpdateDTO : BaseWorkflowUpdateDTO

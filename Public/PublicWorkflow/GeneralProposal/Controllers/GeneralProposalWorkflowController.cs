@@ -75,7 +75,7 @@ public class GeneralProposalWorkflowController
 
         var targetIds = new List<int> { 3 };
         if (organizationIds.Any(targetIds.Contains))
-            return await base.GetAll();
+            return Ok(await _workflowService.GetAllAsync());
         else
         {
             List<GeneralProposalWorkflowDTO> workflows =

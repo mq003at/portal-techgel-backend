@@ -41,6 +41,30 @@ public class GeneralProposalWorkflowService
         _basePath = AppDomain.CurrentDomain.BaseDirectory;
     }
 
+    public override async Task<IEnumerable<GeneralProposalWorkflowDTO>> GetAllAsync()
+    {
+        var workflows = await _dbSet
+            .Include(wf => wf.GeneralProposalNodes)
+            .ToListAsync();
+
+        var workflowIds = workflows.Select(wf => wf.Id).ToList();
+
+        var allAssociations = await _context.DocumentAssociations
+            .Where(da => workflowIds.Contains(da.EntityId) && da.EntityType == "GeneralProposal")
+            .Include(da => da.Document)
+            .ToListAsync();
+
+        foreach (var wf in workflows)
+        {
+            wf.DocumentAssociations = allAssociations
+                .Where(da => da.EntityId == wf.Id)
+                .Select(da => da.Document)
+                .ToList();
+        }
+
+        return _mapper.Map<IEnumerable<GeneralProposalWorkflowDTO>>(workflows);
+    }
+
     public async Task<List<GeneralProposalNodeDTO>> GenerateNodesAsync(
         GeneralProposalWorkflowCreateDTO dto,
         GeneralProposalWorkflow workflow
@@ -315,38 +339,59 @@ public class GeneralProposalWorkflowService
     }
 
     public override async Task<GeneralProposalWorkflowDTO> CreateAsync(
-        GeneralProposalWorkflowCreateDTO dto
-    )
+    GeneralProposalWorkflowCreateDTO dto
+)
+{
+    await using var transaction = await _context.Database.BeginTransactionAsync();
+    try
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        // Map DTO to entity
+        var entity = _mapper.Map<GeneralProposalWorkflow>(dto);
+
+        // Save workflow first to get its Id
+        _context.GeneralProposalWorkflows.Add(entity);
+        await _context.SaveChangesAsync();
+
+        entity.MainId = $"{DateTime.Now:yyyy}/{entity.Id}/TTC";
+        entity.Name = $"Tờ trình chung số {entity.Id}, năm {DateTime.Now:yyyy}";
+
+        // Generate workflow nodes
+        var nodes = await GenerateNodesAsync(dto, entity);
+
+        // 👉 Save lại sau khi cập nhật MainId + Name
+        await _context.SaveChangesAsync();
+
+        // 👉 Lưu DocumentAssociations nếu có
+        if (entity.DocumentAssociations != null && entity.DocumentAssociations.Any())
         {
-            // Map DTO to entity
-            var entity = _mapper.Map<GeneralProposalWorkflow>(dto);
+            foreach (var doc in entity.DocumentAssociations)
+            {
+                var newDocumentAssociation = new DocumentAssociation
+                {
+                    DocumentId = doc.Id,
+                    EntityType = doc.TemplateKey,
+                    EntityId = entity.Id,
+                };
+                _context.DocumentAssociations.Add(newDocumentAssociation);
+            }
 
-            // Save workflow first to get its Id
-            _context.GeneralProposalWorkflows.Add(entity);
             await _context.SaveChangesAsync();
-            entity.MainId = $"{DateTime.Now:yyyy}/{entity.Id}/TTC";
-            entity.Name = $"Tờ trình chung số {entity.Id}, năm {DateTime.Now:yyyy}";
-            // Generate workflow nodes with entity.Id now available
-            var nodes = await GenerateNodesAsync(dto, entity);
-
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            // Map to DTO after commit
-            var finalDto = _mapper.Map<GeneralProposalWorkflowDTO>(entity);
-            finalDto.GeneralProposalNodes = _mapper.Map<List<GeneralProposalNodeDTO>>(nodes);
-
-            return finalDto;
         }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+
+        await transaction.CommitAsync();
+
+        // Map to DTO sau khi commit
+        var finalDto = _mapper.Map<GeneralProposalWorkflowDTO>(entity);
+        finalDto.GeneralProposalNodes = _mapper.Map<List<GeneralProposalNodeDTO>>(nodes);
+        return finalDto;
     }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
+}
+
 
     public override async Task<GeneralProposalWorkflowDTO?> GetByIdAsync(int id)
     {

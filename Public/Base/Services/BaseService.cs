@@ -38,6 +38,7 @@ public class BaseService<TModel, TReadDTO, TCreateDTO, TUpdateDTO>
     public virtual async Task<IEnumerable<TReadDTO>> GetAllAsync()
     {
         var entities = await _dbSet.ToListAsync();
+        
         return _mapper.Map<IEnumerable<TReadDTO>>(entities);
     }
 
