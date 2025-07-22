@@ -28,6 +28,8 @@ public class GatePassWorkflowProfile
             .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
             .ForMember(dest => dest.GatePassNodes, opt => opt.MapFrom(src => src.GatePassNodes))
             .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
+            .ForMember(dest => dest.SenderMainId, opt => opt.MapFrom(src => src.Sender.MainId))
+            .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Sender.LastName + " " + src.Sender.MiddleName + " " + src.Sender.FirstName))
             .ReverseMap();
 
         // GatePassWorkflowCreateDTO <-> GatePassWorkflow (for creating workflows)

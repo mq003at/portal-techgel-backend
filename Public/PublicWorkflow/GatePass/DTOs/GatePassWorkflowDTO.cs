@@ -9,6 +9,7 @@ public class GatePassWorkflowDTO : BaseWorkflowDTO
     public DateTime GatePassStartTime { get; set; }
     public DateTime GatePassEndTime { get; set; }
     public string? Comment { get; set; }
+    public string? RejectReason { get; set; }
     public List<GatePassNodeDTO> GatePassNodes { get; set; } = [];
 }
 

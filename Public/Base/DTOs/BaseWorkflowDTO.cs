@@ -7,6 +7,7 @@ public class BaseWorkflowDTO : BaseModelDTO
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public int SenderId { get; set; }
+    public string SenderMainId { get; set; } = null!;
     public string SenderName { get; set; } = null!;
     public GeneralWorkflowStatusType Status { get; set; }
 
