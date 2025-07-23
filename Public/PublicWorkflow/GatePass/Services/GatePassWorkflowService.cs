@@ -310,19 +310,23 @@ public class GatePassWorkflowService
             );
 
         Employee approver =
-            await _context.Employees.Include(e => e.Signature).Include(e => e.CompanyInfo).FirstOrDefaultAsync(e => e.Id == finalParticipant.EmployeeId)
+            await _context
+                .Employees.Include(e => e.Signature)
+                .Include(e => e.CompanyInfo)
+                .FirstOrDefaultAsync(e => e.Id == finalParticipant.EmployeeId)
             ?? throw new InvalidOperationException(
                 $"Không tìm thấy người duyệt với ID {finalParticipant.EmployeeId}."
             );
 
         Employee employee =
-            await _context.Employees.Include(e => e.Signature).Include(e => e.CompanyInfo).FirstOrDefaultAsync(employee =>
-                employee.Id == workflow.SenderId
-            )
+            await _context
+                .Employees.Include(e => e.Signature)
+                .Include(e => e.CompanyInfo)
+                .FirstOrDefaultAsync(employee => employee.Id == workflow.SenderId)
             ?? throw new InvalidOperationException(
                 $"Không tìm thấy người duyệt với ID {workflow.SenderId}."
             );
-            
+
         var approverPosition = "";
         if (finalParticipant.EmployeeId == employee.Supervisor?.Id)
             approverPosition = "Supervisor";
@@ -397,8 +401,8 @@ public class GatePassWorkflowService
 
     public new async Task<List<GatePassWorkflowDTO>> GetAllByEmployeeIdAsync(int employeeId)
     {
-        var workflows = await _context.GatePassWorkflows
-            .Where(wf => wf.SenderId == employeeId)
+        var workflows = await _context
+            .GatePassWorkflows.Where(wf => wf.SenderId == employeeId)
             .Include(wf => wf.Sender)
             .Include(wf => wf.GatePassNodes)
             .ToListAsync();
@@ -440,7 +444,12 @@ public class GatePassWorkflowService
             .ToListAsync();
 
         var dto = _mapper.Map<GatePassWorkflowDTO>(workflow);
-        dto.SenderName = workflow.Sender.LastName + " " + workflow.Sender.MiddleName + " " + workflow.Sender.FirstName;
+        dto.SenderName =
+            workflow.Sender.LastName
+            + " "
+            + workflow.Sender.MiddleName
+            + " "
+            + workflow.Sender.FirstName;
         dto.SenderMainId = workflow.Sender.MainId;
         return dto;
     }
@@ -536,7 +545,7 @@ public class GatePassWorkflowService
             ["employeeSignDate"] = (workflow.CreatedAt.ToString("dd/MM/yyyy"), false),
             ["employeeFullNameBottom"] = (employee.GetDisplayName(), false),
 
-            ["approverPosition"] = (approverPosition, true),
+            ["approverPosition"] = (approver.CompanyInfo?.Position ?? "", true),
             ["approverSignDate"] = (today.ToString("dd/MM/yyyy"), false),
             ["approverFullNameBottom"] = (approver.GetDisplayName(), false),
         };
