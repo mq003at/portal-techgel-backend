@@ -68,7 +68,9 @@ public class GatePassWorkflowService
         // Build up receiver IDs for workflow
         // Compose workflow steps
 
-
+        workflow.Description =
+                $"Phiếu ra cổng của nhân viên {employee.GetDisplayName()} từ {workflow.GatePassStartTime.AddHours(7):dd/MM/yyyy HH:mm} đến {workflow.GatePassEndTime.AddHours(7):dd/MM/yyyy HH:mm}. Người ký: {employee.Supervisor?.GetDisplayName()} và {employee.DeputySupervisor?.GetDisplayName()}";
+            
         // Initiate nodes creation: 2 nodes for now, first one has 2 participants, second one has 2 participants
         var steps = new List<(
             string Name,
@@ -354,7 +356,7 @@ public class GatePassWorkflowService
         {
             // Map DTO to entity
             var entity = _mapper.Map<GatePassWorkflow>(dto);
-            _logger.LogInformation(
+               _logger.LogInformation(
                 "Creating GatePassWorkflow with senderId: {SenderId}, startTime: {StartTime}, endTime: {EndTime}",
                 entity.SenderId,
                 entity.GatePassStartTime,

@@ -666,7 +666,7 @@ public class LeaveRequestWorkflowService
     {
         // Step 1: Get workflow and its nodes
         LeaveRequestWorkflow workflow =
-            await _dbSet.Include(wf => wf.LeaveRequestNodes).Include(w => w.Employee).FirstOrDefaultAsync(wf => wf.Id == id)
+            await _dbSet.Include(wf => wf.LeaveRequestNodes).Include(w => w.Employee).Include(w => w.Sender).FirstOrDefaultAsync(wf => wf.Id == id)
             ?? throw new KeyNotFoundException($"Workflow with ID {id} not found.");
 
         // Step 2: Load all participants in one query

@@ -56,6 +56,7 @@ public class GeneralProposalWorkflowService
     {
         var workflows = await _dbSet
             .Include(wf => wf.GeneralProposalNodes)
+            .Include(wf => wf.Sender)
             .ToListAsync();
 
         var workflowIds = workflows.Select(wf => wf.Id).ToList();
@@ -99,7 +100,6 @@ public class GeneralProposalWorkflowService
 
         // Build up receiver IDs for workflow
         // Compose workflow steps
-
 
         // Initiate nodes creation: 2 nodes for now, first one has 2 participants, second one has 2 participants
         var steps = new List<(
