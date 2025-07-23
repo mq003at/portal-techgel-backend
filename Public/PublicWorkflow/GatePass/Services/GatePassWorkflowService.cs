@@ -387,11 +387,9 @@ public class GatePassWorkflowService
 
     public override async Task<IEnumerable<GatePassWorkflowDTO>> GetAllAsync()
     {
-        _logger.LogError("*************** workflows: " + "ádf");
         var workflows = await _dbSet
             .Include(wf => wf.GatePassNodes)
             .Include(wf => wf.Sender)
-            .Include("Sender")
             .ToListAsync();
 
         var dto = _mapper.Map<IEnumerable<GatePassWorkflowDTO>>(workflows);

@@ -32,6 +32,10 @@ public class LeaveRequestWorkflowProfile
                 opt => opt.MapFrom(src => src.Employee.GetDisplayName())
             )
             .ForMember(
+                dest => dest.SenderMainId,
+                opt => opt.MapFrom(src => src.Sender != null ? src.Sender.MainId : string.Empty)
+            )
+            .ForMember(
                 dest => dest.LeaveRequestNodes,
                 opt => opt.MapFrom(src => src.LeaveRequestNodes)
             )

@@ -22,52 +22,65 @@ public static class DateHelper
 
     public static double CalculateLeaveDays(
         DateTime startDate,
-        int startDayNightType,
+        DayNightEnum startDayNightType,
         DateTime endDate,
-        int endDayNightType
+        DayNightEnum endDayNightType
     )
     {
         if (startDate > endDate)
             throw new ArgumentException("Start date must be before or equal to end date");
 
-        double totalDays = 0;
-
-        for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
+        double WorkingDayWeight(DateTime date)
         {
-            // Sunday: skip
-            if (date.DayOfWeek == DayOfWeek.Sunday)
-                continue;
-
-            // Saturday: half day by default
-            double dayValue = date.DayOfWeek == DayOfWeek.Saturday ? 0.5 : 1.0;
-
-            bool isStart = date == startDate.Date;
-            bool isEnd = date == endDate.Date;
-
-            // Special case: same day
-            if (isStart && isEnd)
+            return date.DayOfWeek switch
             {
-                if (startDayNightType == 1 && endDayNightType == 1)
-                    dayValue = 1.0; // Full day leave: morning to evening
-                else if (startDayNightType == 1 && endDayNightType == 0)
-                    dayValue = 0.5; // Morning only
-                else if (startDayNightType == 0 && endDayNightType == 0)
-                    dayValue = 0.5; // Morning only
-                else if (startDayNightType == 0 && endDayNightType == 1)
-                    dayValue = 1.0; // Morning to evening
-            }
-            else
-            {
-                if (isStart && startDayNightType == 1)
-                    dayValue -= 0.5;
-
-                if (isEnd && endDayNightType == 0)
-                    dayValue -= 0.5;
-            }
-
-            totalDays += Math.Max(dayValue, 0);
+                DayOfWeek.Sunday => 0.0,
+                DayOfWeek.Saturday => 0.5,
+                _ => 1.0
+            };
         }
 
-        return totalDays;
+        double totalDays = 0.0;
+
+        // Trả về ngày chỉ có phần ngày
+        DateTime current = startDate.Date;
+        DateTime end = endDate.Date;
+
+        // Cộng toàn bộ số ngày làm việc giữa 2 ngày
+        while (current <= end)
+        {
+            totalDays += WorkingDayWeight(current);
+            current = current.AddDays(1);
+        }
+
+        DayOfWeek startDay = startDate.DayOfWeek;
+        DayOfWeek endDay = endDate.DayOfWeek;
+
+        // Trừ nửa ngày nếu bắt đầu là buổi chiều (Night)
+        if (startDayNightType == DayNightEnum.Night)
+        {
+            if (startDay >= DayOfWeek.Monday && startDay <= DayOfWeek.Friday)
+            {
+                totalDays -= 0.5;
+            }
+            else if (startDay == DayOfWeek.Saturday)
+            {
+                // Thứ bảy chỉ làm sáng → bắt đầu từ chiều => không có buổi chiều => chỉ giữ lại sáng
+                totalDays = Math.Max(totalDays - 0.5, 0);
+            }
+        }
+
+        // Trừ nửa ngày nếu kết thúc là buổi sáng (Day)
+        if (endDayNightType == DayNightEnum.Day)
+        {
+            if (endDay >= DayOfWeek.Monday && endDay <= DayOfWeek.Friday)
+            {
+                totalDays -= 0.5;
+            }
+            // Thứ bảy sáng thì vẫn giữ lại như cũ, không trừ thêm
+        }
+
+        return Math.Max(totalDays, 0);
     }
 }
+

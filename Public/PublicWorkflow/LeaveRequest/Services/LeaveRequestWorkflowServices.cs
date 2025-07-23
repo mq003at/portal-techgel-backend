@@ -49,12 +49,28 @@ public class LeaveRequestWorkflowService
         _basePath = AppDomain.CurrentDomain.BaseDirectory;
         _employeeService = employeeService;
     }
+    
+    public override async Task<IEnumerable<LeaveRequestWorkflowDTO>> GetAllAsync()
+    {
+        var workflows = await _dbSet
+            .Include(wf => wf.LeaveRequestNodes)
+            .Include(wf => wf.Employee)
+            .Include(wf => wf.Sender)
+            .ToListAsync();
+
+        var dto = _mapper.Map<IEnumerable<LeaveRequestWorkflowDTO>>(workflows);
+
+        return dto;
+    }
 
     public new async Task<List<LeaveRequestWorkflowDTO>> GetAllByEmployeeIdAsync(int id)
     {
+
         var workflows = await _context
             .LeaveRequestWorkflows.Where(w => w.EmployeeId == id)
             .Include(w => w.LeaveRequestNodes)
+            .Include(w => w.Employee)
+            .Include(wf => wf.Sender)
             .ToListAsync();
 
         var workflowDtos = _mapper.Map<List<LeaveRequestWorkflowDTO>>(workflows);
@@ -85,10 +101,10 @@ public class LeaveRequestWorkflowService
 
         // Calculate number of leave days (min 0.5)
         var totalDays = DateHelper.CalculateLeaveDays(
-            dto.StartDate,
-            (int)dto.StartDateDayNightType,
-            dto.EndDate,
-            (int)dto.EndDateDayNightType
+            dto.StartDate.AddDays(1),
+            dto.StartDateDayNightType,
+            dto.EndDate.AddDays(1),
+            dto.EndDateDayNightType
         );
 
         if (totalDays < 0.4)
@@ -420,6 +436,8 @@ public class LeaveRequestWorkflowService
     {
         var nodes = await _context
             .LeaveRequestNodes.Where(n => n.WorkflowId == workflowId)
+            .Include(n => n.Workflow)
+            .ThenInclude(n => n.Sender)
             .ToListAsync();
 
         var nodeIds = nodes.Select(n => n.Id).ToList();
@@ -648,7 +666,7 @@ public class LeaveRequestWorkflowService
     {
         // Step 1: Get workflow and its nodes
         LeaveRequestWorkflow workflow =
-            await _dbSet.Include(wf => wf.LeaveRequestNodes).FirstOrDefaultAsync(wf => wf.Id == id)
+            await _dbSet.Include(wf => wf.LeaveRequestNodes).Include(w => w.Employee).FirstOrDefaultAsync(wf => wf.Id == id)
             ?? throw new KeyNotFoundException($"Workflow with ID {id} not found.");
 
         // Step 2: Load all participants in one query
@@ -683,7 +701,9 @@ public class LeaveRequestWorkflowService
     public async Task<LeaveRequestNodeDTO?> GetAllWorkflowByEmployeeId(int employeeId)
     {
         var workflow = await _context
-            .LeaveRequestWorkflows.Include(w => w.LeaveRequestNodes)
+            .LeaveRequestWorkflows
+            .Include(w => w.LeaveRequestNodes)
+            .Include(w => w.Employee)
             .FirstOrDefaultAsync(w => w.EmployeeId == employeeId);
 
         if (workflow == null)
@@ -691,14 +711,6 @@ public class LeaveRequestWorkflowService
 
         var workflowDto = _mapper.Map<LeaveRequestNodeDTO>(workflow);
         return workflowDto;
-    }
-
-    public override async Task<IEnumerable<LeaveRequestWorkflowDTO>> GetAllAsync()
-    {
-        var workflows = await base.GetAllAsync();
-        var workflowList = workflows.ToList();
-
-        return workflowList;
     }
 
     private async Task<string> GenerateDocumentsAsync(int workflowId, int approverId)
@@ -863,6 +875,7 @@ public class LeaveRequestWorkflowService
                 false
             ),
             ["approverSignDate"] = (today.ToString("dd/MM/yyyy"), false),
+            ["comment"] = (workflow.Comment ?? "", false),
 
             ["type"] = (
                 workflow.LeaveApprovalCategory switch
