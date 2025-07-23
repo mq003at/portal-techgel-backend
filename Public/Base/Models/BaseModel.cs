@@ -21,5 +21,3 @@ public abstract class BaseModelWithOnlyId
     [Key]
     public long Id { get; set; }
 }
-
-

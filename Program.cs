@@ -64,6 +64,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(
 
 // Register SaveChangesInterceptor
 builder.Services.AddSingleton<AppDbContextSaveChangesInterceptor>();
+builder.Services.AddHttpContextAccessor();
 
 // Register Identity
 builder
@@ -258,6 +259,7 @@ builder.Services.AddScoped<IWarehouseLocationService, WarehouseLocationService>(
 builder.Services.AddScoped<IStockService, StockService>();
 
 var app = builder.Build();
+AppTimeZoneConverter.Configure(app.Services.GetRequiredService<IHttpContextAccessor>());
 
 // Swagger
 app.UseSwagger();

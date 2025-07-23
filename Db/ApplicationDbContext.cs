@@ -32,6 +32,26 @@ public class ApplicationDbContext : IdentityDbContext
 
         // Apply all configurations dynamically
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BaseModelConfiguration<>).Assembly);
+        // 2. Apply global ValueConverter for all DateTime/DateTimeOffset
+        ApplyUtcToAppTimeZoneConverters(modelBuilder);
+    }
+
+    private static void ApplyUtcToAppTimeZoneConverters(ModelBuilder modelBuilder)
+    {
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
+                {
+                    property.SetValueConverter(AppTimeZoneConverter.DateTimeConverter);
+                }
+                else if (property.ClrType == typeof(DateTimeOffset))
+                {
+                    property.SetValueConverter(AppTimeZoneConverter.DateTimeOffsetConverter);
+                }
+            }
+        }
     }
 
     // CONVERT ENUM TO STRING -> CHANGE ALL INT ENUMS BEFOREHAND OR HASCONVERSION() THEM
