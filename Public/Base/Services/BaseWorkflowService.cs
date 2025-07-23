@@ -74,7 +74,7 @@ public abstract class BaseWorkflowService<TModel, TReadDTO, TCreateDTO, TUpdateD
     }
 
     // Get all workflows based on Sender ID
-    public async Task<List<TReadDTO>> GetAllByEmployeeIdAsync(int id)
+    public virtual async Task<List<TReadDTO>> GetAllByEmployeeIdAsync(int id)
     {
         var workflows = await _context.Set<TModel>().Where(w => w.SenderId == id).ToListAsync();
 

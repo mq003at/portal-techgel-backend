@@ -41,6 +41,9 @@ public abstract class BaseNodeService<TModel, TReadDTO, TCreateDTO, TUpdateDTO, 
     {
         int approverId = dto.ApproverId;
 
+        _logger.LogError("************* nodeId: " + nodeId);
+        _logger.LogError("TModel is: {ModelType}", typeof(TModel).Name);
+
         // Fetch the node and its workflow
         TModel node =
             await _context.Set<TModel>().FirstOrDefaultAsync(n => n.Id == nodeId)

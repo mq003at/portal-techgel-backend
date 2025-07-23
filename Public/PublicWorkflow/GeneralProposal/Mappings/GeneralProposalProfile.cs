@@ -36,6 +36,8 @@ public class GeneralProposalWorkflowProfile
             .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
             .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
             .ForMember(dest => dest.Proposal, opt => opt.MapFrom(src => src.Proposal))
+            .ForMember(dest => dest.SenderMainId, opt => opt.MapFrom(src => src.Sender.MainId))
+            .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Sender.LastName + " " + src.Sender.MiddleName + " " + src.Sender.FirstName))
             .ForMember(
                 dest => dest.GeneralProposalNodes,
                 opt => opt.MapFrom(src => src.GeneralProposalNodes)

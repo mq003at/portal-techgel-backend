@@ -310,13 +310,13 @@ public class GatePassWorkflowService
             );
 
         Employee approver =
-            await _context.Employees.Include(e => e.Signature).FirstOrDefaultAsync(e => e.Id == finalParticipant.EmployeeId)
+            await _context.Employees.Include(e => e.Signature).Include(e => e.CompanyInfo).FirstOrDefaultAsync(e => e.Id == finalParticipant.EmployeeId)
             ?? throw new InvalidOperationException(
                 $"Không tìm thấy người duyệt với ID {finalParticipant.EmployeeId}."
             );
 
         Employee employee =
-            await _context.Employees.Include(e => e.Signature).FirstOrDefaultAsync(employee =>
+            await _context.Employees.Include(e => e.Signature).Include(e => e.CompanyInfo).FirstOrDefaultAsync(employee =>
                 employee.Id == workflow.SenderId
             )
             ?? throw new InvalidOperationException(
@@ -381,6 +381,31 @@ public class GatePassWorkflowService
         }
     }
 
+    public override async Task<IEnumerable<GatePassWorkflowDTO>> GetAllAsync()
+    {
+        _logger.LogError("*************** workflows: " + "ádf");
+        var workflows = await _dbSet
+            .Include(wf => wf.GatePassNodes)
+            .Include(wf => wf.Sender)
+            .Include("Sender")
+            .ToListAsync();
+
+        var dto = _mapper.Map<IEnumerable<GatePassWorkflowDTO>>(workflows);
+
+        return dto;
+    }
+
+    public new async Task<List<GatePassWorkflowDTO>> GetAllByEmployeeIdAsync(int employeeId)
+    {
+        var workflows = await _context.GatePassWorkflows
+            .Where(wf => wf.SenderId == employeeId)
+            .Include(wf => wf.Sender)
+            .Include(wf => wf.GatePassNodes)
+            .ToListAsync();
+
+        return _mapper.Map<List<GatePassWorkflowDTO>>(workflows);
+    }
+
     public override async Task<GatePassWorkflowDTO?> GetByIdAsync(int id)
     {
         // Step 1: Get workflow and its nodes
@@ -414,7 +439,10 @@ public class GatePassWorkflowService
             .Select(da => da.Document)
             .ToListAsync();
 
-        return _mapper.Map<GatePassWorkflowDTO>(workflow);
+        var dto = _mapper.Map<GatePassWorkflowDTO>(workflow);
+        dto.SenderName = workflow.Sender.LastName + " " + workflow.Sender.MiddleName + " " + workflow.Sender.FirstName;
+        dto.SenderMainId = workflow.Sender.MainId;
+        return dto;
     }
 
     // Add document only at the end of the workflow. The newly created document will be attached to the workflow itself, not the nodes

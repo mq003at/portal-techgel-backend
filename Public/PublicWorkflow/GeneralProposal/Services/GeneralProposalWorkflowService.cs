@@ -41,6 +41,17 @@ public class GeneralProposalWorkflowService
         _basePath = AppDomain.CurrentDomain.BaseDirectory;
     }
 
+    public new async Task<List<GeneralProposalWorkflowDTO>> GetAllByEmployeeIdAsync(int employeeId)
+    {
+        var workflows = await _context.GeneralProposalWorkflows
+            .Where(wf => wf.SenderId == employeeId)
+            .Include(wf => wf.Sender)
+            .Include(wf => wf.GeneralProposalNodes)
+            .ToListAsync();
+
+        return _mapper.Map<List<GeneralProposalWorkflowDTO>>(workflows);
+    }
+
     public override async Task<IEnumerable<GeneralProposalWorkflowDTO>> GetAllAsync()
     {
         var workflows = await _dbSet
@@ -64,6 +75,7 @@ public class GeneralProposalWorkflowService
 
         return _mapper.Map<IEnumerable<GeneralProposalWorkflowDTO>>(workflows);
     }
+    
 
     public async Task<List<GeneralProposalNodeDTO>> GenerateNodesAsync(
         GeneralProposalWorkflowCreateDTO dto,
@@ -262,7 +274,8 @@ public class GeneralProposalWorkflowService
     public async Task<IEnumerable<GeneralProposalNodeDTO>> GetNodesByWorkflowIdAsync(int workflowId)
     {
         var nodes = await _context
-            .GeneralProposalNodes.Where(n => n.WorkflowId == workflowId)
+            .GeneralProposalNodes
+            .Where(n => n.WorkflowId == workflowId)
             .ToListAsync();
 
         var nodeIds = nodes.Select(n => n.Id).ToList();
@@ -279,6 +292,7 @@ public class GeneralProposalWorkflowService
         }
 
         var dtos = _mapper.Map<IEnumerable<GeneralProposalNodeDTO>>(nodes);
+
         _logger.LogInformation(
             "first node has {ParticipantCount} participants.",
             dtos.First().WorkflowNodeParticipants.Count()
@@ -399,6 +413,7 @@ public class GeneralProposalWorkflowService
         GeneralProposalWorkflow workflow =
             await _dbSet
                 .Include(wf => wf.GeneralProposalNodes)
+                .Include(wf => wf.Sender)
                 .FirstOrDefaultAsync(wf => wf.Id == id)
             ?? throw new KeyNotFoundException($"Không tìm thấy tờ trình với id: {id}.");
 
@@ -428,7 +443,10 @@ public class GeneralProposalWorkflowService
             .Select(da => da.Document)
             .ToListAsync();
 
-        return _mapper.Map<GeneralProposalWorkflowDTO>(workflow);
+        var dto = _mapper.Map<GeneralProposalWorkflowDTO>(workflow);
+        dto.SenderName = workflow.Sender.LastName + " " + workflow.Sender.MiddleName + " " + workflow.Sender.FirstName;
+        dto.SenderMainId = workflow.Sender.MainId;
+        return dto;
     }
 
     // Add document only at the end of the workflow. The newly created document will be attached to the workflow itself, not the nodes

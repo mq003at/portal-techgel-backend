@@ -8,7 +8,8 @@ public class GeneralProposalWorkflowDTO : BaseWorkflowDTO
     public string About { get; set; } = null!;
 
     [Required]
-    public string Comment { get; set; } = null!;
+    public string? Comment { get; set; } = null!;
+    public string? RejectReason { get; set; }
 
     public string ProjectName { get; set; } = null!;
 
