@@ -16,6 +16,7 @@ public class CompanyInfoDTO : BaseModelDTO
     public bool IsOnProbation { get; set; }
     public double CompensatoryLeaveTotalDays { get; set; }
     public double AnnualLeaveTotalDays { get; set; }
+    public double? AdditionalLeaveForPosition { get; set; }
 }
 
 public class CompanyInfoUpdateDTO : BaseModelUpdateDTO
@@ -32,6 +33,7 @@ public class CompanyInfoUpdateDTO : BaseModelUpdateDTO
     public bool? IsOnProbation { get; set; }
     public double? CompensatoryLeaveTotalDays { get; set; }
     public double? AnnualLeaveTotalDays { get; set; }
+    public double? AdditionalLeaveForPosition { get; set; }
 }
 
 public class CompanyInfoCreateDTO : BaseModelCreateDTO
@@ -48,4 +50,5 @@ public class CompanyInfoCreateDTO : BaseModelCreateDTO
     public bool IsOnProbation { get; set; }
     public double CompensatoryLeaveTotalDays { get; set; }
     public double AnnualLeaveTotalDays { get; set; }
+    public double? AdditionalLeaveForPosition { get; set; }
 }

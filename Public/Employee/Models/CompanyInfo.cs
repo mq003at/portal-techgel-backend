@@ -18,4 +18,5 @@ public class CompanyInfo : BaseModelWithOnlyId
     public bool IsOnProbation { get; set; }
     public double CompensatoryLeaveTotalDays { get; set; }
     public double AnnualLeaveTotalDays { get; set; }
+    public double AdditionalLeaveForPosition { get; set; }
 }

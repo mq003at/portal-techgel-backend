@@ -795,13 +795,15 @@ public class LeaveRequestWorkflowService
         bool isImgValid = FileHandling.IsPngHeader(employeeSignature);
         _logger.LogInformation("Employee signature is valid: {IsValid}", isImgValid);
 
-        var Location = "6_Noi_Chinh";
+        var Location = "7_KHOI_NOI_CHINH";
         var newFileName =
             $"{workflow.Id}-{today:yyyy-MM-dd}-{Location}-DN-{employee.MainId}-v01{".docx"}";
 
         var newTargetPath = Path.Combine(
                 "erp",
                 "documents",
+                "admin",
+                "files",
                 Location,
                 "Ho_So",
                 "Nghi_Phep",
