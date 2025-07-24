@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using portal.Authentication.Services;
 using portal.Db;
 using portal.Extensions;
+using portal.Models;
 using portal.Options;
 using portal.Services;
 
@@ -164,6 +166,15 @@ builder.Services.AddCors(options =>
     );
 });
 
+// Register OwnCloud settings and client
+builder.Services.Configure<OwnCloudSettings>(builder.Configuration.GetSection("OwnCloud"));
+builder.Services.AddScoped<OwnCloudUserService>();
+builder.Services.AddSingleton(provider =>
+{
+    var settings = provider.GetRequiredService<IOptions<OwnCloudSettings>>().Value;
+    return new OwnCloudClient(settings);
+});
+
 // LevinMQ
 builder.Services.AddScoped<INotificationCategoryResolver, NotificationCategoryResolver>();
 builder.Services.AddTransient<WorkflowEventHandler>();
@@ -284,7 +295,6 @@ app.MapControllers();
 
 app.UseHangfireDashboard("/hangfire");
 
-app.MapHub<NotificationHub>("/hubs/notification")
-    .RequireCors("AllowFrontend");
+app.MapHub<NotificationHub>("/hubs/notification").RequireCors("AllowFrontend");
 
 app.Run();
