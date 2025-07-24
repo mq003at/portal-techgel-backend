@@ -2,6 +2,7 @@ using System.Text.Json;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using portal.Authentication.Services;
 using portal.Db;
 using portal.DTOs;
 using portal.Helpers;
@@ -16,17 +17,20 @@ public class EmployeeService
     private readonly DbSet<Employee> _employees;
     private readonly DbSet<OrganizationEntity> _orgEntities;
     private readonly DbSet<OrganizationEntityEmployee> _oee;
+    private readonly OwnCloudUserService _ownCloudUserService;
 
     public EmployeeService(
         ApplicationDbContext context,
         IMapper mapper,
-        ILogger<EmployeeService> logger
+        ILogger<EmployeeService> logger,
+        OwnCloudUserService ownCloudUserService
     )
         : base(context, mapper, logger)
     {
         _employees = context.Set<Employee>();
         _orgEntities = context.Set<OrganizationEntity>();
         _oee = context.Set<OrganizationEntityEmployee>();
+        _ownCloudUserService = ownCloudUserService;
     }
 
     public async Task<IEnumerable<EmployeeDTO>> GetPhoneBookAllEmployeesAsync()
@@ -135,6 +139,18 @@ public class EmployeeService
         // manifest an id
         string mainId = "TG" + FileNameHelper.PadWithZeros(employee.Id);
         employee.MainId = mainId;
+
+        // register new user in OwnCloud
+        var success = await _ownCloudUserService.CreateUserAsync(
+            userId: employee.MainId, // or employee ID, username, etc.
+            password: "1234" // generate or require user to set
+        );
+
+        if (!success)
+        {
+            // Optionally log or rollback depending on your business rules
+            throw new Exception("Không thể tạo nhân viên mới trong OwnCloud.");
+        }
         await _context.SaveChangesAsync();
 
         _logger.LogInformation(
