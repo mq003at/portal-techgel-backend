@@ -508,9 +508,9 @@ public class GeneralProposalWorkflowService
         var newTargetPath = Path.Combine(
                 "erp",
                 "documents",
-                Location,
-                "Ho_So",
-                "To_Trinh_Chung",
+                employee.MainId,
+                "files",
+                "Documents",
                 newFileName
             )
             .Replace("\\", "/");

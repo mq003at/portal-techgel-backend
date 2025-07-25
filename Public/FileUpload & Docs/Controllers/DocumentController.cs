@@ -26,9 +26,11 @@ public class DocumentController : ControllerBase
 
     // Get the entire folder structure
     [HttpGet("folder-structure")]
-    public async Task<IActionResult> GetFolderStructure()
+    public async Task<IActionResult> GetFolderStructure([FromQuery] string? employeeMainId, [FromQuery] string? path)
     {
-        var structure = await _documentService.GetFolderStructure();
+        var structure = string.IsNullOrWhiteSpace(employeeMainId)
+        ? await _documentService.GetFolderStructure()
+        : await _documentService.GetFolderStructure(employeeMainId, path);
         return Ok(structure);
     }
 

@@ -20,4 +20,5 @@ public interface IFileStorageService
     Task<bool> MoveAsync(IEnumerable<(string sourcePath, string destinationPath)> files);
     Task<bool> DeleteAsync(IEnumerable<string> filePaths);
     Task<object> FolderStructureAsync(string path = "");
+    Task<object> FolderStructureAsync(string employeeMainId, string path = "");
 }

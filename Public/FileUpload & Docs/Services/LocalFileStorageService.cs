@@ -352,4 +352,9 @@ public class LocalFileStorageService : IFileStorageService
         }
         return result;
     }
+
+    public Task<object> FolderStructureAsync(string employeeMainId, string path = "")
+    {
+        throw new NotImplementedException();
+    }
 }

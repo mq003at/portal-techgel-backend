@@ -310,6 +310,43 @@ public class SftpFileStorageService : IFileStorageService
         }
     }
 
+    public async Task<object> FolderStructureAsync(string employeeMainId, string path = "")
+    {
+        if (string.IsNullOrWhiteSpace(employeeMainId))
+            throw new ArgumentException("employeeMainId is required.", nameof(employeeMainId));
+
+        var basePath = $"/erp/documents/{employeeMainId}/files/";
+        var normalizedPath = Path.Combine(basePath, path ?? "")
+                                .Replace('\\', '/')
+                                .TrimEnd('/');
+
+        await _sync.WaitAsync();
+        try
+        {
+            using var client = CreateClient();
+            try
+            {
+                client.Connect();
+
+                if (!client.Exists(normalizedPath))
+                    // throw new DirectoryNotFoundException($"Path not found: {normalizedPath}");
+                    return new List<Dictionary<string, object>>();
+
+                var structure = GetDirectoryStructure(client, normalizedPath);
+                return structure;
+            }
+            finally
+            {
+                if (client.IsConnected)
+                    client.Disconnect();
+            }
+        }
+        finally
+        {
+            _sync.Release();
+        }
+    }
+
     private SftpClient CreateClient() =>
         new(_opts.Host, _opts.Port, _opts.Username, _opts.Password);
 
@@ -333,19 +370,73 @@ public class SftpFileStorageService : IFileStorageService
         client.DeleteDirectory(path);
     }
 
-    private object GetDirectoryStructure(SftpClient client, string path)
+    // private object GetDirectoryStructure(SftpClient client, string path)
+    // {
+    //     var result = new Dictionary<string, object>();
+
+    //     IEnumerable<ISftpFile> entries;
+    //     try
+    //     {
+    //         entries = client.ListDirectory(path);
+    //     }
+    //     catch (SftpPermissionDeniedException ex)
+    //     {
+    //         _logger.LogWarning("Permission denied accessing {Path}: {Message}", path, ex.Message);
+    //         return "[Permission Denied]";
+    //     }
+
+    //     foreach (var entry in entries)
+    //     {
+    //         if (entry.Name is "." or "..")
+    //             continue;
+
+    //         var fullPath = entry.FullName;
+    //         var entryName = entry.Name;
+
+    //         if (entry.IsDirectory)
+    //         {
+    //             try
+    //             {
+    //                 result[entryName] = GetDirectoryStructure(client, fullPath);
+    //             }
+    //             catch (SftpPermissionDeniedException ex)
+    //             {
+    //                 _logger.LogWarning(
+    //                     "Permission denied accessing {Path}: {Message}",
+    //                     fullPath,
+    //                     ex.Message
+    //                 );
+    //                 result[entryName] = "[Permission Denied]";
+    //             }
+    //         }
+    //         else
+    //         {
+    //             var extension = Path.GetExtension(entry.Name);
+    //             result[entry.Name] = string.IsNullOrEmpty(extension) ? "file" : extension;
+    //         }
+    //     }
+
+    //     return result;
+    // }
+
+    private List<Dictionary<string, object>> GetDirectoryStructure(SftpClient client, string path)
     {
-        var result = new Dictionary<string, object>();
+        var result = new List<Dictionary<string, object>>();
 
         IEnumerable<ISftpFile> entries;
         try
         {
             entries = client.ListDirectory(path);
         }
+        catch (SftpPathNotFoundException)
+        {
+            _logger.LogWarning("Path not found: {Path}", path);
+            return result; // Trả về mảng rỗng
+        }
         catch (SftpPermissionDeniedException ex)
         {
             _logger.LogWarning("Permission denied accessing {Path}: {Message}", path, ex.Message);
-            return "[Permission Denied]";
+            return result; // Trả về mảng rỗng
         }
 
         foreach (var entry in entries)
@@ -354,33 +445,38 @@ public class SftpFileStorageService : IFileStorageService
                 continue;
 
             var fullPath = entry.FullName;
-            var entryName = entry.Name;
+            var item = new Dictionary<string, object>
+            {
+                ["name"] = entry.Name,
+                ["path"] = fullPath.Replace('\\', '/'),
+            };
 
             if (entry.IsDirectory)
             {
+                item["type"] = "folder";
                 try
                 {
-                    result[entryName] = GetDirectoryStructure(client, fullPath);
+                    item["hasChildren"] = client.ListDirectory(fullPath)
+                                                .Any(f => f.Name != "." && f.Name != "..");
                 }
-                catch (SftpPermissionDeniedException ex)
+                catch
                 {
-                    _logger.LogWarning(
-                        "Permission denied accessing {Path}: {Message}",
-                        fullPath,
-                        ex.Message
-                    );
-                    result[entryName] = "[Permission Denied]";
+                    item["hasChildren"] = false;
                 }
             }
             else
             {
-                var extension = Path.GetExtension(entry.Name);
-                result[entry.Name] = string.IsNullOrEmpty(extension) ? "file" : extension;
+                item["type"] = "file";
+                item["extension"] = Path.GetExtension(entry.Name);
             }
+
+            result.Add(item);
         }
 
         return result;
     }
+
+
 
     public async Task<bool> CopyAsync(
         IEnumerable<(string sourcePath, string destinationPath)> items

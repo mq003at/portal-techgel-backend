@@ -30,6 +30,7 @@ public interface IDocumentService
     Task<bool> SignFileAsync(int documentId, Stream signedFileStream);
     Task<List<DocumentDTO>> SearchByTagsAsync(List<string> tags);
     Task<List<object>> GetFolderStructure();
+    Task<List<object>> GetFolderStructure(string employeeMainId, string path);
 
     //Template handling
     Task<DocumentDTO> GetTemplateAsync(string templateKey);

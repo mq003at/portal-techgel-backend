@@ -142,6 +142,17 @@ public class DocumentService : IDocumentService
         };
     }
 
+    public async Task<List<object>> GetFolderStructure(string employeeMainId, string path)
+    {
+        var structure = await _fileStorage.FolderStructureAsync(employeeMainId, path);
+
+        return structure switch
+        {
+            Dictionary<string, object> dict => dict.Values.ToList(),
+            _ => new List<object> { structure }
+        };
+    }
+
     public async Task<DocumentStatusEnum> CheckDocumentSignStatusAsync(int id)
     {
         var doc = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id);

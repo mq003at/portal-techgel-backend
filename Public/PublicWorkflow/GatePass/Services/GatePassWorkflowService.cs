@@ -508,15 +508,15 @@ public class GatePassWorkflowService
         bool isImgValid = FileHandling.IsPngHeader(employeeSignature);
         _logger.LogInformation("Employee signature is valid: {IsValid}", isImgValid);
 
-        var Location = "6_Noi_Chinh";
+        var Location = "2_Chung";
         var newFileName =
             $"{workflow.Id}-{today:yyyy-MM-dd}-{Location}-PRC-{employee.MainId}-v01{".docx"}";
         var newTargetPath = Path.Combine(
                 "erp",
                 "documents",
-                Location,
-                "Ho_So",
-                "Phieu_Ra_Cong",
+                employee.MainId,
+                "files",
+                "Documents",
                 newFileName
             )
             .Replace("\\", "/");
