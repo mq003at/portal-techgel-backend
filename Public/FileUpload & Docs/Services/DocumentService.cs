@@ -429,10 +429,10 @@ public class DocumentService : IDocumentService
         var documents = await _context.Documents.Where(d => fileUrls.Contains(d.Url)).ToListAsync();
 
         var missingInDb = fileUrls.Except(documents.Select(d => d.Url)).ToList();
-        if (missingInDb.Any())
-            throw new FileNotFoundException(
-                "Metadata not found for: " + string.Join(", ", missingInDb)
-            );
+        // if (missingInDb.Any())
+        //     throw new FileNotFoundException(
+        //         "Metadata not found for: " + string.Join(", ", missingInDb)
+        //     );
 
         // Step 2: Check if files exist in storage
         var allExist = await _fileStorage.AreExists(fileUrls);
@@ -445,9 +445,12 @@ public class DocumentService : IDocumentService
             throw new IOException("Failed to delete one or more files from storage.");
 
         // Step 4: Delete metadata
-        foreach (var doc in documents)
+        if (!missingInDb.Any())
         {
-            _context.Documents.Remove(doc);
+            foreach (var doc in documents)
+            {
+                _context.Documents.Remove(doc);
+            }
         }
 
         await _context.SaveChangesAsync();
